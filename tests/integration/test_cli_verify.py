@@ -204,6 +204,21 @@ def test_verify_outside_git_repo_is_usage_error(
     assert "not inside a git repository" in err
 
 
+def test_error_messages_are_never_hard_wrapped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression (macOS CI): Rich wrapped long errors at 80 columns, splitting the message
+    across lines and breaking anyone who greps for it."""
+    plain = tmp_path / ("a-rather-long-directory-name-" * 3) / "plain"
+    plain.mkdir(parents=True)
+    assert len(str(plain)) > 100
+    monkeypatch.chdir(plain)
+    code, _, err = _verify()
+    assert code == 2
+    assert err.count("\n") == 1, repr(err)
+    assert err.rstrip("\n").endswith("is not inside a git repository")
+
+
 @pytest.mark.parametrize("fmt", ["html", "sarif"])
 def test_unimplemented_formats_fail_loudly(in_repo: Path, fmt: str) -> None:
     code, _, err = _verify("--format", fmt)

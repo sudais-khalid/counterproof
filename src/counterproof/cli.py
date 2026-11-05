@@ -46,6 +46,7 @@ hook_app = typer.Typer(help="Agent integration hooks.", no_args_is_help=True)
 app.add_typer(hook_app, name="hook")
 
 out_console = Console()
+# soft_wrap on every message: never hard-wrap paths or errors (they are grepped and parsed).
 err_console = Console(stderr=True)
 log = get_logger("cli")
 
@@ -107,7 +108,7 @@ class ReportFormatOpt(enum.StrEnum):
 
 
 def _fail(message: str, code: int) -> NoReturn:
-    err_console.print(f"[bold red]error:[/] {message}", highlight=False)
+    err_console.print(f"[bold red]error:[/] {message}", highlight=False, soft_wrap=True)
     raise typer.Exit(code)
 
 
@@ -150,7 +151,7 @@ def _not_implemented(command: str, milestone: str) -> NoReturn:
 
 def _version_callback(value: bool) -> None:
     if value:
-        out_console.print(f"counterproof {__version__}", highlight=False)
+        out_console.print(f"counterproof {__version__}", highlight=False, soft_wrap=True)
         raise typer.Exit(0)
 
 
@@ -257,7 +258,9 @@ def verify(
     _emit(bundle, fmt.value, out)
     verdict = outcome.manifest.verdict
     if fail_on is not None and verdict.verdict == "INCONCLUSIVE":
-        err_console.print("warning: INCONCLUSIVE does not fail --fail-on", highlight=False)
+        err_console.print(
+            "warning: INCONCLUSIVE does not fail --fail-on", highlight=False, soft_wrap=True
+        )
     raise typer.Exit(exit_code_for(verdict, fail_on.value if fail_on else None))
 
 
@@ -313,8 +316,10 @@ def gc(
     removed = _guard(lambda: gc_runs(age, dry_run=dry_run))
     verb = "would remove" if dry_run else "removed"
     for path in removed:
-        out_console.print(f"{verb} {path}", highlight=False)
-    out_console.print(f"gc: {verb} {len(removed)} run(s) older than {older_than}", highlight=False)
+        out_console.print(f"{verb} {path}", highlight=False, soft_wrap=True)
+    out_console.print(
+        f"gc: {verb} {len(removed)} run(s) older than {older_than}", highlight=False, soft_wrap=True
+    )
 
 
 @app.command()
@@ -406,7 +411,7 @@ def init(
         return target, names
 
     target, names = _guard(_run)
-    out_console.print(f"wrote {target} (detected: {names})", highlight=False)
+    out_console.print(f"wrote {target} (detected: {names})", highlight=False, soft_wrap=True)
 
 
 @app.command("eval")

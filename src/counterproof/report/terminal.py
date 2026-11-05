@@ -26,6 +26,6 @@ def header(bundle: RunBundle) -> str:
 
 def render_terminal(bundle: RunBundle, console: Console) -> None:
     verdict = bundle.manifest.verdict
-    console.print(header(bundle), style=STYLES[verdict.verdict], highlight=False)
+    console.print(header(bundle), style=STYLES[verdict.verdict], highlight=False, soft_wrap=True)
     console.print(Markdown(render_markdown(bundle)))
-    console.print(f"Run directory: {bundle.run_dir}", highlight=False)
+    console.print(f"Run directory: {bundle.run_dir}", highlight=False, soft_wrap=True)
