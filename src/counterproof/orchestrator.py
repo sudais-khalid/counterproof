@@ -1,23 +1,23 @@
 """Run orchestration (PRD section 6.3).
 
-M1 scope: resolve refs and the change, snapshot the working tree, build base and head
-worktrees, detect the stack, select impacted tests and run the head baseline. Probes arrive
-from M2; until the verdict engine lands in M3, the early INCONCLUSIVE outcomes here use the
-section 8 rule ids (R-INC-BUILD, R-INC-FLAKY, R-INC-HEADRED) and everything else is reported
-as ``INCONCLUSIVE / NOT_IMPLEMENTED``.
+Resolve refs and the change, snapshot the working tree, build base and head worktrees,
+detect the stack, select impacted tests, run the head baseline, then the probes cheapest
+first (P2 integrity, then P1 red-green). Every decision goes through the pure
+:func:`counterproof.verdict.rules.decide`.
 """
 
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, Final, Literal
 
 from counterproof import __version__, git
-from counterproof.adapters.base import CollectionError
+from counterproof.adapters.base import Adapter, CollectionError, CoverageMap
 from counterproof.adapters.detect import detect_adapters
 from counterproof.change.resolver import NO_CODE_CHANGE, commit_message_for, resolve_change
 from counterproof.change.task import resolve_task_text
@@ -39,12 +39,19 @@ from counterproof.models import (
     BaselineReport,
     ChangeSet,
     Intent,
+    ProbeResult,
     RunManifest,
     RunResult,
+    Selection,
     Verdict,
 )
+from counterproof.probes.integrity.probe import changed_test_file_pairs, run_integrity
+from counterproof.probes.integrity.python_rules import changed_test_ids
+from counterproof.probes.pyast import added_symbols, module_name
+from counterproof.probes.red_green import run_red_green
+from counterproof.verdict.rules import NOT_IMPLEMENTED, DecisionInput, decide
 from counterproof.workspace.env import dropped_names, scrub_env
-from counterproof.workspace.manager import WorkspaceManager
+from counterproof.workspace.manager import Workspace, WorkspaceManager
 
 log = get_logger("orchestrator")
 
@@ -133,7 +140,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
                 user_intent=req.intent,
             )
             store.write_json("change.json", change)
-            verdict = _preflight(store, workspaces, change, config)
+            verdict, probes = _pipeline(store, workspaces, change, config)
             if req.keep:
                 for ws in workspaces.workspaces.values():
                     log.warning("kept worktree %s: %s", ws.name, ws.root)
@@ -145,7 +152,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
             seed_commitment=seed_commitment(seed),
             config_sha256=config.sha256(),
             change=change,
-            probes=[],
+            probes=probes,
             verdict=verdict,
         )
         log.info("verdict %s (%s)", verdict.verdict, verdict.rule_id)
@@ -156,23 +163,134 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
     return VerifyOutcome(sealed, digest, store.run_dir, config)
 
 
-def _inconclusive(rule_id: str, *reasons: str) -> Verdict:
-    return Verdict.make("INCONCLUSIVE", rule_id, list(reasons))
+@dataclass
+class _Context:
+    """Everything the probes need once the head baseline is known."""
+
+    adapter: Adapter
+    head: Workspace
+    base: Workspace
+    collected: list[str]
+    coverage: CoverageMap | None
+    selection: Selection
+    baseline: BaselineReport
 
 
-def _preflight(
+def _pipeline(
     store: EvidenceStore, workspaces: WorkspaceManager, change: ChangeSet, config: Config
-) -> Verdict:
-    """Workspaces, stack detection, impact selection and baseline (sections 6.3 steps 2-5)."""
+) -> tuple[Verdict, list[ProbeResult]]:
+    """Section 6.3 steps 2-7: workspaces, baseline, probes (P2 then P1), verdict."""
+    prepared = _prepare(store, workspaces, change, config)
+    if isinstance(prepared, str):
+        return decide(DecisionInput(intent=change.intent, build_error=prepared), config), []
+
+    ctx = prepared
+    early = decide(DecisionInput(intent=change.intent, baseline=ctx.baseline), config)
+    if early.rule_id != NOT_IMPLEMENTED:
+        return early, []  # FR-IS-04/05: no proof is possible on a flaky or red head
+
+    repo = change.repo_root
+    read_base = partial(git.show_file, repo, change.base_sha)
+    read_head = partial(git.show_file, repo, change.head_snapshot_sha)
+    probes: list[ProbeResult] = []
+
+    # P2 first: static and cheap (PRD 6.2, cheap first, expensive last).
+    selected_files = sorted({t.partition("::")[0] for t in ctx.selection.tests})
+    integrity = run_integrity(
+        change,
+        read_base=read_base,
+        read_head=read_head,
+        literal_test_files=selected_files,
+        covering_by_file=_covering_by_file(change, ctx.coverage),
+    )
+    probes.append(integrity)
+    store.write_json("probes/integrity.json", integrity)
+
+    verdict = decide(DecisionInput(change.intent, baseline=ctx.baseline, probes=probes), config)
+    if verdict.rule_id != NOT_IMPLEMENTED and config.run.short_circuit:
+        probes.append(ProbeResult(probe="red_green", status="skipped", signals=["SHORT_CIRCUIT"]))
+        return verdict, probes
+
+    # P1 red-green.
+    pairs = changed_test_file_pairs(change, read_base, read_head)
+    added, new_modules = _added_api(change, read_base, read_head)
+    outcome = run_red_green(
+        change=change,
+        adapter=ctx.adapter,
+        head=ctx.head,
+        base=ctx.base,
+        changed_tests=changed_test_ids(pairs),
+        collected=ctx.collected,
+        selection=ctx.selection,
+        baseline=ctx.baseline,
+        added_symbols=added,
+        new_modules=new_modules,
+        junit_path=lambda name: store.path(f"junit/red-green-{name}.xml"),
+        timeout_s=config.impact.run_timeout_s,
+    )
+    for name in ("base-1", "base-2"):
+        _track_existing(store, f"junit/red-green-{name}.xml", f"junit/red-green-{name}.log")
+    probes.append(outcome.result)
+    store.write_json("probes/red_green.json", outcome.result)
+    store.write_json(
+        "red_green_cases.json",
+        {
+            "candidate_source": outcome.candidate_source,
+            "transplanted": outcome.transplanted,
+            "cases": [c.model_dump(mode="json") for c in outcome.cases],
+        },
+    )
+    final = DecisionInput(change.intent, baseline=ctx.baseline, probes=probes)
+    return decide(final, config), probes
+
+
+def _covering_by_file(
+    change: ChangeSet, coverage: CoverageMap | None
+) -> dict[str, set[str]] | None:
+    """Tests that execute any line of each changed source file (for FR-IN-06)."""
+    if coverage is None:
+        return None
+    result: dict[str, set[str]] = {f.path: set() for f in change.files if f.role == "source"}
+    for (path, _line), tests in coverage.items():
+        if path in result:
+            result[path] |= tests
+    return result
+
+
+def _added_api(
+    change: ChangeSet,
+    read_base: Callable[[str], str | None],
+    read_head: Callable[[str], str | None],
+) -> tuple[set[str], set[str]]:
+    """Symbols and modules the change added (FR-AD-04 API_ABSENT)."""
+    added: set[str] = set()
+    new_modules: set[str] = set()
+    for f in change.files:
+        if f.role != "source" or f.status == "deleted" or not f.path.endswith(".py"):
+            continue
+        head_text = read_head(f.path) or ""
+        base_text = None if f.status == "added" else read_base(f.old_path or f.path)
+        added |= added_symbols(base_text, head_text)
+        if f.status == "added":
+            new_modules.add(module_name(f.path))
+    return added, new_modules
+
+
+def _prepare(
+    store: EvidenceStore, workspaces: WorkspaceManager, change: ChangeSet, config: Config
+) -> _Context | str:
+    """Workspaces, stack detection, impact selection and baseline (6.3 steps 2-5).
+
+    Returns the probe context, or a rule-1 (R-INC-BUILD) reason.
+    """
     if NO_CODE_CHANGE in change.flags:
-        # FR-CR-07
-        return _inconclusive("R-INC-BUILD", "NO_CODE_CHANGE: the change has no code to verify")
+        return "NO_CODE_CHANGE: the change has no code to verify"  # FR-CR-07
 
     head = workspaces.add("head", change.head_snapshot_sha)
-    workspaces.add("base", change.base_sha)
+    base = workspaces.add("base", change.base_sha)
     adapters = detect_adapters(head.root, env_pass=config.env.pass_)
     if not adapters:
-        return _inconclusive("R-INC-BUILD", "no supported test runner detected (pytest in M1)")
+        return "no supported test runner detected (pytest in this version)"
     adapter = adapters[0]
     dropped = dropped_names(os.environ, scrub_env(os.environ, config.env.pass_))
     log.info("child env: dropped %d variables (names in run log)", len(dropped))
@@ -180,12 +298,12 @@ def _preflight(
 
     prep = adapter.prepare(head)
     if not prep.ok:
-        return _inconclusive("R-INC-BUILD", f"head cannot prepare: {prep.message}")
+        return f"head cannot prepare: {prep.message}"
     try:
         all_tests = adapter.list_tests(head)
     except CollectionError as exc:
         store.write_text("logs/collect-head.log", exc.output)
-        return _inconclusive("R-INC-BUILD", f"head cannot collect tests: {exc}")
+        return f"head cannot collect tests: {exc}"
 
     timeout = config.impact.run_timeout_s
     coverage = adapter.coverage_map(
@@ -208,7 +326,7 @@ def _preflight(
     )
     store.write_json("selection.json", selection)
     if not selection.tests:
-        return _inconclusive("R-INC-BUILD", "no selected tests for the changed lines")
+        return "no selected tests for the changed lines"
 
     runs: list[RunResult] = []
     for i in range(1, config.impact.baseline_runs + 1):
@@ -231,31 +349,14 @@ def _preflight(
         max_ratio=config.flaky.max_ratio,
     )
     store.write_json("baseline.json", report)
-    return _baseline_verdict(report, config)
-
-
-def _baseline_verdict(report: BaselineReport, config: Config) -> Verdict:
-    if report.status == "flaky_suite":
-        return _inconclusive(
-            "R-INC-FLAKY",
-            f"FLAKY_SUITE: {len(report.flaky)} of {len(report.selected)} selected tests are "
-            f"flaky (ratio {report.flaky_ratio:.2f} > {config.flaky.max_ratio})",
-        )
-    if report.status == "head_red":
-        shown = ", ".join(report.failing[:5]) + (" ..." if len(report.failing) > 5 else "")
-        return _inconclusive("R-INC-HEADRED", f"HEAD_RED: {len(report.failing)} failing: {shown}")
-    if report.status == "no_tests":
-        return _inconclusive("R-INC-BUILD", "no selected tests for the changed lines")
-    flaky_note = f"; {len(report.flaky)} flaky excluded" if report.flaky else ""
-    return Verdict.make(
-        "INCONCLUSIVE",
-        "NOT_IMPLEMENTED",
-        [
-            f"baseline green: {len(report.stable)} stable selected tests x {report.runs} runs"
-            f"{flaky_note}",
-            "probes are not implemented yet (P1 and P2 arrive in M2)",
-        ],
-        confidence_note="Change resolved and baseline run; no probe has judged the change.",
+    return _Context(
+        adapter=adapter,
+        head=head,
+        base=base,
+        collected=[t.nodeid for t in all_tests],
+        coverage=coverage,
+        selection=selection,
+        baseline=report,
     )
 
 

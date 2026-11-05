@@ -189,6 +189,15 @@ class Verdict(_Strict):
         )
 
 
+class RedGreenCase(_Strict):
+    """FR-RG-03: one candidate test's outcome on base (it passes on head by selection)."""
+
+    nodeid: str
+    base_outcome: TestOutcome | Literal["not_run"]
+    base_kind: FailureKind | None = None
+    message: str = ""
+
+
 BaselineStatus = Literal["ok", "no_tests", "flaky_suite", "head_red"]
 
 

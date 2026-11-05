@@ -17,11 +17,18 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M1).** Counterproof resolves the change (hunks, file roles,
-> intent, task text), snapshots your working tree without touching it, builds isolated base and
-> head git worktrees, selects impacted tests from coverage contexts, and runs the head baseline
-> three times with flaky detection. The probes arrive from M2, so a green baseline currently
-> reports `INCONCLUSIVE (NOT_IMPLEMENTED)`. See [docs/PRD.md](docs/PRD.md) for the full plan.
+> **Status: pre-alpha (milestone M2).** Counterproof resolves the change, snapshots your
+> working tree without touching it, builds isolated base and head worktrees, selects impacted
+> tests from coverage, and runs the head baseline with flaky detection. Two probes run:
+> **integrity** (weakened tests, skipped or neutralised assertions, deleted tests, code that
+> special-cases test inputs or detects the test runner) and **red-green** (the change's tests
+> must fail on the old code for a behavioural reason). Gamed changes are already `REFUTED`;
+> honest changes report `INCONCLUSIVE (NOT_IMPLEMENTED)` until the mutant probe and full
+> verdict engine land in M3. See [docs/PRD.md](docs/PRD.md) for the full plan.
+
+Waive an integrity finding with an inline comment on (or just above) the flagged line:
+`# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver
+added by the change under test is reported as a proposal, so an agent cannot excuse itself.
 
 ## Install (development)
 

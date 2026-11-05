@@ -18,7 +18,13 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from counterproof.adapters.base import CollectionError, CoverageMap, PrepResult, classify_failure
+from counterproof.adapters.base import (
+    NOT_REPORTED,
+    CollectionError,
+    CoverageMap,
+    PrepResult,
+    classify_failure,
+)
 from counterproof.adapters.junit import JUnitCase, junit_key, module_of, parse_junit
 from counterproof.change.classify import is_test_path
 from counterproof.evidence.hashing import sha256_bytes, sha256_file
@@ -326,7 +332,7 @@ class PytestAdapter:
                 failures[t] = FailureInfo(kind="TIMEOUT", message="run timed out")
             elif not stopped_early:
                 outcomes[t] = "error"
-                failures[t] = FailureInfo(kind="COLLECTION", message="no result reported")
+                failures[t] = FailureInfo(kind="COLLECTION", message=NOT_REPORTED)
         return outcomes, failures
 
     def failure_kind(self, case: JUnitCase) -> FailureKind:

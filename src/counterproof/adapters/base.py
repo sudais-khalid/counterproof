@@ -11,6 +11,9 @@ from counterproof.adapters.junit import JUnitCase
 from counterproof.models import FailureKind, RunResult, TestId
 from counterproof.workspace.manager import Workspace
 
+NOT_REPORTED: Final = "no result reported"
+"""Message for requested tests missing from the report (for example after a collection abort)."""
+
 FileLine = tuple[str, int]
 """Workspace-relative POSIX path and 1-based line number."""
 CoverageMap = dict[FileLine, set[str]]
@@ -100,3 +103,41 @@ def classify_failure(case: JUnitCase, *, timed_out: bool = False) -> FailureKind
     if _ENV_HINTS.search(blob):
         return "ENV"
     return "EXCEPTION_BEHAVIOURAL"
+
+
+_API_HINTS: Final = re.compile(
+    r"(ImportError|cannot import name|AttributeError|has no attribute|TypeError|"
+    r"unexpected keyword argument|positional argument|is not a function|is not callable|"
+    r"ModuleNotFoundError)"
+)
+_QUOTED: Final = re.compile(r"['\"]([A-Za-z_][\w.]*)['\"]")
+_UNEXPECTED_KW: Final = re.compile(r"(\w+)\(\) got an unexpected keyword argument '(\w+)'")
+_POSITIONAL: Final = re.compile(r"(\w+)\(\) takes .* positional arguments? but .* given")
+
+
+def refine_api_absent(
+    kind: FailureKind,
+    text: str,
+    added_symbols: set[str],
+    new_modules: set[str],
+) -> FailureKind:
+    """FR-AD-04 ``API_ABSENT``: the failure names a symbol, argument or module the change added.
+
+    ``added_symbols`` holds names and ``func(param)`` pairs from :func:`pyast.added_symbols`.
+    A test that cannot even call the old code is weak evidence (FR-RG-05), not a behavioural
+    failure, so it must not count as red-green proof.
+    """
+    if kind not in {"EXCEPTION_BEHAVIOURAL", "ENV", "COLLECTION"} or not _API_HINTS.search(text):
+        return kind
+    names = {s for s in added_symbols if "(" not in s}
+    params = {tuple(s[:-1].split("(", 1)) for s in added_symbols if "(" in s}
+    for quoted in _QUOTED.findall(text):
+        if quoted in names or quoted.rsplit(".", 1)[-1] in names or quoted in new_modules:
+            return "API_ABSENT"
+    for func, arg in _UNEXPECTED_KW.findall(text):
+        if (func, arg) in params:
+            return "API_ABSENT"
+    for func in _POSITIONAL.findall(text):
+        if any(f == func for f, _ in params):
+            return "API_ABSENT"
+    return kind

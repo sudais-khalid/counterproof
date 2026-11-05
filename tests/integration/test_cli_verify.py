@@ -33,7 +33,7 @@ def test_m0_verify_creates_run_dir_and_empty_manifest(in_repo: Path, isolated_ca
     assert code == 40, err
 
     manifest = RunManifest.model_validate_json(out)
-    assert manifest.probes == []
+    assert [p.probe for p in manifest.probes] == ["integrity", "red_green"]
     assert manifest.verdict.verdict == "INCONCLUSIVE"
     assert manifest.verdict.rule_id == "NOT_IMPLEMENTED"
     assert manifest.change.repo_root == in_repo.resolve()
