@@ -17,9 +17,11 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M0).** The CLI, configuration, data models, run directory and
-> sealed evidence bundle exist. No probes run yet, so every `verify` currently reports
-> `INCONCLUSIVE (NOT_IMPLEMENTED)`. See [docs/PRD.md](docs/PRD.md) for the full plan.
+> **Status: pre-alpha (milestone M1).** Counterproof resolves the change (hunks, file roles,
+> intent, task text), snapshots your working tree without touching it, builds isolated base and
+> head git worktrees, selects impacted tests from coverage contexts, and runs the head baseline
+> three times with flaky detection. The probes arrive from M2, so a green baseline currently
+> reports `INCONCLUSIVE (NOT_IMPLEMENTED)`. See [docs/PRD.md](docs/PRD.md) for the full plan.
 
 ## Install (development)
 
@@ -50,8 +52,15 @@ Run artefacts live outside the repository, under `$XDG_CACHE_HOME/counterproof/r
 (`~/.cache` by default; `%LOCALAPPDATA%` on Windows). Set `COUNTERPROOF_CACHE_DIR` to override.
 Counterproof never writes to your working tree.
 
-Copy [counterproof.example.toml](counterproof.example.toml) to `counterproof.toml` to configure
-it. With no configuration, `llm.provider = "none"` and nothing leaves your machine.
+Run `counterproof init` (or copy [counterproof.example.toml](counterproof.example.toml)) to
+configure it. The configuration is read from the **base** commit by default, so a change cannot
+loosen its own thresholds; pass `--config-from worktree` to use the file on disk. With no
+configuration, `llm.provider = "none"` and nothing leaves your machine.
+
+Tests run in your existing Python environment: `COUNTERPROOF_PYTHON`, then the repository's
+`.venv`/`venv`, then `$VIRTUAL_ENV`, then the interpreter running Counterproof. Install
+`pytest-cov` there to get coverage-based test selection. Child processes get a scrubbed
+environment; pass extra variables with `[env] pass = [...]`.
 
 ## Development
 

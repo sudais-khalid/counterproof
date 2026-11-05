@@ -1,0 +1,43 @@
+# Counterproof configuration (PRD section 12). Copy to counterproof.toml.
+# Unknown keys are rejected. CLI flags override values here.
+
+[run]
+profile = "full"            # fast | full | paranoid
+mode = "audit"              # audit | coach
+workers = 4                 # default: min(4, cpu_count // 2)
+sandbox = "none"            # none | docker
+short_circuit = true
+
+[llm]
+provider = "none"           # anthropic | openai | ollama | none (default: none, fully local)
+mutant_model = "claude-sonnet-5-5"
+judge_model = "claude-haiku-5-5"
+oracle_model = "auto"       # auto = different family from code author when known
+budget_usd = 0.30
+budget_tokens = 400000
+
+[impact]
+max_tests = 400
+baseline_runs = 3           # profile default: fast 2, full 3, paranoid 5
+run_timeout_s = 600         # hard timeout per baseline or coverage run
+
+[flaky]
+max_ratio = 0.2
+known = []                  # e.g. ["tests/test_network.py::test_retry"]
+
+[mutants]
+budget = 8                  # profile default: fast 4, full 8, paranoid 16
+llm_budget = 6
+unproven_below = 0.5
+proven_at_least = 0.8
+fuzz = true
+
+[oracle]
+enabled = true
+k = 6
+
+[paths]
+exclude = []                # e.g. ["migrations/**", "**/*.generated.ts"]
+
+[env]
+pass = []                   # extra env vars passed to test processes, e.g. ["DATABASE_URL_TEST"]

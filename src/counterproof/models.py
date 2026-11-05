@@ -54,6 +54,7 @@ class ChangedFile(_Strict):
     role: FileRole
     status: FileStatus
     old_path: str | None = None
+    binary: bool = False
 
 
 class Hunk(_Strict):
@@ -107,6 +108,8 @@ class RunResult(_Strict):
     command: list[str]
     exit_code: int
     junit_sha256: str
+    test_durations: dict[str, float] = Field(default_factory=dict)
+    """Per-test wall time from the junit report (FR-IS-06)."""
 
 
 class Mutant(_Strict):
@@ -184,6 +187,42 @@ class Verdict(_Strict):
             exit_code=VERDICT_EXIT_CODES[verdict],
             confidence_note=confidence_note,
         )
+
+
+BaselineStatus = Literal["ok", "no_tests", "flaky_suite", "head_red"]
+
+
+class Selection(_Strict):
+    """FR-IS-01/02: which tests a run uses and why."""
+
+    tests: list[str] = Field(default_factory=list)
+    covering: list[str] = Field(default_factory=list)
+    in_changed_test_files: list[str] = Field(default_factory=list)
+    related: list[str] = Field(default_factory=list)
+    coverage_available: bool = False
+    capped: bool = False
+    file_targets: list[str] = Field(default_factory=list)
+    """When the cap is hit, the test files that replace the per-test selection."""
+
+
+class BaselineReport(_Strict):
+    """FR-IS-03 to FR-IS-06: head runs, flakiness and timings."""
+
+    runs: int = Field(ge=0)
+    status: BaselineStatus
+    selected: list[str] = Field(default_factory=list)
+    flaky: list[str] = Field(default_factory=list)
+    known_flaky: list[str] = Field(default_factory=list)
+    failing: list[str] = Field(default_factory=list)
+    flaky_ratio: float = Field(default=0.0, ge=0.0, le=1.0)
+    durations: dict[str, float] = Field(default_factory=dict)
+    outcomes: dict[str, list[TestOutcome]] = Field(default_factory=dict)
+
+    @property
+    def stable(self) -> list[str]:
+        """Selected tests usable by probes: not flaky and not known-flaky."""
+        excluded = set(self.flaky) | set(self.known_flaky)
+        return [t for t in self.selected if t not in excluded]
 
 
 class RunManifest(_Strict):

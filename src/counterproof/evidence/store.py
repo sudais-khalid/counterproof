@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError
 
 from counterproof.errors import EvidenceError, RunDirError
 from counterproof.evidence.hashing import pretty_json, sha256_bytes, sha256_file
+from counterproof.git import try_git
 from counterproof.models import RunManifest
 
 CACHE_DIR_ENV: Final = "COUNTERPROOF_CACHE_DIR"
@@ -230,6 +231,7 @@ def gc_runs(
         return []
     cutoff = (now or datetime.now(UTC)) - older_than
     removed: list[Path] = []
+    repos_to_prune: set[Path] = set()
     for repo_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         for run_dir in sorted(p for p in repo_dir.iterdir() if p.is_dir()):
             if not RUN_ID_RE.match(run_dir.name):
@@ -237,11 +239,26 @@ def gc_runs(
             mtime = datetime.fromtimestamp(run_dir.stat().st_mtime, UTC)
             if mtime < cutoff:
                 if not dry_run:
+                    if (repo := _manifest_repo(run_dir)) is not None:
+                        repos_to_prune.add(repo)
                     remove_tree(run_dir)
                 removed.append(run_dir)
         if not dry_run and not any(repo_dir.iterdir()):
             repo_dir.rmdir()
+    for repo in sorted(repos_to_prune):
+        # Worktrees kept with --keep leave metadata in the user's .git; drop the stale entries.
+        if repo.is_dir():
+            try_git(["worktree", "prune"], repo)
     return removed
+
+
+def _manifest_repo(run_dir: Path) -> Path | None:
+    try:
+        return RunManifest.model_validate_json(
+            (run_dir / MANIFEST_NAME).read_bytes()
+        ).change.repo_root
+    except (OSError, ValidationError):
+        return None
 
 
 def parse_duration(text: str) -> timedelta:

@@ -19,6 +19,7 @@ budget_tokens = 400000
 [impact]
 max_tests = 400
 baseline_runs = 3           # profile default: fast 2, full 3, paranoid 5
+run_timeout_s = 600         # hard timeout per baseline or coverage run
 
 [flaky]
 max_ratio = 0.2

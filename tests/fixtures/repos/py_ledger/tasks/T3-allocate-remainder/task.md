@@ -1,0 +1,1 @@
+Bug: Money.of('100.00').allocate([1, 1, 1]) returns three parts of 33.33 that add up to 99.99. Parts must always add up to the total, with leftover cents handed out one at a time to the earliest parts, so the result should be 33.34, 33.33, 33.33.

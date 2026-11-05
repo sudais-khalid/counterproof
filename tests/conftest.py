@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import hashlib
-import os
-import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from counterproof.adapters.pytest_adapter import INTERPRETER_ENV
 from counterproof.evidence.store import CACHE_DIR_ENV
+from tests.helpers import git
 
 
 @pytest.fixture(autouse=True)
@@ -19,33 +19,10 @@ def isolated_cache(
 ) -> Path:
     cache = tmp_path_factory.mktemp("cache")
     monkeypatch.setenv(CACHE_DIR_ENV, str(cache))
+    # Fixture repos run under this interpreter, which has pytest and pytest-cov installed;
+    # without this the developer's $VIRTUAL_ENV would decide.
+    monkeypatch.setenv(INTERPRETER_ENV, sys.executable)
     return cache
-
-
-def _git_env(tmp: Path) -> dict[str, str]:
-    """Isolate test git calls from the developer's global and system configuration."""
-    empty = tmp / "empty.gitconfig"
-    empty.touch()
-    env = dict(os.environ)
-    env.update(
-        GIT_CONFIG_NOSYSTEM="1",
-        GIT_CONFIG_GLOBAL=str(empty),
-        GIT_AUTHOR_NAME="Fixture",
-        GIT_AUTHOR_EMAIL="fixture@example.invalid",
-        GIT_COMMITTER_NAME="Fixture",
-        GIT_COMMITTER_EMAIL="fixture@example.invalid",
-        GIT_AUTHOR_DATE="2026-01-01T00:00:00Z",
-        GIT_COMMITTER_DATE="2026-01-01T00:00:00Z",
-    )
-    return env
-
-
-def git(repo: Path, *args: str) -> str:
-    env = _git_env(repo.parent)
-    proc = subprocess.run(
-        ["git", *args], cwd=repo, env=env, capture_output=True, text=True, check=True
-    )
-    return proc.stdout
 
 
 @pytest.fixture
@@ -69,19 +46,6 @@ def git_repo(tmp_path: Path) -> Path:
     )
     (repo / "notes.txt").write_text("untracked file\n", encoding="utf-8")
     return repo
-
-
-def tree_hash(root: Path) -> str:
-    """Hash every path and file byte under ``root``, excluding ``.git``."""
-    digest = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
-        rel = path.relative_to(root)
-        if rel.parts and rel.parts[0] == ".git":
-            continue
-        digest.update(rel.as_posix().encode() + b"\0")
-        if path.is_file():
-            digest.update(hashlib.sha256(path.read_bytes()).digest())
-    return digest.hexdigest()
 
 
 @pytest.fixture

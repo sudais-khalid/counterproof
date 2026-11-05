@@ -1,0 +1,2 @@
+# Fixture repositories must be byte-identical on every OS (they are diffed and hashed).
+tests/fixtures/** text eol=lf

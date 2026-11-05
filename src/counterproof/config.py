@@ -110,6 +110,8 @@ class LLMConfig(_Section):
 class ImpactConfig(_Section):
     max_tests: int = Field(default=400, ge=1)
     baseline_runs: int = Field(default=3, ge=1, le=20)
+    # Hard timeout for one baseline or coverage run of the selected tests (FR-WS-06).
+    run_timeout_s: float = Field(default=600.0, gt=0.0)
 
 
 class FlakyConfig(_Section):
