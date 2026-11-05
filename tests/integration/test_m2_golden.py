@@ -109,8 +109,11 @@ def test_m2_honest_fix_is_rg_strong(
     assert red == set(TASKS[task]["variants"]["honest"]["red_on_base"])
     assert {c["base_kind"] for c in cases["cases"] if c["base_outcome"] == "fail"} == {"ASSERTION"}
 
-    assert manifest.verdict.rule_id == "NOT_IMPLEMENTED"  # rules 6-14 need P3 (M3)
-    assert any(r.startswith("red_green: ok RG_STRONG") for r in manifest.verdict.reasons)
+    expected = TASKS[task]["variants"]["honest"]["provider_none"]
+    assert (manifest.verdict.verdict, manifest.verdict.rule_id) == (
+        expected["verdict"],
+        expected["rule_id"],
+    )
     # The transplant happened in the base worktree, never in the user's tree.
     assert repo_state(repo) == before
 

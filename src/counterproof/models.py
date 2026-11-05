@@ -125,6 +125,8 @@ class Mutant(_Strict):
     status: MutantStatus
     killed_by: list[str] = Field(default_factory=list)
     hint: str | None = None
+    covering_tests: list[str] = Field(default_factory=list)
+    """Tests run against this mutant (FR-MU-10)."""
 
 
 class Finding(_Strict):
@@ -245,3 +247,5 @@ class RunManifest(_Strict):
     verdict: Verdict
     artefacts: dict[str, str] = Field(default_factory=dict)
     """Relative path inside the run directory -> sha256 of its bytes."""
+    duration_s: float = Field(default=0.0, ge=0.0)
+    """Wall-clock time of the run (excluded from determinism comparisons)."""

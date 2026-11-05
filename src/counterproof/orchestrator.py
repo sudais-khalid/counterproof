@@ -2,13 +2,14 @@
 
 Resolve refs and the change, snapshot the working tree, build base and head worktrees,
 detect the stack, select impacted tests, run the head baseline, then the probes cheapest
-first (P2 integrity, then P1 red-green). Every decision goes through the pure
+first (P2 integrity, P1 red-green, P3 mutants). Every decision goes through the pure
 :func:`counterproof.verdict.rules.decide`.
 """
 
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -31,7 +32,7 @@ from counterproof.evidence.seed import (
     seed_commitment,
 )
 from counterproof.evidence.store import EvidenceStore, cache_root, runs_root
-from counterproof.impact.baseline import analyse_baseline
+from counterproof.impact.baseline import analyse_baseline, mutant_timeout_s
 from counterproof.impact.selector import select_tests
 from counterproof.log import attach_run_log, detach_run_log, get_logger
 from counterproof.models import (
@@ -46,10 +47,11 @@ from counterproof.models import (
     Verdict,
 )
 from counterproof.probes.integrity.probe import changed_test_file_pairs, run_integrity
-from counterproof.probes.integrity.python_rules import changed_test_ids
+from counterproof.probes.integrity.python_rules import TestFilePair, changed_test_ids
+from counterproof.probes.mutants.probe import run_mutation_probe
 from counterproof.probes.pyast import added_symbols, module_name
 from counterproof.probes.red_green import run_red_green
-from counterproof.verdict.rules import NOT_IMPLEMENTED, DecisionInput, decide
+from counterproof.verdict.rules import DecisionInput, decide, early_verdict
 from counterproof.workspace.env import dropped_names, scrub_env
 from counterproof.workspace.manager import Workspace, WorkspaceManager
 
@@ -107,6 +109,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
         raise UsageError(f"transcript not found: {req.transcript}")
     config = load_run_config(repo, base_sha, req.config_from, req.overrides)
 
+    started = time.monotonic()
     store = EvidenceStore.create(repo, runs_dir=runs_root(cache))
     handler = attach_run_log(store.path(RUN_LOG))
     try:
@@ -140,7 +143,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
                 user_intent=req.intent,
             )
             store.write_json("change.json", change)
-            verdict, probes = _pipeline(store, workspaces, change, config)
+            verdict, probes = _pipeline(store, workspaces, change, config, seed)
             if req.keep:
                 for ws in workspaces.workspaces.values():
                     log.warning("kept worktree %s: %s", ws.name, ws.root)
@@ -154,6 +157,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
             change=change,
             probes=probes,
             verdict=verdict,
+            duration_s=round(time.monotonic() - started, 3),
         )
         log.info("verdict %s (%s)", verdict.verdict, verdict.rule_id)
     finally:
@@ -177,22 +181,31 @@ class _Context:
 
 
 def _pipeline(
-    store: EvidenceStore, workspaces: WorkspaceManager, change: ChangeSet, config: Config
+    store: EvidenceStore,
+    workspaces: WorkspaceManager,
+    change: ChangeSet,
+    config: Config,
+    seed: bytes,
 ) -> tuple[Verdict, list[ProbeResult]]:
-    """Section 6.3 steps 2-7: workspaces, baseline, probes (P2 then P1), verdict."""
+    """Section 6.3 steps 2-7: workspaces, baseline, probes (P2, P1, P3), verdict."""
+    llm = config.llm.provider != "none"
     prepared = _prepare(store, workspaces, change, config)
     if isinstance(prepared, str):
-        return decide(DecisionInput(intent=change.intent, build_error=prepared), config), []
+        inp = DecisionInput(intent=change.intent, build_error=prepared, llm_enabled=llm)
+        return decide(inp, config), []
 
     ctx = prepared
-    early = decide(DecisionInput(intent=change.intent, baseline=ctx.baseline), config)
-    if early.rule_id != NOT_IMPLEMENTED:
+    early = early_verdict(DecisionInput(change.intent, baseline=ctx.baseline), config)
+    if early is not None:
         return early, []  # FR-IS-04/05: no proof is possible on a flaky or red head
 
     repo = change.repo_root
     read_base = partial(git.show_file, repo, change.base_sha)
     read_head = partial(git.show_file, repo, change.head_snapshot_sha)
     probes: list[ProbeResult] = []
+
+    def decision() -> DecisionInput:
+        return DecisionInput(change.intent, baseline=ctx.baseline, probes=probes, llm_enabled=llm)
 
     # P2 first: static and cheap (PRD 6.2, cheap first, expensive last).
     selected_files = sorted({t.partition("::")[0] for t in ctx.selection.tests})
@@ -206,13 +219,58 @@ def _pipeline(
     probes.append(integrity)
     store.write_json("probes/integrity.json", integrity)
 
-    verdict = decide(DecisionInput(change.intent, baseline=ctx.baseline, probes=probes), config)
-    if verdict.rule_id != NOT_IMPLEMENTED and config.run.short_circuit:
-        probes.append(ProbeResult(probe="red_green", status="skipped", signals=["SHORT_CIRCUIT"]))
-        return verdict, probes
+    refuted = early_verdict(decision(), config)
+    if refuted is not None and config.run.short_circuit:
+        for name in ("red_green", "mutants"):
+            probes.append(ProbeResult(probe=name, status="skipped", signals=["SHORT_CIRCUIT"]))
+        return refuted, probes
 
-    # P1 red-green.
     pairs = changed_test_file_pairs(change, read_base, read_head)
+    changed_tests = changed_test_ids(pairs)
+
+    # P1 red-green. For test-only changes it does not apply (section 8): P3 covers them.
+    if change.intent == "test_only":
+        probes.append(
+            ProbeResult(probe="red_green", status="skipped", signals=["RG_NOT_APPLICABLE"])
+        )
+    else:
+        probes.append(
+            _red_green(
+                store,
+                ctx,
+                change=change,
+                config=config,
+                pairs=pairs,
+                read_base=read_base,
+                read_head=read_head,
+            )
+        )
+
+    # P3 mutants.
+    probes.append(
+        _mutants(
+            store,
+            workspaces,
+            ctx,
+            change=change,
+            config=config,
+            changed_tests=changed_tests,
+            seed=seed,
+        )
+    )
+    return decide(decision(), config), probes
+
+
+def _red_green(
+    store: EvidenceStore,
+    ctx: _Context,
+    *,
+    change: ChangeSet,
+    config: Config,
+    pairs: list[TestFilePair],
+    read_base: Callable[[str], str | None],
+    read_head: Callable[[str], str | None],
+) -> ProbeResult:
     added, new_modules = _added_api(change, read_base, read_head)
     outcome = run_red_green(
         change=change,
@@ -230,7 +288,6 @@ def _pipeline(
     )
     for name in ("base-1", "base-2"):
         _track_existing(store, f"junit/red-green-{name}.xml", f"junit/red-green-{name}.log")
-    probes.append(outcome.result)
     store.write_json("probes/red_green.json", outcome.result)
     store.write_json(
         "red_green_cases.json",
@@ -240,8 +297,57 @@ def _pipeline(
             "cases": [c.model_dump(mode="json") for c in outcome.cases],
         },
     )
-    final = DecisionInput(change.intent, baseline=ctx.baseline, probes=probes)
-    return decide(final, config), probes
+    return outcome.result
+
+
+def _mutants(
+    store: EvidenceStore,
+    workspaces: WorkspaceManager,
+    ctx: _Context,
+    *,
+    change: ChangeSet,
+    config: Config,
+    changed_tests: list[str],
+    seed: bytes,
+) -> ProbeResult:
+    texts: dict[str, str] = {}
+
+    def head_text(path: str) -> str:
+        # Read from the head worktree: byte-exact, so line ranges match what runs.
+        if path not in texts:
+            texts[path] = (ctx.head.root / path).read_bytes().decode("utf-8", "replace")
+        return texts[path]
+
+    def workers(count: int) -> list[Workspace]:
+        # FR-WS-03: one head worktree per worker, created before any mutant runs.
+        return [workspaces.add(f"w{i}", change.head_snapshot_sha) for i in range(1, count + 1)]
+
+    outcome = run_mutation_probe(
+        change=change,
+        config=config,
+        adapter=ctx.adapter,
+        workers=workers,
+        head_text=head_text,
+        coverage=ctx.coverage,
+        selection=ctx.selection,
+        baseline=ctx.baseline,
+        changed_tests=changed_tests,
+        seed=seed,
+        junit_path=lambda name: store.path(f"mutants/{name}.xml"),
+        timeout_for=lambda tests: mutant_timeout_s(ctx.baseline, tests),
+    )
+    for mutant in outcome.mutants:
+        for name in (mutant.id, f"{mutant.id}-rerun"):
+            _track_existing(store, f"mutants/{name}.xml", f"mutants/{name}.log")
+    store.write_json(
+        "mutants.json",
+        {
+            "filtered": outcome.filtered,
+            "mutants": [m.model_dump(mode="json") for m in outcome.mutants],
+        },
+    )
+    store.write_json("probes/mutants.json", outcome.result)
+    return outcome.result
 
 
 def _covering_by_file(

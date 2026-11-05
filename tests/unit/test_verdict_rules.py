@@ -1,4 +1,6 @@
-"""Section 8 verdict rules 1-5: table-driven, including rule order. ``decide`` is pure."""
+"""Section 8 verdict rules 1-5 (``early_verdict``): table-driven, including rule order.
+
+Rules 6-14 and the full order are covered in test_verdict_engine.py."""
 
 from __future__ import annotations
 
@@ -8,7 +10,7 @@ import pytest
 
 from counterproof.config import build_config
 from counterproof.models import BaselineReport, Finding, ProbeResult, Severity
-from counterproof.verdict.rules import NOT_IMPLEMENTED, RULES, DecisionInput, decide
+from counterproof.verdict.rules import RULES, DecisionInput, decide, early_verdict
 
 CONFIG = build_config()
 
@@ -52,7 +54,7 @@ class Case:
     baseline: BaselineReport | None = field(default_factory=_baseline)
     probes: tuple[ProbeResult, ...] = ()
     verdict: str = "INCONCLUSIVE"
-    rule_id: str = NOT_IMPLEMENTED
+    rule_id: str | None = None  # None: no rule 1-5 matches
     reason_rules: tuple[str, ...] = ()
 
 
@@ -140,7 +142,11 @@ def test_section_8_rules_1_to_5(case: Case) -> None:
     inp = DecisionInput(
         intent="bugfix", build_error=case.build_error, baseline=case.baseline, probes=case.probes
     )
-    verdict = decide(inp, CONFIG)
+    verdict = early_verdict(inp, CONFIG)
+    if case.rule_id is None:
+        assert verdict is None
+        return
+    assert verdict is not None
     assert (verdict.verdict, verdict.rule_id) == (case.verdict, case.rule_id)
     matched = tuple(
         r
@@ -151,7 +157,7 @@ def test_section_8_rules_1_to_5(case: Case) -> None:
 
 
 def test_rules_are_listed_in_prd_order() -> None:
-    assert [(r.number, r.rule_id) for r in RULES] == [
+    assert [(r.number, r.rule_id) for r in RULES[:5]] == [
         (1, "R-INC-BUILD"),
         (2, "R-INC-FLAKY"),
         (3, "R-REF-CLAIM"),
@@ -170,13 +176,5 @@ def test_decide_is_pure_and_deterministic() -> None:
 def test_flaky_threshold_comes_from_config() -> None:
     strict = build_config({"flaky": {"max_ratio": 0.05}})
     inp = DecisionInput(intent="bugfix", baseline=_baseline(flaky=1))
-    assert decide(inp, CONFIG).rule_id == NOT_IMPLEMENTED
+    assert early_verdict(inp, CONFIG) is None
     assert decide(inp, strict).rule_id == "R-INC-FLAKY"
-
-
-def test_not_implemented_lists_probe_evidence() -> None:
-    rg = ProbeResult(probe="red_green", status="ok", signals=["RG_STRONG"], metrics={"strong": 2.0})
-    verdict = decide(DecisionInput(intent="bugfix", baseline=_baseline(), probes=(rg,)), CONFIG)
-    assert verdict.rule_id == NOT_IMPLEMENTED
-    assert "red_green: ok RG_STRONG (strong=2)" in verdict.reasons
-    assert verdict.exit_code == 40

@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 from counterproof.cli import app
 from counterproof.evidence.store import EvidenceStore, repo_hash, runs_root
 from counterproof.models import BaselineReport, RunManifest, Selection
-from tests.helpers import build_repo, git, repo_state
+from tests.helpers import build_repo, git, load_expectations, repo_state
 
 pytestmark = pytest.mark.integration
 
@@ -96,9 +96,9 @@ def test_m1_change_selection_and_three_baseline_runs(
         assert f"junit/baseline-{i}.xml" in manifest.artefacts
     assert EvidenceStore.open(_run_dir(isolated_cache, t1_honest, manifest)).verify() == []
 
-    assert manifest.verdict.verdict == "INCONCLUSIVE"
-    assert manifest.verdict.rule_id == "NOT_IMPLEMENTED"
-    assert "x 3 runs" in manifest.verdict.reasons[0]
+    # The recorded provider_none verdict for T1 honest (tests/golden/expectations.yaml).
+    expected = load_expectations()["repos"]["py_ledger"]["tasks"]["T1-discount-cap"]
+    assert manifest.verdict.rule_id == expected["variants"]["honest"]["provider_none"]["rule_id"]
 
     # FR-WS-01 / engineering rule 1: the user's tree, index, refs and stash are untouched,
     # and every worktree was removed.
@@ -183,8 +183,10 @@ def test_fr_is_03_real_flaky_test_is_detected_and_excluded(
     assert report.flaky == ["tests/test_flip.py::test_flips_every_run"]
     assert report.status == "ok"  # 1 of 10 selected tests is below the 0.2 threshold
     assert "tests/test_flip.py::test_flips_every_run" not in report.stable
-    assert manifest.verdict.rule_id == "NOT_IMPLEMENTED"
-    assert "1 flaky excluded" in manifest.verdict.reasons[0]
+    # The exclusion is stated on the certificate.
+    monkeypatch.chdir(t1_honest)
+    cert = runner.invoke(app, ["report", manifest.run_id, "--format", "md"]).stdout
+    assert "Flaky tests excluded: tests/test_flip.py::test_flips_every_run" in cert
 
 
 def test_fr_is_04_flaky_suite_is_inconclusive(
@@ -260,7 +262,9 @@ def test_fr_ws_07_keep_then_gc_prunes_worktrees(
     manifest = _verify(t1_honest, monkeypatch, "--keep")
     run_dir = _run_dir(isolated_cache, t1_honest, manifest)
     assert (run_dir / "ws" / "head" / "src" / "ledger" / "discounts.py").is_file()
-    assert git(t1_honest, "worktree", "list", "--porcelain").count("worktree ") == 3
+    kept = [p for p in (run_dir / "ws").iterdir() if p.is_dir()]
+    assert {"head", "base"} <= {p.name for p in kept}
+    assert git(t1_honest, "worktree", "list", "--porcelain").count("worktree ") == 1 + len(kept)
     result = runner.invoke(app, ["gc", "--older-than", "0s"])
     assert result.exit_code == 0, result.stderr
     assert not run_dir.exists()

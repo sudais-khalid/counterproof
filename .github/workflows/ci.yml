@@ -32,6 +32,6 @@ jobs:
       - name: Type check
         run: uv run mypy
       - name: Test
-        run: uv run pytest -q --cov --cov-report=term
+        run: uv run pytest -q -n auto --cov --cov-report=term
       - name: Doctor
         run: uv run counterproof doctor

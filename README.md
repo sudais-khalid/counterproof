@@ -17,14 +17,22 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M2).** Counterproof resolves the change, snapshots your
-> working tree without touching it, builds isolated base and head worktrees, selects impacted
-> tests from coverage, and runs the head baseline with flaky detection. Two probes run:
-> **integrity** (weakened tests, skipped or neutralised assertions, deleted tests, code that
-> special-cases test inputs or detects the test runner) and **red-green** (the change's tests
-> must fail on the old code for a behavioural reason). Gamed changes are already `REFUTED`;
-> honest changes report `INCONCLUSIVE (NOT_IMPLEMENTED)` until the mutant probe and full
-> verdict engine land in M3. See [docs/PRD.md](docs/PRD.md) for the full plan.
+> **Status: pre-alpha (milestone M3).** Counterproof resolves the change, snapshots your
+> working tree without touching it, builds isolated worktrees, selects impacted tests from
+> coverage and runs the head baseline. Three probes run: **integrity** (weakened, skipped or
+> neutralised tests; code that special-cases test inputs), **red-green** (the change's tests
+> must fail on the old code for a behavioural reason) and **mutants** (rule-based wrong
+> versions of only the changed lines, run in parallel worktrees). The deterministic verdict
+> engine implements all 14 rules of PRD section 8 and prints a Proof Certificate. LLM mutants,
+> the blind oracle and the claim audit arrive in M4 and M5. See [docs/PRD.md](docs/PRD.md).
+
+```sh
+counterproof verify                      # certificate in the terminal, exit code = verdict
+counterproof verify --format md          # Markdown certificate (PRD section 14)
+counterproof verify --fail-on refuted    # CI gate: only REFUTED fails the job
+counterproof report RUN_ID --format json # re-render a stored run
+counterproof explain RUN_ID r002         # diff, tests run and hint for one mutant
+```
 
 Waive an integrity finding with an inline comment on (or just above) the flagged line:
 `# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver

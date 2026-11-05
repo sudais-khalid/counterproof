@@ -7,6 +7,7 @@ Exit codes: 0 PROVEN, 10 WEAK, 20 UNPROVEN, 30 REFUTED, 40 INCONCLUSIVE, 2 usage
 from __future__ import annotations
 
 import contextlib
+import difflib
 import enum
 import signal
 import sys
@@ -24,11 +25,13 @@ from counterproof import doctor as doctor_mod
 from counterproof.adapters.detect import detect_adapters
 from counterproof.config import CONFIG_FILENAME
 from counterproof.errors import CounterproofError, UsageError
-from counterproof.evidence.hashing import pretty_json
 from counterproof.evidence.store import gc_runs, parse_duration
 from counterproof.log import get_logger, setup_logging
 from counterproof.models import EXIT_INTERNAL_ERROR, EXIT_USAGE_ERROR, WORKTREE
 from counterproof.orchestrator import VerifyOutcome, VerifyRequest, run_verify
+from counterproof.report import RunBundle, find_run, load_bundle, render_json, render_markdown
+from counterproof.report.terminal import header, render_terminal
+from counterproof.verdict.engine import exit_code_for
 
 T = TypeVar("T")
 
@@ -88,6 +91,12 @@ class FormatOpt(enum.StrEnum):
 class ConfigFromOpt(enum.StrEnum):
     base = "base"
     worktree = "worktree"
+
+
+class FailOnOpt(enum.StrEnum):
+    weak = "weak"
+    unproven = "unproven"
+    refuted = "refuted"
 
 
 class ReportFormatOpt(enum.StrEnum):
@@ -192,12 +201,16 @@ def verify(
         ConfigFromOpt,
         typer.Option(help="Read counterproof.toml from the base commit or the working tree."),
     ] = ConfigFromOpt.base,
+    fail_on: Annotated[
+        FailOnOpt | None,
+        typer.Option(help="Exit non-zero only for this verdict or worse (CI gating)."),
+    ] = None,
 ) -> None:
     """Verify the current change and write a sealed evidence bundle."""
     if task is not None and task_file is not None:
         _fail("--task and --task-file are mutually exclusive", EXIT_USAGE_ERROR)
-    if fmt in {FormatOpt.md, FormatOpt.html, FormatOpt.sarif}:
-        _fail(f"--format {fmt.value} is not implemented yet (md in M3, html/sarif in M7)", 1)
+    if fmt in {FormatOpt.html, FormatOpt.sarif}:
+        _fail(f"--format {fmt.value} is not implemented yet (planned for M7)", 1)
 
     overrides: dict[str, Any] = {}
     run_over = {
@@ -240,32 +253,33 @@ def verify(
             return run_verify(request)
 
     outcome = _guard(_run)
-    rendered = _render_verify(outcome, fmt)
+    bundle = _guard(lambda: load_bundle(outcome.run_dir))
+    _emit(bundle, fmt.value, out)
+    verdict = outcome.manifest.verdict
+    if fail_on is not None and verdict.verdict == "INCONCLUSIVE":
+        err_console.print("warning: INCONCLUSIVE does not fail --fail-on", highlight=False)
+    raise typer.Exit(exit_code_for(verdict, fail_on.value if fail_on else None))
+
+
+def _emit(bundle: RunBundle, fmt: str, out: Path | None) -> None:
+    """Write a rendered run to ``out`` or stdout (Rich when stdout is a terminal)."""
+    if fmt == "text" and out is None and sys.stdout.isatty():
+        render_terminal(bundle, out_console)
+        return
+    if fmt == "json":
+        rendered = render_json(bundle)
+    elif fmt == "md":
+        rendered = render_markdown(bundle)
+    else:
+        rendered = (
+            f"{header(bundle)}\n\n{render_markdown(bundle)}\nRun directory: {bundle.run_dir}\n"
+        )
     if out is not None:
         target = out
         _guard(lambda: target.write_text(rendered, encoding="utf-8"))
     else:
         sys.stdout.write(rendered)
         sys.stdout.flush()
-    raise typer.Exit(outcome.manifest.verdict.exit_code)
-
-
-def _render_verify(outcome: VerifyOutcome, fmt: FormatOpt) -> str:
-    manifest = outcome.manifest
-    if fmt is FormatOpt.json:
-        return pretty_json(manifest.model_dump(mode="json")).decode("utf-8")
-    verdict = manifest.verdict
-    lines = [f"Counterproof verdict: {verdict.verdict} (rule {verdict.rule_id})"]
-    lines += [f"  - {reason}" for reason in verdict.reasons]
-    if verdict.confidence_note:
-        lines.append(f"  note: {verdict.confidence_note}")
-    lines += [
-        f"Run: {manifest.run_id}",
-        f"Run directory: {outcome.run_dir}",
-        f"Manifest sha256: {outcome.manifest_sha256}",
-        f"Seed commitment: {manifest.seed_commitment}",
-    ]
-    return "\n".join(lines) + "\n"
 
 
 @app.command()
@@ -307,9 +321,13 @@ def gc(
 def report(
     run_id: Annotated[str, typer.Argument()],
     fmt: Annotated[ReportFormatOpt, typer.Option("--format")] = ReportFormatOpt.md,
+    out: Annotated[Path | None, typer.Option(help="Write output to this file.")] = None,
 ) -> None:
     """Render a stored run."""
-    _not_implemented("report", "M3")
+    if fmt in {ReportFormatOpt.html, ReportFormatOpt.sarif}:
+        _fail(f"--format {fmt.value} is not implemented yet (planned for M7)", 1)
+    bundle = _guard(lambda: load_bundle(find_run(run_id)))
+    _emit(bundle, fmt.value, out)
 
 
 @app.command()
@@ -317,8 +335,32 @@ def explain(
     run_id: Annotated[str, typer.Argument()],
     mutant_id: Annotated[str, typer.Argument()],
 ) -> None:
-    """Show a mutant's diff, covering tests and hint."""
-    _not_implemented("explain", "M3")
+    """Show a mutant's diff, covering tests and hint (audit mode: for humans only)."""
+    bundle = _guard(lambda: load_bundle(find_run(run_id)))
+    mutant = bundle.mutant(mutant_id)
+    if mutant is None:
+        known = ", ".join(m.id for m in bundle.mutants) or "none"
+        _fail(f"no mutant {mutant_id!r} in run {run_id} (known: {known})", EXIT_USAGE_ERROR)
+    diff = difflib.unified_diff(
+        mutant.original.splitlines(keepends=True),
+        mutant.replacement.splitlines(keepends=True),
+        fromfile=f"a/{mutant.file}:{mutant.start_line}",
+        tofile=f"b/{mutant.file}:{mutant.start_line} ({mutant.id})",
+    )
+    lines = [
+        f"Mutant {mutant.id} ({mutant.source} / {mutant.operator_or_class}): {mutant.status}",
+        f"Location: {mutant.file}:{mutant.start_line}-{mutant.end_line}",
+        "",
+        "".join(diff).rstrip("\n"),
+        "",
+        f"Tests run: {len(mutant.covering_tests)}",
+        *[f"  {t}" for t in mutant.covering_tests],
+    ]
+    if mutant.killed_by:
+        lines += ["Killed by:", *[f"  {t}" for t in mutant.killed_by]]
+    if mutant.hint:
+        lines.append(f"Missing test: {mutant.hint}")
+    sys.stdout.write("\n".join(lines) + "\n")
 
 
 @app.command("export-oracle")
