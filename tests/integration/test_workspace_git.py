@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -115,6 +116,31 @@ def test_fr_ws_01_snapshot_includes_untracked_and_leaves_index_alone(tmp_path: P
     assert not any("__pycache__" in f for f in files)
     assert git(repo, "show", f"{sha}:src/ledger/tax.py") == "# modified\n"
     assert repo_state(repo) == before
+
+
+def test_fr_ws_01_snapshot_sees_same_size_edit_made_in_the_index_write_second(
+    tmp_path: Path,
+) -> None:
+    """Regression: a same-size edit made in the same second as the last index write is
+    "racily clean". git only re-reads such a file if the index keeps its original timestamp;
+    a snapshot built from an index copy with a fresh timestamp silently missed the edit."""
+    built = build_repo(tmp_path / "repo")
+    repo = built.path
+    target = repo / "src" / "ledger" / "tax.py"
+    original = target.stat()
+    data = target.read_bytes()
+    edited = data.replace(b"tax rate cannot be negative", b"TAX RATE CANNOT BE NEGATIVE")
+    assert len(edited) == len(data) and edited != data
+    target.write_bytes(edited)
+    # Same size, and same timestamp as both the index entry and the index file itself.
+    os.utime(target, ns=(original.st_atime_ns, original.st_mtime_ns))
+    index = repo / ".git" / "index"
+    os.utime(index, ns=(original.st_atime_ns, original.st_mtime_ns))
+    assert "TAX RATE CANNOT" in git(repo, "diff", "HEAD"), "control: git itself sees the edit"
+
+    with WorkspaceManager(repo, tmp_path / "run" / "ws") as wm:
+        sha = wm.snapshot_worktree()
+    assert "TAX RATE CANNOT BE NEGATIVE" in git(repo, "show", f"{sha}:src/ledger/tax.py")
 
 
 def test_fr_ws_01_worktrees_created_and_removed(tmp_path: Path) -> None:

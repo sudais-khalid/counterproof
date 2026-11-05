@@ -75,8 +75,10 @@ class WorkspaceManager:
             real_index = self.repo / real_index
         env = {"GIT_INDEX_FILE": str(index)}
         if real_index.is_file():
-            # A copy keeps the stat cache, so `add -A` only rehashes changed files.
-            shutil.copyfile(real_index, index)
+            # A copy keeps the stat cache, so `add -A` only rehashes changed files. copy2 also
+            # keeps the index timestamp: git re-reads "racily clean" entries (files written in
+            # the same second as the index) only when the index looks as old as it really is.
+            shutil.copy2(real_index, index)
         else:
             git.run_git(["read-tree", "HEAD"], self.repo, env=env)
         # No split-index or untracked-cache side files: only objects are added to .git.
