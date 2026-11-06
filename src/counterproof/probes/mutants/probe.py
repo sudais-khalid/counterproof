@@ -19,6 +19,7 @@ from typing import Final
 from counterproof.adapters.base import Adapter, CoverageMap
 from counterproof.change.classify import is_test_path
 from counterproof.config import Config
+from counterproof.llm.roles import LLMSession
 from counterproof.models import (
     BaselineReport,
     ChangeSet,
@@ -30,10 +31,13 @@ from counterproof.models import (
 )
 from counterproof.probes.integrity.probe import added_lines_by_file
 from counterproof.probes.mutants.apply import invalid_reason
+from counterproof.probes.mutants.equivalence import FuzzResult, judge_survivors
+from counterproof.probes.mutants.llm_forge import forge, overfit_candidates
 from counterproof.probes.mutants.rule_forge_py import Candidate, generate
 from counterproof.probes.mutants.runner import MutantJob, run_mutants
 from counterproof.probes.mutants.scope import mutation_scope
 from counterproof.probes.mutants.select import select_mutants
+from counterproof.probes.pyast import Literal
 from counterproof.workspace.manager import Workspace
 
 KILLED: Final = frozenset({"killed", "timeout"})
@@ -89,19 +93,40 @@ def _scopes(
     return scopes
 
 
-def _to_mutant(index: int, candidate: Candidate) -> Mutant:
+@dataclass(frozen=True)
+class LLMContext:
+    """What the LLM half of P3 needs (absent when ``provider = none`` or no key)."""
+
+    session: LLMSession
+    mutant_model: str
+    judge_model: str
+    task_text: str | None
+    sendable: Callable[[str], bool]
+    test_source: Callable[[Sequence[str]], str]
+    fuzz: Callable[[Mutant], FuzzResult] | None = None
+
+
+def _to_mutant(mutant_id: str, candidate: Candidate) -> Mutant:
     return Mutant(
-        id=f"r{index:03d}",
-        source="rule",
+        id=mutant_id,
+        source="llm" if candidate.source == "llm" else "rule",
         operator_or_class=candidate.operator,
         file=candidate.file,
         start_line=candidate.start_line,
         end_line=candidate.end_line,
         original=candidate.original,
         replacement=candidate.replacement,
-        plausibility=None,
+        plausibility=candidate.plausibility,
         status="survived",  # provisional until it has been run
     )
+
+
+def _template_hint(mutant: Mutant, line: int) -> str:
+    template = HINTS.get(
+        mutant.operator_or_class,
+        "Add a test that distinguishes this {bug_class} fault on line {line}.",
+    )
+    return template.format(line=line, bug_class=mutant.operator_or_class)
 
 
 def run_mutation_probe(
@@ -118,6 +143,8 @@ def run_mutation_probe(
     seed: bytes,
     junit_path: Callable[[str], Path],
     timeout_for: Callable[[Sequence[str]], float],
+    test_literals: set[Literal] | None = None,
+    llm: LLMContext | None = None,
 ) -> MutantOutcome:
     started = time.monotonic()
     stable = [t for t in baseline.stable if all(o == "pass" for o in baseline.outcomes.get(t, []))]
@@ -127,11 +154,12 @@ def run_mutation_probe(
         t for t in stable if any(t == c or t.startswith(c + "[") for c in changed_tests)
     ]
 
+    scopes = _scopes(change, head_text, coverage, changed_tests)
     candidates: list[Candidate] = []
-    for path, scope in sorted(_scopes(change, head_text, coverage, changed_tests).items()):
+    for path, scope in sorted(scopes.items()):
         candidates += generate(path, head_text(path), scope)
 
-    filtered = {"candidates": len(candidates), "equivalent": 0, "invalid": 0}
+    filtered: dict[str, int] = {"candidates": len(candidates), "equivalent": 0, "invalid": 0}
     valid: list[Candidate] = []
     for candidate in candidates:
         if candidate.equivalent_reason:  # FR-MU-07 stage 1
@@ -149,10 +177,33 @@ def run_mutation_probe(
             continue
         valid.append(candidate)
 
-    chosen = select_mutants(valid, config.mutants.budget, seed)  # FR-MU-05
+    required: list[Candidate] = []
+    if llm is not None and scopes:
+        # FR-MU-03/04: realistic faults plus the mandatory overfit mutant.
+        changed = added_lines_by_file(change)
+        forged = forge(
+            llm.session,
+            model=llm.mutant_model,
+            scopes=scopes,
+            changed=changed if not test_only else scopes,
+            head_text=head_text,
+            task_text=llm.task_text,
+            test_literals=test_literals or set(),
+            n=config.mutants.llm_budget,
+            sendable=llm.sendable,
+        )
+        filtered["llm_proposed"] = forged.proposed
+        filtered["llm_rejected"] = sum(forged.rejected.values())
+        valid += forged.candidates
+        required = overfit_candidates(forged.candidates)
+
+    chosen = select_mutants(valid, config.mutants.budget, seed, required=required)  # FR-MU-05
     jobs: list[MutantJob] = []
-    for index, candidate in enumerate(chosen, start=1):
-        mutant = _to_mutant(index, candidate)
+    counters = {"rule": 0, "llm": 0}
+    for candidate in chosen:
+        kind = "llm" if candidate.source == "llm" else "rule"
+        counters[kind] += 1
+        mutant = _to_mutant(f"{kind[0]}{counters[kind]:03d}", candidate)
         if test_only:
             tests = changed_stable
         else:
@@ -169,11 +220,21 @@ def run_mutation_probe(
     )
     node_line = {job.mutant.id: c.line for job, c in zip(jobs, chosen, strict=True)}
     mutants = [
-        m.model_copy(update={"hint": HINTS[m.operator_or_class].format(line=node_line[m.id])})
+        m.model_copy(update={"hint": _template_hint(m, node_line[m.id])})
         if m.status == "survived"
         else m
         for m in executed
     ]
+    if llm is not None:
+        # FR-MU-08/09/11/13: judge survivors with their tests; hints from the judge.
+        mutants = judge_survivors(
+            mutants,
+            session=llm.session,
+            model=llm.judge_model,
+            head_text=head_text,
+            test_source=llm.test_source,
+            fuzz=llm.fuzz if config.mutants.fuzz else None,
+        )
     return MutantOutcome(
         result=_score(mutants, config, filtered, time.monotonic() - started),
         mutants=mutants,
@@ -188,6 +249,7 @@ def _score(
     killed = sum(1 for m in mutants if m.status in KILLED)
     survived = [m for m in mutants if m.status == "survived"]
     valid = killed + len(survived)
+    excluded = [m for m in mutants if m.status in {"equivalent", "probably_equivalent"}]
     metrics: dict[str, float] = {
         "candidates": float(filtered.get("candidates", 0)),
         "filtered_equivalent": float(filtered.get("equivalent", 0)),
@@ -202,16 +264,20 @@ def _score(
         "high_plausibility_survivors": float(
             sum(1 for m in survived if m.source == "llm" and (m.plausibility or 0) >= 4)
         ),
+        "equivalent": float(len(excluded)),
+        "llm_proposed": float(filtered.get("llm_proposed", 0)),
+        "llm_rejected": float(filtered.get("llm_rejected", 0)),
     }
     signals: list[str] = []
     if valid:
         ratio = killed / valid
         metrics["kill_ratio"] = round(ratio, 6)
-        rule = [m for m in mutants if m.source == "rule" and m.status in KILLED | {"survived"}]
-        if rule:
-            metrics["kill_ratio_rule"] = round(
-                sum(1 for m in rule if m.status in KILLED) / len(rule), 6
-            )
+        for source in ("rule", "llm"):  # FR-MU-12: reported separately
+            group = [m for m in mutants if m.source == source and m.status in KILLED | {"survived"}]
+            if group:
+                metrics[f"kill_ratio_{source}"] = round(
+                    sum(1 for m in group if m.status in KILLED) / len(group), 6
+                )
         if ratio >= config.mutants.proven_at_least:
             signals.append("MU_STRONG")
         elif ratio >= config.mutants.unproven_below:
@@ -222,6 +288,8 @@ def _score(
         signals.append("MU_NO_MUTANTS")
     if valid < 3:
         signals.append("MU_FEW_MUTANTS")
+    if any(m.operator_or_class == "overfit" and m.source == "llm" for m in survived):
+        signals.append("MU_OVERFIT_SURVIVED")  # FR-MU-04: the tests are too narrow
     findings = [
         Finding(
             rule_id="MU-SURVIVOR",

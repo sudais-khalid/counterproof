@@ -72,6 +72,10 @@ class Adapter(Protocol):
 
     def failure_kind(self, case: JUnitCase) -> FailureKind: ...
 
+    def run_script(
+        self, ws: Workspace, script: Path, args: list[str], *, timeout_s: float = 120.0
+    ) -> str | None: ...
+
 
 _COLLECTION_HINTS: Final = re.compile(
     r"(collection failure|ERROR collecting|SyntaxError|IndentationError|"

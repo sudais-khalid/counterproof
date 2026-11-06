@@ -317,3 +317,12 @@ def test_fr_mu_12_no_valid_mutants() -> None:
     assert result.status == "inconclusive"
     assert result.signals == ["MU_NO_MUTANTS", "MU_FEW_MUTANTS"]
     assert "kill_ratio" not in result.metrics
+
+
+def test_fr_mu_05_soft_diversity_fills_the_budget_for_one_line_changes() -> None:
+    one_line = _mutants({11})  # five candidates, all on line 11
+    assert len(one_line) >= 4
+    chosen = select_mutants(one_line, 4, b"" * 16)
+    assert len(chosen) == 4, "the budget is filled once diversity is exhausted"
+    spread = select_mutants(_candidates(), 6, b"" * 16)
+    assert max(sum(1 for c in spread if c.line == line) for line in {c.line for c in spread}) <= 2

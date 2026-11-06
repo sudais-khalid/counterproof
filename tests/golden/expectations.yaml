@@ -9,7 +9,9 @@
 # verdict / rule_id are the targets for the full pipeline (full profile, LLM enabled).
 # A list means any of those verdicts is acceptable. Golden verdict tests switch on in M3
 # (provider = none) and M4 (recorded LLM cassettes); `provider_none` holds the rule-only
-# expectation, observed with seed 00..00 in M3 and explained per variant.
+# expectation, observed with seed 00..00 in M3 and explained per variant. `provider_llm`
+# holds the verdict with recorded DeepSeek output (deepseek-v4-pro forge, deepseek-flash
+# judge; cassettes in tests/cassettes/py_ledger, recorded 2026-11-06, full profile).
 #
 # red_on_base: the variant's new or changed tests that must FAIL when transplanted onto the
 # base source. These are checked today by tests/integration/test_fixture_py_ledger.py.
@@ -25,8 +27,10 @@ repos:
           honest:
             verdict: PROVEN
             rule_id: R-PROVEN
-            provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
-            provider_none_why: "equivalent boundary mutant `discount >= cap` survives (at equality cap == discount); the M4 equivalence judge is expected to remove it"
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_none_why: "6/7 rule mutants killed (0.86); the survivor `discount >= cap` is equivalent (at equality cap == discount)"
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_llm_why: "6/6 killed; 2 judged equivalent (boundary at equality, overfit with fallback)"
             red_on_base:
               - tests/test_discounts.py::test_discount_is_capped
               - tests/test_discounts.py::test_large_discount_on_small_order_is_capped
@@ -34,12 +38,14 @@ repos:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-07
             red_on_base: [tests/test_discounts.py::test_discount_is_capped]
           weakened:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-01
             weakened_test: tests/test_discounts.py::test_discount_below_cap_is_unchanged
             red_on_base: [tests/test_discounts.py::test_discount_is_capped]
@@ -48,6 +54,8 @@ repos:
             rule_id: null
             provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
             provider_none_why: "`rate > 20` -> `rate >= 20` survives: no test uses 20%"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "4/8 killed: `rate > 20` boundary/constant mutants survive, no test at or below 20%"
             note: caps only when percent > 20; 10% of 500.00 with a 30.00 cap is not capped
             red_on_base: [tests/test_discounts.py::test_discount_is_capped]
       T2-round-half-up:
@@ -59,6 +67,8 @@ repos:
             rule_id: R-PROVEN
             provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}
             provider_none_why: "the fix is a rounding-mode constant; no rule operator mutates it (1 mutant)"
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_llm_why: "5/5 killed; 2 judged equivalent"
             red_on_base:
               - tests/test_rounding.py::test_round_half_up_rounds_exact_half_up
               - tests/test_rounding.py::test_round_half_up_rounds_negative_half_away_from_zero
@@ -67,12 +77,14 @@ repos:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-07
             red_on_base: [tests/test_rounding.py::test_round_half_up_rounds_exact_half_up]
           weakened:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-03
             weakened_test: tests/test_rounding.py::test_round_half_up_below_half_goes_down
             red_on_base: [tests/test_rounding.py::test_round_half_up_rounds_exact_half_up]
@@ -81,6 +93,8 @@ repos:
             rule_id: null
             provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
             provider_none_why: "`value >= 1` survives: no test rounds a value in [0, 1)"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "4/8 killed: `value >= 1` and branch-order mutants survive, negative halves untested"
             note: half-up only for non-negative values; -2.665 still rounds to -2.66
             red_on_base: [tests/test_rounding.py::test_round_half_up_rounds_exact_half_up]
       T3-allocate-remainder:
@@ -92,6 +106,8 @@ repos:
             rule_id: R-PROVEN
             provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
             provider_none_why: "8/8 rule mutants killed"
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_llm_why: "8/8 killed"
             red_on_base:
               - tests/test_money.py::test_allocate_parts_add_up_to_total
               - tests/test_money.py::test_allocate_spreads_leftover_cents_one_at_a_time
@@ -100,12 +116,14 @@ repos:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-07
             red_on_base: [tests/test_money.py::test_allocate_parts_add_up_to_total]
           weakened:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-02
             weakened_test: tests/test_money.py::test_allocate_keeps_currency
             red_on_base: [tests/test_money.py::test_allocate_parts_add_up_to_total]
@@ -114,6 +132,8 @@ repos:
             rule_id: null
             provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
             provider_none_why: "MISSED with rule mutants only: 5/5 killed; needs M4/M5"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "5/8 killed: LLM mutants that misplace leftover cents survive, only 100.00 / [1,1,1] is tested"
             note: all leftover cents go to the first part; 0.10 split six ways is wrong
             red_on_base: [tests/test_money.py::test_allocate_parts_add_up_to_total]
       T4-inclusive-tax:
@@ -125,6 +145,8 @@ repos:
             rule_id: R-PROVEN
             provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
             provider_none_why: "3/3 rule mutants killed"
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_llm_why: "6/6 killed; 2 judged equivalent"
             red_on_base:
               - tests/test_tax.py::test_tax_from_gross_extracts_included_tax
               - tests/test_tax.py::test_tax_from_gross_at_seven_percent
@@ -133,12 +155,14 @@ repos:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-07
             red_on_base: [tests/test_tax.py::test_tax_from_gross_extracts_included_tax]
           weakened:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-05
             weakened_test: tests/test_tax.py::test_tax_from_gross_extracts_included_tax
             # The neutralised assertion passes on any code, so nothing is red on base.
@@ -146,8 +170,10 @@ repos:
           partial:
             verdict: [UNPROVEN, WEAK]
             rule_id: null
-            provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}
-            provider_none_why: "only 2 valid rule mutants on the single changed line"
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
+            provider_none_why: "MISSED with rule mutants only: 3/3 killed; no rule operator varies the hard-wired 1.2 against the rate"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "6/7 killed: the general formula value / (1 + value) survives, no rate but 20% is tested"
             note: divides by a hard-wired 1.2, so only the 20% rate is right
             red_on_base: [tests/test_tax.py::test_tax_from_gross_extracts_included_tax]
       T5-cash-rounding:
@@ -159,6 +185,8 @@ repos:
             rule_id: R-PROVEN
             provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
             provider_none_why: "4/4 rule mutants killed"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "7/8 killed: a special case for 1.03 that ignores `step` survives (real but minor gap)"
             red_on_base:
               - tests/test_rounding.py::test_cash_round_goes_to_nearest_step
               - tests/test_rounding.py::test_cash_round_exact_half_goes_up
@@ -167,12 +195,14 @@ repos:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-07
             red_on_base: [tests/test_rounding.py::test_cash_round_goes_to_nearest_step]
           weakened:
             verdict: REFUTED
             rule_id: R-REF-INTEGRITY
             provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}
             integrity_rule: FR-IN-05
             weakened_test: tests/test_rounding.py::test_cash_round_small_remainder_goes_down
             red_on_base: [tests/test_rounding.py::test_cash_round_goes_to_nearest_step]
@@ -181,5 +211,7 @@ repos:
             rule_id: null
             provider_none: {verdict: PROVEN, rule_id: R-PROVEN}
             provider_none_why: "MISSED with rule mutants only: ROUND_HALF_DOWN is a constant no operator touches"
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}
+            provider_llm_why: "7/8 killed: ROUND_HALF_EVEN survives, no exact half of the step is tested"
             note: rounds exact halves down (ROUND_HALF_DOWN); 1.025 gives 1.00, not 1.05
             red_on_base: [tests/test_rounding.py::test_cash_round_goes_to_nearest_step]

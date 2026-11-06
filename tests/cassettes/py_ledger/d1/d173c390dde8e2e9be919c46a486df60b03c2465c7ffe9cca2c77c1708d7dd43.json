@@ -1,0 +1,12 @@
+{
+  "key": "d173c390dde8e2e9be919c46a486df60b03c2465c7ffe9cca2c77c1708d7dd43",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.99, \"distinguishing_input\": \"none: value / (1 + value) and value / (value + 1) are identical for all inputs since addition is commutative, so no input distinguishes them\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 545,
+  "tokens_out": 54,
+  "user": "Original:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    value = _rate(rate)\n    return gross.times(value / (1 + value))\n```\n\nMutant:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    value = _rate(rate)\n    return gross.times(value / (value + 1))\n```\n\nTests that pass on both versions:\n```python\ndef test_tax_from_gross_at_seven_percent():\n    assert tax_from_gross(Money.of(\"107.00\"), \"0.07\") == Money.of(\"7.00\")\n\ndef test_tax_from_gross_extracts_included_tax():\n    assert tax_from_gross(Money.of(\"120.00\"), Decimal(\"0.20\")) == Money.of(\"20.00\")\n\ndef test_tax_from_gross_inverts_add_tax():\n    for net in (\"10.00\", \"33.33\", \"250.00\"):\n        gross = add_tax(Money.of(net), \"0.19\")\n        assert tax_from_gross(gross, \"0.19\") == gross - Money.of(net)\n\ndef test_zero_rate_has_no_tax():\n    assert tax_from_gross(Money.of(\"50.00\"), 0) == Money.of(\"0.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

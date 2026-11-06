@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import partial
@@ -34,12 +34,16 @@ from counterproof.evidence.seed import (
 from counterproof.evidence.store import EvidenceStore, cache_root, runs_root
 from counterproof.impact.baseline import analyse_baseline, mutant_timeout_s
 from counterproof.impact.selector import select_tests
+from counterproof.llm.factory import build_session
+from counterproof.llm.redact import may_send
+from counterproof.llm.roles import LLMSession
 from counterproof.log import attach_run_log, detach_run_log, get_logger
 from counterproof.models import (
     WORKTREE,
     BaselineReport,
     ChangeSet,
     Intent,
+    LLMUsage,
     ProbeResult,
     RunManifest,
     RunResult,
@@ -48,8 +52,10 @@ from counterproof.models import (
 )
 from counterproof.probes.integrity.probe import changed_test_file_pairs, run_integrity
 from counterproof.probes.integrity.python_rules import TestFilePair, changed_test_ids
-from counterproof.probes.mutants.probe import run_mutation_probe
-from counterproof.probes.pyast import added_symbols, module_name
+from counterproof.probes.mutants.fuzz import make_fuzzer
+from counterproof.probes.mutants.probe import LLMContext, run_mutation_probe
+from counterproof.probes.pyast import Literal as CodeLiteral
+from counterproof.probes.pyast import added_symbols, analyse_test_file, module_name
 from counterproof.probes.red_green import run_red_green
 from counterproof.verdict.rules import DecisionInput, decide, early_verdict
 from counterproof.workspace.env import dropped_names, scrub_env
@@ -143,7 +149,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
                 user_intent=req.intent,
             )
             store.write_json("change.json", change)
-            verdict, probes = _pipeline(store, workspaces, change, config, seed)
+            verdict, probes, llm_usage = _pipeline(store, workspaces, change, config, seed)
             if req.keep:
                 for ws in workspaces.workspaces.values():
                     log.warning("kept worktree %s: %s", ws.name, ws.root)
@@ -158,6 +164,7 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
             probes=probes,
             verdict=verdict,
             duration_s=round(time.monotonic() - started, 3),
+            llm=llm_usage,
         )
         log.info("verdict %s (%s)", verdict.verdict, verdict.rule_id)
     finally:
@@ -186,18 +193,21 @@ def _pipeline(
     change: ChangeSet,
     config: Config,
     seed: bytes,
-) -> tuple[Verdict, list[ProbeResult]]:
+) -> tuple[Verdict, list[ProbeResult], LLMUsage]:
     """Section 6.3 steps 2-7: workspaces, baseline, probes (P2, P1, P3), verdict."""
-    llm = config.llm.provider != "none"
+    session, models, llm_note = build_session(config)
+    llm = session is not None
+    log.info("LLM: %s", llm_note)
     prepared = _prepare(store, workspaces, change, config)
     if isinstance(prepared, str):
         inp = DecisionInput(intent=change.intent, build_error=prepared, llm_enabled=llm)
-        return decide(inp, config), []
+        return decide(inp, config), [], _usage(store, config, session, llm_note)
 
     ctx = prepared
     early = early_verdict(DecisionInput(change.intent, baseline=ctx.baseline), config)
     if early is not None:
-        return early, []  # FR-IS-04/05: no proof is possible on a flaky or red head
+        # FR-IS-04/05: no proof is possible on a flaky or red head
+        return early, [], _usage(store, config, session, llm_note)
 
     repo = change.repo_root
     read_base = partial(git.show_file, repo, change.base_sha)
@@ -205,7 +215,14 @@ def _pipeline(
     probes: list[ProbeResult] = []
 
     def decision() -> DecisionInput:
-        return DecisionInput(change.intent, baseline=ctx.baseline, probes=probes, llm_enabled=llm)
+        skipped = len(session.budget.skipped) if session is not None else 0
+        return DecisionInput(
+            change.intent,
+            baseline=ctx.baseline,
+            probes=probes,
+            llm_enabled=llm,
+            llm_skipped=skipped,
+        )
 
     # P2 first: static and cheap (PRD 6.2, cheap first, expensive last).
     selected_files = sorted({t.partition("::")[0] for t in ctx.selection.tests})
@@ -223,7 +240,7 @@ def _pipeline(
     if refuted is not None and config.run.short_circuit:
         for name in ("red_green", "mutants"):
             probes.append(ProbeResult(probe=name, status="skipped", signals=["SHORT_CIRCUIT"]))
-        return refuted, probes
+        return refuted, probes, _usage(store, config, session, llm_note)
 
     pairs = changed_test_file_pairs(change, read_base, read_head)
     changed_tests = changed_test_ids(pairs)
@@ -256,9 +273,86 @@ def _pipeline(
             config=config,
             changed_tests=changed_tests,
             seed=seed,
+            llm=_llm_context(
+                store, ctx, change=change, config=config, session=session, models=models
+            ),
         )
     )
-    return decide(decision(), config), probes
+    return decide(decision(), config), probes, _usage(store, config, session, llm_note)
+
+
+def _usage(store: EvidenceStore, config: Config, session: LLMSession | None, note: str) -> LLMUsage:
+    if session is None:
+        return LLMUsage(provider="none", note=note)
+    calls = session.calls
+    store.write_json("llm_calls.json", [vars(c) for c in calls])
+    return LLMUsage(
+        provider=config.llm.provider,
+        note=note,
+        models=sorted({c.model for c in calls}),
+        calls=len(calls),
+        ok=sum(1 for c in calls if c.ok),
+        cached=sum(1 for c in calls if c.cached),
+        tokens=session.budget.tokens,
+        usd=round(session.budget.usd, 6),
+        redactions=sum(c.redactions for c in calls),
+        skipped=list(session.budget.skipped),
+        errors=[f"{c.role}: {c.error}" for c in calls if not c.ok and c.error],
+    )
+
+
+def _llm_context(
+    store: EvidenceStore,
+    ctx: _Context,
+    *,
+    change: ChangeSet,
+    config: Config,
+    session: LLMSession | None,
+    models: dict[str, str],
+) -> tuple[LLMContext | None, set[CodeLiteral]]:
+    """The LLM half of P3 plus the test literals FR-IN-07 and FR-MU-04 both use."""
+    literals: set[CodeLiteral] = set()
+    tests_by_file: dict[str, dict[str, str]] = {}
+    for path in sorted({t.partition("::")[0] for t in ctx.selection.tests}):
+        target = ctx.head.root / path
+        analysed = (
+            analyse_test_file(target.read_text(encoding="utf-8")) if target.is_file() else None
+        )
+        if analysed is not None:
+            literals |= analysed.literals
+            tests_by_file[path] = {k: fn.code for k, fn in analysed.tests.items()}
+    if session is None:
+        return None, literals
+
+    def test_source(nodeids: Sequence[str]) -> str:
+        parts = []
+        for nodeid in nodeids:
+            file, _, rest = nodeid.partition("::")
+            code = tests_by_file.get(file, {}).get(rest.split("[", 1)[0])
+            if code:
+                parts.append(code.strip())
+        return "\n\n".join(dict.fromkeys(parts))
+
+    adapter = ctx.adapter
+    fuzz = make_fuzzer(
+        head_text=lambda p: _read_head(ctx, p),
+        literals=literals,
+        run_script=lambda script, args: adapter.run_script(ctx.head, script, args),
+        script_dir=store.run_dir / "fuzz",
+    )
+    excluded = list(config.paths.exclude)
+    return (
+        LLMContext(
+            session=session,
+            mutant_model=models["mutant"],
+            judge_model=models["judge"],
+            task_text=change.task_text,
+            sendable=lambda path: may_send(path, excluded),
+            test_source=test_source,
+            fuzz=fuzz,
+        ),
+        literals,
+    )
 
 
 def _red_green(
@@ -309,14 +403,10 @@ def _mutants(
     config: Config,
     changed_tests: list[str],
     seed: bytes,
+    llm: tuple[LLMContext | None, set[CodeLiteral]],
 ) -> ProbeResult:
-    texts: dict[str, str] = {}
-
     def head_text(path: str) -> str:
-        # Read from the head worktree: byte-exact, so line ranges match what runs.
-        if path not in texts:
-            texts[path] = (ctx.head.root / path).read_bytes().decode("utf-8", "replace")
-        return texts[path]
+        return _read_head(ctx, path)
 
     def workers(count: int) -> list[Workspace]:
         # FR-WS-03: one head worktree per worker, created before any mutant runs.
@@ -335,6 +425,8 @@ def _mutants(
         seed=seed,
         junit_path=lambda name: store.path(f"mutants/{name}.xml"),
         timeout_for=lambda tests: mutant_timeout_s(ctx.baseline, tests),
+        test_literals=llm[1],
+        llm=llm[0],
     )
     for mutant in outcome.mutants:
         for name in (mutant.id, f"{mutant.id}-rerun"):
@@ -348,6 +440,12 @@ def _mutants(
     )
     store.write_json("probes/mutants.json", outcome.result)
     return outcome.result
+
+
+def _read_head(ctx: _Context, path: str) -> str:
+    """Byte-exact head file text (no newline translation): mutant line ranges and original
+    text must match what runs, including CRLF checkouts on Windows."""
+    return (ctx.head.root / path).read_bytes().decode("utf-8", "replace")
 
 
 def _covering_by_file(

@@ -72,6 +72,7 @@ class ModeOpt(enum.StrEnum):
 class ProviderOpt(enum.StrEnum):
     anthropic = "anthropic"
     openai = "openai"
+    deepseek = "deepseek"
     ollama = "ollama"
     none = "none"
 

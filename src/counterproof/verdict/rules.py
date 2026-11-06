@@ -46,6 +46,8 @@ class DecisionInput:
     baseline: BaselineReport | None = None
     probes: Sequence[ProbeResult] = ()
     llm_enabled: bool = False
+    llm_skipped: int = 0
+    """LLM calls the budget did not allow (the certificate must say so)."""
 
     def probe(self, name: ProbeName) -> ProbeResult | None:
         return next((p for p in self.probes if p.probe == name), None)
@@ -244,8 +246,11 @@ def confidence_note(inp: DecisionInput) -> str:
         parts.append(f"Tested against {valid} plausible fault(s) on the changed lines")
     if not inp.llm_enabled:
         parts.append("LLM disabled: rule mutants only, no blind oracle")
-    elif inp.probe("blind_oracle") is None:
-        parts.append("blind oracle not run")
+    else:
+        if inp.llm_skipped:
+            parts.append(f"LLM budget exhausted: {inp.llm_skipped} call(s) skipped")
+        if inp.probe("blind_oracle") is None:
+            parts.append("blind oracle not run")
     if inp.probe("claim_audit") is None:
         parts.append("claim audit not run")
     parts.append("not a proof of full program correctness")

@@ -338,6 +338,18 @@ class PytestAdapter:
     def failure_kind(self, case: JUnitCase) -> FailureKind:
         return classify_failure(case)
 
+    def run_script(
+        self, ws: Workspace, script: Path, args: list[str], *, timeout_s: float = 120.0
+    ) -> str | None:
+        """Run a helper script in the project's interpreter with the worktree importable."""
+        proc = run_process(
+            [self.interpreter, str(script), *args],
+            cwd=script.parent,
+            env=self.child_env(ws),
+            timeout_s=timeout_s,
+        )
+        return None if proc.timed_out or proc.exit_code != 0 else proc.stdout
+
     # -- coverage ----------------------------------------------------------------------
 
     def coverage_map(

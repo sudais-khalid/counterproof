@@ -23,7 +23,7 @@ from counterproof.models import ProbeName
 Profile = Literal["fast", "full", "paranoid"]
 Mode = Literal["audit", "coach"]
 SandboxKind = Literal["none", "docker"]
-ProviderName = Literal["anthropic", "openai", "ollama", "none"]
+ProviderName = Literal["anthropic", "openai", "deepseek", "ollama", "none"]
 
 CONFIG_FILENAME: Final = "counterproof.toml"
 
@@ -100,11 +100,17 @@ class RunConfig(_Section):
 class LLMConfig(_Section):
     # Local-first default (PRD goal 4): no provider until the user opts in.
     provider: ProviderName = "none"
-    mutant_model: str = "claude-sonnet-5-5"
-    judge_model: str = "claude-haiku-5-5"
+    # "auto" picks the provider's default model for each role (llm/provider.py).
+    mutant_model: str = "auto"
+    judge_model: str = "auto"
     oracle_model: str = "auto"
     budget_usd: float = Field(default=0.30, ge=0.0)
     budget_tokens: int = Field(default=400_000, ge=0)
+    # Wall-clock budget for LLM work; unset means the profile's target time (section 5.4).
+    budget_seconds: float | None = Field(default=None, gt=0.0)
+    # DeepSeek only: thinking mode (off by default: cheaper, faster, honours temperature).
+    thinking: bool = False
+    base_url: str | None = None
 
 
 class ImpactConfig(_Section):

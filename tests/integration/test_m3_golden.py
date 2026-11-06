@@ -129,7 +129,8 @@ def test_certificate_report_explain_and_fail_on(
     assert cert.startswith("## Counterproof certificate: WEAK  (rule R-WEAK-SURVIVOR)")
     assert "| Red-green    | PASS: 1 of 1 test(s) fail on the old code" in cert
     assert "| Integrity    | OK (0 findings) |" in cert
-    assert "| Mutants      | 2/4 killed (0.50). 2 survivor(s) |" in cert
+    # Soft diversity cap (approved in M4): 8 of 11 candidates run; still the untested 20% gap.
+    assert "| Mutants      | 5/8 killed (0.62). 3 survivor(s) |" in cert
     assert "`if cap is not None and rate >= 20 and discount > cap:`" in cert
     assert "Missing test: Add a test where the two sides of the comparison" in cert
     assert "LLM disabled: rule mutants only" in cert

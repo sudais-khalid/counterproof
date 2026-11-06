@@ -9,12 +9,15 @@ sandbox = "none"            # none | docker
 short_circuit = true
 
 [llm]
-provider = "none"           # anthropic | openai | ollama | none (default: none, fully local)
-mutant_model = "claude-sonnet-5-5"
-judge_model = "claude-haiku-5-5"
+provider = "none"           # anthropic | openai | deepseek | ollama | none (default: none)
+mutant_model = "auto"       # auto: claude-sonnet-5-5 (anthropic), deepseek-v4-pro (deepseek)
+judge_model = "auto"        # auto: claude-haiku-5-5 (anthropic), deepseek-flash (deepseek)
 oracle_model = "auto"       # auto = different family from code author when known
 budget_usd = 0.30
 budget_tokens = 400000
+# budget_seconds = 300      # LLM wall-clock budget; default: the profile's target time
+thinking = false            # deepseek only: enable thinking mode
+# base_url = "http://127.0.0.1:11434/v1"   # override the provider endpoint
 
 [impact]
 max_tests = 400

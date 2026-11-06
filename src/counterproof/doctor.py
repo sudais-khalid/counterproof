@@ -15,6 +15,7 @@ from typing import Final, Literal
 from counterproof import git
 from counterproof.errors import UsageError
 from counterproof.evidence.store import cache_root, runs_root
+from counterproof.llm.credentials import api_key, credentials_path
 
 Status = Literal["ok", "info", "warn", "fail"]
 Which = Callable[[str], str | None]
@@ -91,6 +92,8 @@ def _optional_tool(name: str, exe: str, purpose: str, which: Which) -> Check:
 def _check_provider(name: str, env_var: str) -> Check:
     if os.environ.get(env_var):
         return Check(f"provider: {name}", "ok", f"{env_var} is set")
+    if api_key(name, env={}):
+        return Check(f"provider: {name}", "ok", f"key found in {credentials_path()}")
     return Check(f"provider: {name}", "info", f"{env_var} not set (optional)")
 
 
@@ -115,6 +118,7 @@ def run_checks(
         _optional_tool("docker", "docker", "optional, for --sandbox docker", which),
         _check_provider("anthropic", "ANTHROPIC_API_KEY"),
         _check_provider("openai", "OPENAI_API_KEY"),
+        _check_provider("deepseek", "DEEPSEEK_API_KEY"),
         Check(
             "provider: ollama",
             "ok" if ollama else "info",

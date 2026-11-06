@@ -1,0 +1,12 @@
+{
+  "key": "b52d5042719f29b8ba0217b16ba68e49a26b47ad547254d34734e6f8ea1a3983",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.95, \"distinguishing_input\": \"none: multiplying by Decimal('1.0') is an identity operation, so both versions return the same Money for every input\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 435,
+  "tokens_out": 46,
+  "user": "Original:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    return gross.times(_rate(rate) / Decimal('1.2'))\n```\n\nMutant:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    return gross.times(_rate(rate) / Decimal('1.2')).times(Decimal('1.0'))\n```\n\nTests that pass on both versions:\n```python\ndef test_tax_from_gross_extracts_included_tax():\n    assert tax_from_gross(Money.of(\"120.00\"), Decimal(\"0.20\")) == Money.of(\"20.00\")\n\ndef test_zero_rate_has_no_tax():\n    assert tax_from_gross(Money.of(\"50.00\"), 0) == Money.of(\"0.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

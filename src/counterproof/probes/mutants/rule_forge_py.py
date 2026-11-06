@@ -77,10 +77,16 @@ class Candidate:
     original: str
     replacement: str
     equivalent_reason: str | None = None
+    source: str = "rule"
+    plausibility: int | None = None
+    """LLM-assigned plausibility (1-5); rule mutants use the operator prior instead."""
+    rationale: str = ""
 
     @property
     def prior(self) -> int:
-        return PRIORS[self.operator]
+        if self.plausibility is not None:
+            return self.plausibility
+        return PRIORS.get(self.operator, 3)
 
 
 # -- constant folding (FR-MU-07 stage 1) ------------------------------------------------

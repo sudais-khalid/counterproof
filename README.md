@@ -17,14 +17,14 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M3).** Counterproof resolves the change, snapshots your
+> **Status: pre-alpha (milestone M4).** Counterproof resolves the change, snapshots your
 > working tree without touching it, builds isolated worktrees, selects impacted tests from
-> coverage and runs the head baseline. Three probes run: **integrity** (weakened, skipped or
-> neutralised tests; code that special-cases test inputs), **red-green** (the change's tests
-> must fail on the old code for a behavioural reason) and **mutants** (rule-based wrong
-> versions of only the changed lines, run in parallel worktrees). The deterministic verdict
-> engine implements all 14 rules of PRD section 8 and prints a Proof Certificate. LLM mutants,
-> the blind oracle and the claim audit arrive in M4 and M5. See [docs/PRD.md](docs/PRD.md).
+> coverage and runs the head baseline. Three probes run: **integrity**, **red-green** and
+> **mutants**. Mutants are rule-based and, with an LLM provider, also LLM-written realistic
+> faults on the changed lines, including an overfit mutant; survivors pass a 3-stage
+> equivalence filter (static, LLM judge, Hypothesis fuzz). The deterministic verdict engine
+> implements all 14 rules of PRD section 8. The blind oracle and claim audit arrive in M5.
+> See [docs/PRD.md](docs/PRD.md).
 
 ```sh
 counterproof verify                      # certificate in the terminal, exit code = verdict
@@ -37,6 +37,25 @@ counterproof explain RUN_ID r002         # diff, tests run and hint for one muta
 Waive an integrity finding with an inline comment on (or just above) the flagged line:
 `# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver
 added by the change under test is reported as a proposal, so an agent cannot excuse itself.
+
+## LLM providers
+
+LLMs are optional: with `llm.provider = "none"` (the default) nothing leaves your machine.
+
+| Provider | Key | Default models (`auto`) |
+|---|---|---|
+| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-v4-pro` (mutants), `deepseek-flash` (judge) |
+| `anthropic` | `ANTHROPIC_API_KEY` or `ant auth login` | `claude-sonnet-5-5`, `claude-haiku-5-5` |
+| `openai` | `OPENAI_API_KEY` | set `mutant_model` / `judge_model` explicitly |
+| `ollama` | none (local) | `qwen2.5-coder:7b` |
+
+Keys come from the environment or from `credentials.toml` in your user cache directory
+(`%LOCALAPPDATA%\counterproof` on Windows, `~/.cache/counterproof` elsewhere), never from the
+repository. Only the changed source lines, their context, the task text and test snippets are
+sent; secrets are redacted, and `.env` files, lockfiles and `paths.exclude` are never sent.
+Every run has hard token, USD (`llm.budget_usd`, default $0.30) and time limits; work the
+budget does not allow is skipped and listed on the certificate, which always states which
+provider saw code. Responses are cached, so re-running on the same change is free.
 
 ## Install (development)
 

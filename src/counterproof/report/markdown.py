@@ -76,6 +76,9 @@ def _mutants(probe: ProbeResult) -> str:
     survived = int(m.get("survived", 0))
     if survived:
         text += f". {survived} survivor(s)"
+    equivalent = int(m.get("equivalent", 0))
+    if equivalent:
+        text += f"; {equivalent} judged equivalent and excluded"
     high = int(m.get("high_plausibility_survivors", 0))
     if high:
         text += f", {high} high-plausibility"
@@ -86,7 +89,7 @@ def _probe_cell(name: str, probes: Mapping[str, ProbeResult], bundle: RunBundle)
     probe = probes.get(name)
     if probe is None:
         if name == "blind_oracle":
-            return "not run (needs an LLM provider; arrives in M5)"
+            return "not run (arrives in M5)"
         if name == "claim_audit":
             return "not run (arrives in M5)"
         return "not run"
@@ -108,6 +111,24 @@ def _findings(findings: Sequence[Finding]) -> list[str]:
         note = f" ({proposed[0]})" if proposed else ""
         lines.append(f"- [{f.severity}] {f.rule_id} {where}: {f.message}{waiver}{note}")
     return lines
+
+
+def _llm_line(bundle: RunBundle) -> str:
+    """PRD 15.2: the certificate always states which provider saw code."""
+    llm = bundle.manifest.llm
+    if llm is None or llm.provider == "none":
+        note = f" ({llm.note})" if llm is not None and llm.note else ""
+        return f"LLM: not used{note}. No code was sent to any provider."
+    text = (
+        f"LLM: {llm.provider} ({', '.join(llm.models) or 'no calls'}): {llm.calls} call(s), "
+        f"{llm.cached} from cache, {llm.tokens:,} tokens, ${llm.usd:.3f}. "
+        f"Changed code was sent to {llm.provider}; {llm.redactions} secret(s) redacted."
+    )
+    if llm.skipped:
+        text += f" Budget skipped: {'; '.join(llm.skipped[:3])}."
+    if llm.errors:
+        text += f" Failed: {'; '.join(llm.errors[:3])}."
+    return text
 
 
 def render_markdown(bundle: RunBundle) -> str:
@@ -156,6 +177,7 @@ def render_markdown(bundle: RunBundle) -> str:
 
     if verdict.confidence_note:
         out += ["", f"Scope: {verdict.confidence_note}"]
+    out += ["", _llm_line(bundle)]
     out += [
         "",
         f"Evidence: run {manifest.run_id}  manifest sha256 {bundle.manifest_sha256[:12]}  "

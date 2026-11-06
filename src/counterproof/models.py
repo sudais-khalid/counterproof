@@ -127,6 +127,8 @@ class Mutant(_Strict):
     hint: str | None = None
     covering_tests: list[str] = Field(default_factory=list)
     """Tests run against this mutant (FR-MU-10)."""
+    equivalence_note: str | None = None
+    """Equivalence judge / fuzz outcome for survivors (FR-MU-08, FR-MU-09)."""
 
 
 class Finding(_Strict):
@@ -236,6 +238,22 @@ class BaselineReport(_Strict):
         return [t for t in self.selected if t not in excluded]
 
 
+class LLMUsage(_Strict):
+    """Which provider saw code, what it cost and what the budget skipped (PRD 9, 15.2)."""
+
+    provider: str
+    note: str = ""
+    models: list[str] = Field(default_factory=list)
+    calls: int = 0
+    ok: int = 0
+    cached: int = 0
+    tokens: int = 0
+    usd: float = 0.0
+    redactions: int = 0
+    skipped: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+
+
 class RunManifest(_Strict):
     run_id: str
     tool_version: str
@@ -249,3 +267,4 @@ class RunManifest(_Strict):
     """Relative path inside the run directory -> sha256 of its bytes."""
     duration_s: float = Field(default=0.0, ge=0.0)
     """Wall-clock time of the run (excluded from determinism comparisons)."""
+    llm: LLMUsage | None = None
