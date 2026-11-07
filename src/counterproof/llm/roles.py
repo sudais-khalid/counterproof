@@ -26,7 +26,12 @@ from counterproof.log import get_logger
 log = get_logger("llm")
 S = TypeVar("S", bound=BaseModel)
 # Current prompt version per role; older files stay in prompts/ for history and replay.
-PROMPT_VERSIONS: Final[dict[str, str]] = {"mutant_forge": "v2", "equivalence_judge": "v1"}
+PROMPT_VERSIONS: Final[dict[str, str]] = {
+    "mutant_forge": "v2",
+    "equivalence_judge": "v1",
+    "oracle_writer": "v1",
+    "triage_judge": "v1",
+}
 _PLACEHOLDER: Final = re.compile(r"\{\{(\w+)\}\}")
 _FENCE: Final = re.compile(r"^```(?:json)?\s*|\s*```$", re.S)
 

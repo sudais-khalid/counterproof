@@ -249,10 +249,17 @@ def confidence_note(inp: DecisionInput) -> str:
     else:
         if inp.llm_skipped:
             parts.append(f"LLM budget exhausted: {inp.llm_skipped} call(s) skipped")
-        if inp.probe("blind_oracle") is None:
+        oracle = inp.probe("blind_oracle")
+        if oracle is None or oracle.status != "ok":
             parts.append("blind oracle not run")
-    if inp.probe("claim_audit") is None:
+        else:
+            agree, valid = int(oracle.metrics.get("agree", 0)), int(oracle.metrics.get("valid", 0))
+            parts.append(f"{agree}/{valid} blind-oracle test(s) agree")
+    claims = inp.probe("claim_audit")
+    if claims is None:
         parts.append("claim audit not run")
+    elif claims.status == "skipped":
+        parts.append("agent claims not audited (no usable transcript)")
     parts.append("not a proof of full program correctness")
     return "; ".join(parts) + "."
 

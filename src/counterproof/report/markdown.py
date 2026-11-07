@@ -85,13 +85,55 @@ def _mutants(probe: ProbeResult) -> str:
     return text
 
 
+_ORACLE_SKIPS = {
+    "SHORT_CIRCUIT": "skipped (verdict already decided)",
+    "BO_NO_LLM": "not run (LLM disabled)",
+    "BO_NO_INTERFACE": "not run (no changed Python source to test)",
+}
+_CLAIM_SKIPS = {
+    "CA_NO_TRANSCRIPT": "skipped (no transcript given)",
+    "CA_UNREADABLE": "skipped (transcript format not recognised)",
+    "CA_NO_FINAL_MESSAGE": "skipped (the transcript has no final message)",
+}
+
+
+def _oracle(probe: ProbeResult) -> str:
+    for signal, text in _ORACLE_SKIPS.items():
+        if signal in probe.signals:
+            return text
+    m = probe.metrics
+    if "BO_NO_TESTS" in probe.signals:
+        return f"no usable oracle tests ({int(m.get('rejected', 0))} rejected)"
+    if "BO_ALL_DISCARDED" in probe.signals:
+        return f"inconclusive: all {int(m.get('written', 0))} oracle tests errored or were flaky"
+    text = f"{int(m.get('agree', 0))}/{int(m.get('valid', 0))} agree"
+    likely = [f for f in probe.findings if f.rule_id == "BO-LIKELY-BUG"]
+    if likely:
+        text += f". {len(likely)} likely bug(s), see below"
+    elif m.get("failing"):
+        text += f". {int(m['failing'])} failing, triaged as oracle error or ambiguous"
+    if m.get("discarded"):
+        text += f"; {int(m['discarded'])} discarded"
+    return text
+
+
+def _claims(probe: ProbeResult) -> str:
+    for signal, text in _CLAIM_SKIPS.items():
+        if signal in probe.signals:
+            return text
+    high = [f for f in probe.findings if f.severity == "high"]
+    if high:
+        return f"REFUTED: {high[0].message}"
+    if probe.findings:
+        return f"WEAK: {probe.findings[0].message}"
+    if "CA_NO_PASS_CLAIM" in probe.signals:
+        return "OK: the agent made no passing-tests claim"
+    return "OK: claims match the commands the agent ran"
+
+
 def _probe_cell(name: str, probes: Mapping[str, ProbeResult], bundle: RunBundle) -> str:
     probe = probes.get(name)
     if probe is None:
-        if name == "blind_oracle":
-            return "not run (arrives in M5)"
-        if name == "claim_audit":
-            return "not run (arrives in M5)"
         return "not run"
     if name == "red_green":
         return _red_green(probe, bundle)
@@ -99,13 +141,17 @@ def _probe_cell(name: str, probes: Mapping[str, ProbeResult], bundle: RunBundle)
         return _integrity(probe)
     if name == "mutants":
         return _mutants(probe)
+    if name == "blind_oracle":
+        return _oracle(probe)
+    if name == "claim_audit":
+        return _claims(probe)
     return f"{probe.status} {'/'.join(probe.signals)}"
 
 
-def _findings(findings: Sequence[Finding]) -> list[str]:
+def _findings(findings: Sequence[Finding], default: str = "change") -> list[str]:
     lines = []
     for f in findings:
-        where = f"{f.file}:{f.line}" if f.file and f.line else f.file or "change"
+        where = f"{f.file}:{f.line}" if f.file and f.line else f.file or default
         waiver = f" (waived: {f.waiver_reason})" if f.waived else ""
         proposed = [r for r in f.evidence_refs if r.startswith("proposed waiver")]
         note = f" ({proposed[0]})" if proposed else ""
@@ -138,7 +184,8 @@ def render_markdown(bundle: RunBundle) -> str:
     probes: dict[str, ProbeResult] = {p.probe: p for p in manifest.probes}
     added = sum(1 for h in change.hunks for line in h.lines if line.startswith("+"))
     removed = sum(1 for h in change.hunks for line in h.lines if line.startswith("-"))
-    usd = sum(p.cost.usd for p in manifest.probes)
+    # The LLM session's total is authoritative: not every probe books its own calls.
+    usd = manifest.llm.usd if manifest.llm is not None else sum(p.cost.usd for p in manifest.probes)
     profile = bundle.config.get("run", {}).get("profile", "?")
 
     out = [
@@ -155,6 +202,14 @@ def render_markdown(bundle: RunBundle) -> str:
         out += ["", "Why:"]
         out += [f"- {reason}" for reason in verdict.reasons]
 
+    oracle = probes.get("blind_oracle")
+    likely = [f for f in oracle.findings if not f.waived] if oracle is not None else []
+    if likely:
+        # FR-BO-05: never a refutation, but shown prominently for human review.
+        out += ["", "Likely bugs found by the blind oracle (review these):"]
+        out += [f"- {f.message}" for f in likely]
+        out.append(f"  Oracle tests: counterproof export-oracle {manifest.run_id}")
+
     survivors = [m for m in bundle.mutants if m.status == "survived"]
     if survivors:
         out += ["", "Surviving faults (would ship undetected):"]
@@ -170,6 +225,10 @@ def render_markdown(bundle: RunBundle) -> str:
     integrity = probes.get("integrity")
     if integrity is not None and integrity.findings:
         out += ["", "Integrity findings:", *_findings(integrity.findings)]
+
+    claims = probes.get("claim_audit")
+    if claims is not None and claims.findings:
+        out += ["", "Claim audit findings:", *_findings(claims.findings, "transcript")]
 
     if bundle.baseline is not None and (bundle.baseline.flaky or bundle.baseline.known_flaky):
         flaky = bundle.baseline.flaky + bundle.baseline.known_flaky

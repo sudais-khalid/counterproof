@@ -29,6 +29,7 @@ from counterproof.evidence.store import gc_runs, parse_duration
 from counterproof.log import get_logger, setup_logging
 from counterproof.models import EXIT_INTERNAL_ERROR, EXIT_USAGE_ERROR, WORKTREE
 from counterproof.orchestrator import VerifyOutcome, VerifyRequest, run_verify
+from counterproof.probes.blind_oracle import export as oracle_export
 from counterproof.report import RunBundle, find_run, load_bundle, render_json, render_markdown
 from counterproof.report.terminal import header, render_terminal
 from counterproof.verdict.engine import exit_code_for
@@ -375,8 +376,24 @@ def export_oracle(
     accept: Annotated[list[str] | None, typer.Option(help="Oracle test to accept.")] = None,
     dest: Annotated[Path | None, typer.Option(help="Destination directory.")] = None,
 ) -> None:
-    """Copy accepted blind-oracle tests into the repository (FR-BO-06)."""
-    _not_implemented("export-oracle", "M5")
+    """Copy accepted blind-oracle tests into the repository (FR-BO-06).
+
+    Without --accept, lists the run's oracle tests. --accept all takes every usable test.
+    """
+
+    def _run() -> list[str]:
+        record = oracle_export.load_record(find_run(run_id), run_id)
+        if not accept:
+            return [
+                *oracle_export.describe(record),
+                "Accept tests with --accept NAME (repeatable) or --accept all.",
+            ]
+        target_dir = dest if dest is not None else git.repo_root(Path.cwd()) / record["test_dir"]
+        target, names = oracle_export.export(record, run_id, accept, target_dir)
+        return [f"wrote {len(names)} oracle test(s) to {target}"]
+
+    for line in _guard(_run):
+        out_console.print(line, highlight=False, soft_wrap=True, markup=False)
 
 
 @hook_app.command("claude-stop")

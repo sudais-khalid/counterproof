@@ -2,8 +2,9 @@
 
 Resolve refs and the change, snapshot the working tree, build base and head worktrees,
 detect the stack, select impacted tests, run the head baseline, then the probes cheapest
-first (P2 integrity, P1 red-green, P3 mutants). Every decision goes through the pure
-:func:`counterproof.verdict.rules.decide`.
+first: P5 claim audit (before the early verdict, so rule 3 sees it, and even on a red
+head), P2 integrity, P1 red-green, P3 mutants, P4 blind oracle. Every decision goes through
+the pure :func:`counterproof.verdict.rules.decide`.
 """
 
 from __future__ import annotations
@@ -35,6 +36,7 @@ from counterproof.evidence.store import EvidenceStore, cache_root, runs_root
 from counterproof.impact.baseline import analyse_baseline, mutant_timeout_s
 from counterproof.impact.selector import select_tests
 from counterproof.llm.factory import build_session
+from counterproof.llm.provider import ModelNotConfiguredError, choose_oracle_models
 from counterproof.llm.redact import may_send
 from counterproof.llm.roles import LLMSession
 from counterproof.log import attach_run_log, detach_run_log, get_logger
@@ -50,6 +52,18 @@ from counterproof.models import (
     Selection,
     Verdict,
 )
+from counterproof.probes.blind_oracle.interface import (
+    changed_function_sources,
+    extract_interface,
+)
+from counterproof.probes.blind_oracle.probe import (
+    BO_NO_INTERFACE,
+    BO_NO_LLM,
+    run_blind_oracle,
+    skipped,
+)
+from counterproof.probes.claim_audit.parsers import Transcript, load_transcript
+from counterproof.probes.claim_audit.probe import run_claim_audit
 from counterproof.probes.integrity.probe import changed_test_file_pairs, run_integrity
 from counterproof.probes.integrity.python_rules import TestFilePair, changed_test_ids
 from counterproof.probes.mutants.fuzz import make_fuzzer
@@ -64,6 +78,7 @@ from counterproof.workspace.manager import Workspace, WorkspaceManager
 log = get_logger("orchestrator")
 
 RUN_LOG: Final = "run.log"
+ORACLE_RUN_TIMEOUT_S: Final = 120.0
 SEED_FILE: Final = "seed"
 ConfigFrom = Literal["base", "worktree"]
 
@@ -194,25 +209,34 @@ def _pipeline(
     config: Config,
     seed: bytes,
 ) -> tuple[Verdict, list[ProbeResult], LLMUsage]:
-    """Section 6.3 steps 2-7: workspaces, baseline, probes (P2, P1, P3), verdict."""
+    """Section 6.3 steps 2-7: workspaces, baseline, probes (P5, P2, P1, P3, P4), verdict."""
     session, models, llm_note = build_session(config)
     llm = session is not None
     log.info("LLM: %s", llm_note)
+    transcript = load_transcript(change.transcript_path) if change.transcript_path else None
     prepared = _prepare(store, workspaces, change, config)
     if isinstance(prepared, str):
-        inp = DecisionInput(intent=change.intent, build_error=prepared, llm_enabled=llm)
-        return decide(inp, config), [], _usage(store, config, session, llm_note)
+        claims = _claim_audit(store, config, change, transcript, None)
+        inp = DecisionInput(
+            intent=change.intent, build_error=prepared, probes=claims, llm_enabled=llm
+        )
+        return decide(inp, config), claims, _usage(store, config, session, llm_note)
 
     ctx = prepared
-    early = early_verdict(DecisionInput(change.intent, baseline=ctx.baseline), config)
+    # P5 first: it needs only the transcript and the baseline (FR-IS-05: also on a red head).
+    probes: list[ProbeResult] = _claim_audit(
+        store, config, change, transcript, ctx.baseline.failing
+    )
+    early = early_verdict(
+        DecisionInput(change.intent, baseline=ctx.baseline, probes=probes), config
+    )
     if early is not None:
         # FR-IS-04/05: no proof is possible on a flaky or red head
-        return early, [], _usage(store, config, session, llm_note)
+        return early, probes, _usage(store, config, session, llm_note)
 
     repo = change.repo_root
     read_base = partial(git.show_file, repo, change.base_sha)
     read_head = partial(git.show_file, repo, change.head_snapshot_sha)
-    probes: list[ProbeResult] = []
 
     def decision() -> DecisionInput:
         skipped = len(session.budget.skipped) if session is not None else 0
@@ -238,8 +262,9 @@ def _pipeline(
 
     refuted = early_verdict(decision(), config)
     if refuted is not None and config.run.short_circuit:
-        for name in ("red_green", "mutants"):
-            probes.append(ProbeResult(probe=name, status="skipped", signals=["SHORT_CIRCUIT"]))
+        for name in ("red_green", "mutants", "blind_oracle"):
+            if name != "blind_oracle" or name in config.enabled_probes:
+                probes.append(ProbeResult(probe=name, status="skipped", signals=["SHORT_CIRCUIT"]))
         return refuted, probes, _usage(store, config, session, llm_note)
 
     pairs = changed_test_file_pairs(change, read_base, read_head)
@@ -278,7 +303,113 @@ def _pipeline(
             ),
         )
     )
+
+    # P4 blind oracle: the most expensive probe, last (PRD 6.2).
+    if "blind_oracle" in config.enabled_probes:
+        probes.append(
+            _blind_oracle(
+                store,
+                ctx,
+                change=change,
+                config=config,
+                session=session,
+                models=models,
+                transcript=transcript,
+                selected_files=selected_files,
+                read_base=read_base,
+                read_head=read_head,
+            )
+        )
     return decide(decision(), config), probes, _usage(store, config, session, llm_note)
+
+
+def _claim_audit(
+    store: EvidenceStore,
+    config: Config,
+    change: ChangeSet,
+    transcript: Transcript | None,
+    baseline_failing: list[str] | None,
+) -> list[ProbeResult]:
+    """P5 (FR-CA): pure over the transcript and the baseline's failing tests."""
+    if "claim_audit" not in config.enabled_probes:
+        return []
+    audit = run_claim_audit(
+        transcript,
+        transcript_given=change.transcript_path is not None,
+        baseline_failing=baseline_failing,
+    )
+    if audit.result.status != "skipped":
+        store.write_json("probes/claim_audit.json", audit.result)
+    if audit.evidence:
+        store.write_json("claims.json", audit.evidence)
+    return [audit.result]
+
+
+def _blind_oracle(
+    store: EvidenceStore,
+    ctx: _Context,
+    *,
+    change: ChangeSet,
+    config: Config,
+    session: LLMSession | None,
+    models: dict[str, str],
+    transcript: Transcript | None,
+    selected_files: list[str],
+    read_base: Callable[[str], str | None],
+    read_head: Callable[[str], str | None],
+) -> ProbeResult:
+    if session is None:
+        return skipped(BO_NO_LLM).result
+    excluded = list(config.paths.exclude)
+
+    def sendable(path: str) -> bool:
+        return may_send(path, excluded)
+
+    interface = extract_interface(
+        change,
+        read_head=read_head,
+        read_base=read_base,
+        selected_test_files=selected_files,
+        sendable=sendable,
+    )
+    if interface.empty:
+        return skipped(BO_NO_INTERFACE).result
+    author = transcript.author_model if transcript is not None else None
+    try:
+        oracle_models, note = choose_oracle_models(
+            config.llm.provider,
+            config.llm.oracle_model,
+            author,
+            max(1, config.profile_spec.oracle_models),
+        )
+    except ModelNotConfiguredError:
+        oracle_models = [models["mutant"]]
+        note = f"oracle model {models['mutant']} (the mutant model)"
+    log.info("blind oracle: %s", note)
+    outcome = run_blind_oracle(
+        session=session,
+        models=oracle_models,
+        model_note=note,
+        judge_model=models["judge"],
+        k=config.oracle.k,
+        task_text=change.task_text,
+        interface=interface,
+        functions=changed_function_sources(change, read_head, sendable=sendable),
+        adapter=ctx.adapter,
+        head=ctx.head,
+        base=ctx.base,
+        run_id=store.run_id,
+        junit_path=lambda name: store.path(f"oracle/{name}.xml"),
+        timeout_s=min(config.impact.run_timeout_s, ORACLE_RUN_TIMEOUT_S),
+    )
+    store.write_text("oracle/interface.txt", interface.render() + "\n")
+    if outcome.test_file is not None:
+        store.write_text("oracle/test_oracle.py", outcome.test_file)
+    store.write_json("oracle/oracle.json", outcome.record)
+    for name in ("head-1", "head-2", "head-3", "base"):
+        _track_existing(store, f"oracle/{name}.xml", f"oracle/{name}.log")
+    store.write_json("probes/blind_oracle.json", outcome.result)
+    return outcome.result
 
 
 def _usage(store: EvidenceStore, config: Config, session: LLMSession | None, note: str) -> LLMUsage:

@@ -17,13 +17,15 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M4).** Counterproof resolves the change, snapshots your
+> **Status: pre-alpha (milestone M5).** Counterproof resolves the change, snapshots your
 > working tree without touching it, builds isolated worktrees, selects impacted tests from
-> coverage and runs the head baseline. Three probes run: **integrity**, **red-green** and
-> **mutants**. Mutants are rule-based and, with an LLM provider, also LLM-written realistic
-> faults on the changed lines, including an overfit mutant; survivors pass a 3-stage
-> equivalence filter (static, LLM judge, Hypothesis fuzz). The deterministic verdict engine
-> implements all 14 rules of PRD section 8. The blind oracle and claim audit arrive in M5.
+> coverage and runs the head baseline. All five probes run: **claim audit** (the agent's
+> final message against the commands in its Claude Code transcript), **integrity**,
+> **red-green**, **mutants** (rule-based plus, with an LLM provider, LLM-written realistic
+> faults and an overfit mutant, filtered for equivalence by a static check, an LLM judge and
+> Hypothesis fuzzing) and the **blind oracle** (with an LLM provider: tests written from the
+> task and the public interface only, run on the change and triaged when they fail). The
+> deterministic verdict engine implements all 14 rules of PRD section 8.
 > See [docs/PRD.md](docs/PRD.md).
 
 ```sh
@@ -32,7 +34,16 @@ counterproof verify --format md          # Markdown certificate (PRD section 14)
 counterproof verify --fail-on refuted    # CI gate: only REFUTED fails the job
 counterproof report RUN_ID --format json # re-render a stored run
 counterproof explain RUN_ID r002         # diff, tests run and hint for one mutant
+counterproof verify --transcript ~/.claude/projects/<proj>/<session>.jsonl   # audit claims
+counterproof export-oracle RUN_ID        # list blind-oracle tests; --accept NAME copies one
 ```
+
+The claim audit flags "tests pass" claims that the transcript contradicts: no test run after
+the last edit, a different pass count, a subset run claimed as the full suite, an exit code
+hidden behind `| tail` or `|| true`, or passing claimed while Counterproof's own baseline
+fails. Without a transcript it is skipped, with no penalty. Blind-oracle tests stay in the run
+directory; a likely bug they find caps the verdict at WEAK and is listed for human review,
+but never refutes a change on its own.
 
 Waive an integrity finding with an inline comment on (or just above) the flagged line:
 `# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver
@@ -44,7 +55,7 @@ LLMs are optional: with `llm.provider = "none"` (the default) nothing leaves you
 
 | Provider | Key | Default models (`auto`) |
 |---|---|---|
-| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-v4-pro` (mutants), `deepseek-flash` (judge) |
+| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-v4-pro` (mutants, oracle), `deepseek-flash` (judges) |
 | `anthropic` | `ANTHROPIC_API_KEY` or `ant auth login` | `claude-sonnet-5-5`, `claude-haiku-5-5` |
 | `openai` | `OPENAI_API_KEY` | set `mutant_model` / `judge_model` explicitly |
 | `ollama` | none (local) | `qwen2.5-coder:7b` |
@@ -55,7 +66,10 @@ repository. Only the changed source lines, their context, the task text and test
 sent; secrets are redacted, and `.env` files, lockfiles and `paths.exclude` are never sent.
 Every run has hard token, USD (`llm.budget_usd`, default $0.30) and time limits; work the
 budget does not allow is skipped and listed on the certificate, which always states which
-provider saw code. Responses are cached, so re-running on the same change is free.
+provider saw code. Responses are cached, so re-running on the same change is free. The blind
+oracle sees the task, signatures, docstrings and public constants, never a function body; with
+`oracle_model = "auto"` it prefers a model family other than the one that wrote the code (read
+from the transcript).
 
 ## Install (development)
 

@@ -45,7 +45,14 @@ def test_m0_verify_creates_run_dir_and_empty_manifest(in_repo: Path, isolated_ca
     assert _completed(code, out), err
 
     manifest = RunManifest.model_validate_json(out)
-    assert [p.probe for p in manifest.probes] == ["integrity", "red_green", "mutants"]
+    # M5 (approved): P5 runs first and P4 last; without a transcript or LLM both are skipped.
+    assert [p.probe for p in manifest.probes] == [
+        "claim_audit",
+        "integrity",
+        "red_green",
+        "mutants",
+        "blind_oracle",
+    ]
     assert manifest.change.repo_root == in_repo.resolve()
     assert manifest.change.base_sha == git(in_repo, "rev-parse", "HEAD").strip()
     assert manifest.change.head_ref == "WORKTREE"
@@ -229,7 +236,6 @@ def test_unimplemented_formats_fail_loudly(in_repo: Path, fmt: str) -> None:
 @pytest.mark.parametrize(
     "args",
     [
-        ["export-oracle", "r1"],
         ["hook", "claude-stop"],
         ["mcp"],
         ["eval", "corpus"],

@@ -94,12 +94,13 @@ def build_repo(
     variant: str | None = None,
     *,
     commit_head: bool = True,
+    overlay: Path | None = None,
 ) -> BuiltRepo:
     """Materialise a fixture as a real git repository.
 
     The base tree is committed on ``main``. With a task and variant, the overlay is copied
     on top on branch ``agent/<task>`` and either committed (message = task text) or left
-    uncommitted as a WORKTREE head.
+    uncommitted as a WORKTREE head. ``overlay`` replaces the variant directory (C2 cases).
     """
     source = FIXTURE_REPOS / name
     shutil.copytree(source / "base", dest)
@@ -112,7 +113,7 @@ def build_repo(
     task_dir = source / "tasks" / task
     task_text = (task_dir / "task.md").read_text(encoding="utf-8").strip()
     git(dest, "checkout", "-q", "-b", f"agent/{task}")
-    shutil.copytree(task_dir / variant, dest, dirs_exist_ok=True)
+    shutil.copytree(overlay or task_dir / variant, dest, dirs_exist_ok=True)
     head_sha = None
     if commit_head:
         git(dest, "add", "-A")
