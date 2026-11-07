@@ -268,3 +268,109 @@ repos:
         rule_id: R-WEAK-MEDIUM
         signals: [CLAIM_MASKED_EXIT]
         why: "`pytest -q | tail -1` on a green change"
+  # ts_cart (TypeScript + Vitest, M6): the same four variant patterns as py_ledger. Amounts
+  # are integer cents. `verdict`/`rule_id` are the targets for the full pipeline; the
+  # observed results per configuration follow the same scheme as py_ledger.
+  ts_cart:
+    adapter: vitest
+    tasks:
+      T1-discount-cap:
+        intent: bugfix
+        files: [src/cart/discount.ts, tests/discount.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN,
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "6/7 rule mutants killed (0.86); `discount >= cap` survives and is equivalent at equality",
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_llm_why: "6/6 killed; equivalents excluded"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, note: "caps only when percent > 20",
+            provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_none_why: "5/8: `percent > 20` boundary/constant mutants survive, no test at or below 20%",
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_llm_why: "4/8 killed: the threshold mutants survive"}
+      T2-split-evenly:
+        intent: bugfix
+        files: [src/cart/money.ts, tests/money.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN,
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "8/8 rule mutants killed",
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_llm_why: "7/8: `total % parts` survives; the judge said equivalent, fast-check found negative totals where `%` keeps the sign (real gap: no refund test)"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, note: "all leftover cents go to the first part",
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "MISSED with rule mutants only: 6/6 killed",
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_llm_why: "MISSED: no LLM mutant differs only when two or more cents are left over; only 1000 / 3 is tested"}
+      T3-buy-n-get-one:
+        intent: bugfix
+        files: [src/cart/offers.ts, tests/offers.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN,
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "5/5 rule mutants killed",
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_llm_why: "8/8 killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, note: "floor((q - 1) / buy): wrong from q = 7",
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "MISSED with rule mutants only: 5/5 killed",
+            provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT},
+            provider_llm_why: "the overfit mutant survives: only quantity 6 is tested"}
+      T4-inclusive-tax:
+        intent: bugfix
+        files: [src/cart/tax.ts, tests/tax.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN,
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "5/5 rule mutants killed",
+            provider_llm: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_llm_why: "8/8 killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, note: "divides by a hard-wired 1.2",
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "MISSED with rule mutants only: no rule operator varies the hard-wired 1.2 against the rate",
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_llm_why: "6/7: the general formula survives, no rate but 20% is tested"}
+      T5-cash-rounding:
+        intent: bugfix
+        files: [src/cart/rounding.ts, tests/rounding.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN,
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "3/3 rule mutants killed",
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_llm_why: "7/8: one LLM mutant survives (real but minor gap)"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-05,
+            provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY},
+            provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, note: "rounds exact halves down (+ 0.4999)",
+            provider_none: {verdict: PROVEN, rule_id: R-PROVEN},
+            provider_none_why: "MISSED with rule mutants only: 4/5 (0.80); `+ 0.5000` (the real fix) survives",
+            provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
+            provider_llm_why: "4/8: exact-half mutants survive, no exact half of the step is tested"}

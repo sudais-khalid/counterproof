@@ -10,10 +10,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+import pytest
 import yaml
+
+from counterproof.workspace.links import is_dir_link, link_dir
 
 TESTS_DIR: Final = Path(__file__).resolve().parent
 FIXTURE_REPOS: Final = TESTS_DIR / "fixtures" / "repos"
+FIXTURE_NODE_MODULES: Final = TESTS_DIR / "fixtures" / "node" / "node_modules"
+REQUIRE_NODE_ENV: Final = "COUNTERPROOF_REQUIRE_NODE"
 EXPECTATIONS: Final = TESTS_DIR / "golden" / "expectations.yaml"
 VARIANTS: Final = ("honest", "hardcoded", "weakened", "partial")
 
@@ -51,9 +56,10 @@ def git(repo: Path, *args: str) -> str:
 def tree_hash(root: Path) -> str:
     """Hash every path and file byte under ``root``, excluding ``.git``."""
     digest = hashlib.sha256()
+    linked = {p for p in (root / "node_modules",) if is_dir_link(p)}
     for path in sorted(root.rglob("*")):
         rel = path.relative_to(root)
-        if rel.parts and rel.parts[0] == ".git":
+        if rel.parts and (rel.parts[0] == ".git" or root / rel.parts[0] in linked):
             continue
         digest.update(rel.as_posix().encode() + b"\0")
         if path.is_file():
@@ -104,6 +110,9 @@ def build_repo(
     """
     source = FIXTURE_REPOS / name
     shutil.copytree(source / "base", dest)
+    if (dest / "package.json").is_file() and FIXTURE_NODE_MODULES.is_dir():
+        # The test runners are installed once (tests/fixtures/node) and linked, untracked.
+        link_dir(FIXTURE_NODE_MODULES.resolve(), dest / "node_modules")
     git(dest, "init", "-q", "-b", "main")
     git(dest, "add", "-A")
     git(dest, "commit", "-q", "-m", f"Initial {name} library")
@@ -113,15 +122,35 @@ def build_repo(
     task_dir = source / "tasks" / task
     task_text = (task_dir / "task.md").read_text(encoding="utf-8").strip()
     git(dest, "checkout", "-q", "-b", f"agent/{task}")
-    shutil.copytree(overlay or task_dir / variant, dest, dirs_exist_ok=True)
+    # Fresh mtimes for the overlay (shutil.copy, not copy2): with the fixture's own mtimes an
+    # overlay file of the same size as the base file can look unchanged to git's stat cache.
+    shutil.copytree(
+        overlay or task_dir / variant, dest, dirs_exist_ok=True, copy_function=shutil.copy
+    )
     head_sha = None
     if commit_head:
+        git(dest, "rm", "-r", "-q", "--cached", ".")  # re-hash every file, never trust stat
         git(dest, "add", "-A")
         git(dest, "commit", "-q", "-m", task_text)
         head_sha = git(dest, "rev-parse", "HEAD").strip()
     return BuiltRepo(dest, base_sha, head_sha, task_text)
 
 
-def all_variants() -> list[tuple[str, str]]:
-    expectations = load_expectations()["repos"]["py_ledger"]["tasks"]
+def all_variants(repo: str = "py_ledger") -> list[tuple[str, str]]:
+    expectations = load_expectations()["repos"][repo]["tasks"]
     return [(task, variant) for task in sorted(expectations) for variant in VARIANTS]
+
+
+def node_available() -> bool:
+    """The fixture test runners are installed (``npm ci`` in tests/fixtures/node)."""
+    return FIXTURE_NODE_MODULES.is_dir() and shutil.which("node") is not None
+
+
+def skip_without_node() -> pytest.MarkDecorator:
+    """Skip Node-based tests locally when the runners are missing, but fail in CI
+    (``COUNTERPROOF_REQUIRE_NODE=1``) so they can never be skipped silently there."""
+    required = os.environ.get(REQUIRE_NODE_ENV) == "1"
+    return pytest.mark.skipif(
+        not node_available() and not required,
+        reason="node or tests/fixtures/node/node_modules missing (run npm ci there)",
+    )

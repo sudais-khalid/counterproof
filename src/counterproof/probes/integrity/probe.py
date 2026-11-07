@@ -10,7 +10,8 @@ from typing import Final
 from counterproof.change.diff import changed_new_lines
 from counterproof.change.self_config import SELF_CONFIG_FLAG
 from counterproof.models import ChangeSet, Cost, Finding, ProbeResult
-from counterproof.probes.integrity.overfit import env_detection_findings, overfit_findings
+from counterproof.probes import lang
+from counterproof.probes.integrity.overfit import env_detection_findings
 from counterproof.probes.integrity.python_rules import (
     ChangedSource,
     TestFilePair,
@@ -18,7 +19,7 @@ from counterproof.probes.integrity.python_rules import (
     finding,
 )
 from counterproof.probes.integrity.waivers import apply_waivers
-from counterproof.probes.pyast import Literal, analyse_test_file, module_name, top_level_definitions
+from counterproof.probes.pyast import Literal
 
 Reader = Callable[[str], str | None]
 SNAPSHOT_SUFFIXES: Final = (".snap", ".ambr")
@@ -29,7 +30,7 @@ def changed_test_file_pairs(
 ) -> list[TestFilePair]:
     pairs: list[TestFilePair] = []
     for f in change.files:
-        if f.role != "test" or not f.path.endswith(".py") or f.binary:
+        if f.role != "test" or not lang.supported(f.path) or f.binary:
             continue
         base_path = f.old_path or f.path
         pairs.append(
@@ -70,12 +71,14 @@ def run_integrity(
     sources = [
         f
         for f in change.files
-        if f.role == "source" and f.status != "deleted" and f.path.endswith(".py") and not f.binary
+        if f.role == "source" and f.status != "deleted" and lang.supported(f.path) and not f.binary
     ]
     head_sources = {f.path: read_head(f.path) or "" for f in sources}
     changed_sources = [
         ChangedSource(
-            path=path, module=module_name(path), definitions=frozenset(top_level_definitions(text))
+            path=path,
+            module=lang.module_name(path),
+            definitions=frozenset(lang.top_level_definitions(path, text)),
         )
         for path, text in head_sources.items()
     ]
@@ -85,12 +88,12 @@ def run_integrity(
     literals: set[Literal] = set()
     for path in sorted(set(literal_test_files) | {p.path for p in pairs if p.head_text}):
         text = read_head(path)
-        analysed = analyse_test_file(text) if text is not None else None
+        analysed = lang.analyse_test_file(path, text) if text is not None else None
         if analysed is not None:
             literals |= analysed.literals
     for path, text in head_sources.items():
         lines = added.get(path, set())
-        findings += overfit_findings(path, text, lines, frozenset(literals))
+        findings += lang.overfit_findings(path, text, lines, frozenset(literals))
         split = text.splitlines()
         findings += env_detection_findings(
             path, [(n, split[n - 1]) for n in sorted(lines) if 0 < n <= len(split)]

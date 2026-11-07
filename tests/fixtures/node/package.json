@@ -1,0 +1,11 @@
+{
+  "name": "counterproof-fixture-deps",
+  "private": true,
+  "description": "Test runners for the TypeScript/JavaScript fixture repos (installed once, linked into each built fixture).",
+  "devDependencies": {
+    "fast-check": "4.10.2",
+    "jest": "30.5.2",
+    "jest-junit": "17.0.0",
+    "vitest": "5.1.0"
+  }
+}

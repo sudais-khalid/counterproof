@@ -112,7 +112,15 @@ def classify_failure(case: JUnitCase, *, timed_out: bool = False) -> FailureKind
 _API_HINTS: Final = re.compile(
     r"(ImportError|cannot import name|AttributeError|has no attribute|TypeError|"
     r"unexpected keyword argument|positional argument|is not a function|is not callable|"
-    r"ModuleNotFoundError)"
+    r"ModuleNotFoundError|is not a constructor|does not provide an export named|"
+    r"Failed to load url|Failed to resolve import|Cannot find module)"
+)
+# JavaScript: `(0 , __vi_import_0__.splitCents) is not a function`, missing ESM exports and
+# modules that do not exist on the old code.
+_JS_NOT_CALLABLE: Final = re.compile(r"([A-Za-z_$][\w$]*)\)? is not a (?:function|constructor)")
+_JS_EXPORT: Final = re.compile(r"does not provide an export named '([\w$]+)'")
+_JS_MODULE: Final = re.compile(
+    r"(?:Failed to load url|Failed to resolve import|Cannot find module)\s+['\"]?([^'\"\s)]+)"
 )
 _QUOTED: Final = re.compile(r"['\"]([A-Za-z_][\w.]*)['\"]")
 _UNEXPECTED_KW: Final = re.compile(r"(\w+)\(\) got an unexpected keyword argument '(\w+)'")
@@ -143,5 +151,13 @@ def refine_api_absent(
             return "API_ABSENT"
     for func in _POSITIONAL.findall(text):
         if any(f == func for f, _ in params):
+            return "API_ABSENT"
+    for name in [*_JS_NOT_CALLABLE.findall(text), *_JS_EXPORT.findall(text)]:
+        if name in names:
+            return "API_ABSENT"
+    module_stems = {m.rsplit(".", 1)[-1] for m in new_modules}
+    for spec in _JS_MODULE.findall(text):
+        stem = re.split(r"[/\\]", spec)[-1].split(".", 1)[0]
+        if stem and stem in module_stems:
             return "API_ABSENT"
     return kind

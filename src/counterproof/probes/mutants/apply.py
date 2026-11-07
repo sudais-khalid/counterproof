@@ -43,8 +43,18 @@ def invalid_reason(original_text: str, mutated_text: str, path: str) -> str | No
 
     Rejected when it does not parse, when its normalised syntax tree equals the original's
     (whitespace and comments are not part of the tree), or when it does not compile. Import
-    failures are detected at run time and also mark the mutant invalid.
+    failures are detected at run time and also mark the mutant invalid. TypeScript and
+    JavaScript are checked with tree-sitter; their type errors are not (esbuild strips types).
     """
+    from counterproof.probes import tsast  # noqa: PLC0415
+
+    if tsast.is_ts_path(path):
+        mutated_ts = tsast.normalised(path, mutated_text)
+        if mutated_ts is None:
+            return "does not parse"
+        if mutated_ts == tsast.normalised(path, original_text):
+            return "syntax tree unchanged"
+        return None
     try:
         cst.parse_module(mutated_text)
     except cst.ParserSyntaxError:

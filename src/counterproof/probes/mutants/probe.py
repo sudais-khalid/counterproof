@@ -29,13 +29,13 @@ from counterproof.models import (
     ProbeResult,
     Selection,
 )
+from counterproof.probes import lang
 from counterproof.probes.integrity.probe import added_lines_by_file
 from counterproof.probes.mutants.apply import invalid_reason
 from counterproof.probes.mutants.equivalence import FuzzResult, judge_survivors
 from counterproof.probes.mutants.llm_forge import forge, overfit_candidates
-from counterproof.probes.mutants.rule_forge_py import Candidate, generate
+from counterproof.probes.mutants.rule_forge_py import Candidate
 from counterproof.probes.mutants.runner import MutantJob, run_mutants
-from counterproof.probes.mutants.scope import mutation_scope
 from counterproof.probes.mutants.select import select_mutants
 from counterproof.probes.pyast import Literal
 from counterproof.workspace.manager import Workspace
@@ -74,7 +74,7 @@ def _scopes(
         wanted = set(changed_tests)
         lines: dict[str, set[int]] = {}
         for (path, line), tests in sorted((coverage or {}).items()):
-            if path.endswith(".py") and tests & wanted and not is_test_path(path):
+            if lang.supported(path) and tests & wanted and not is_test_path(path):
                 lines.setdefault(path, set()).add(line)
         flat = [(p, n) for p in sorted(lines) for n in sorted(lines[p])][:TEST_ONLY_MAX_LINES]
         capped: dict[str, set[int]] = {}
@@ -85,11 +85,11 @@ def _scopes(
     scopes: dict[str, set[int]] = {}
     for f in change.files:
         # FR-MU-01: source files only; tests are never mutated.
-        if f.role != "source" or f.status == "deleted" or not f.path.endswith(".py"):
+        if f.role != "source" or f.status == "deleted" or not lang.supported(f.path):
             continue
         changed = added.get(f.path, set())
         if changed:
-            scopes[f.path] = mutation_scope(head_text(f.path), changed)
+            scopes[f.path] = lang.mutation_scope(f.path, head_text(f.path), changed)
     return scopes
 
 
@@ -157,7 +157,7 @@ def run_mutation_probe(
     scopes = _scopes(change, head_text, coverage, changed_tests)
     candidates: list[Candidate] = []
     for path, scope in sorted(scopes.items()):
-        candidates += generate(path, head_text(path), scope)
+        candidates += lang.rule_mutants(path, head_text(path), scope)
 
     filtered: dict[str, int] = {"candidates": len(candidates), "equivalent": 0, "invalid": 0}
     valid: list[Candidate] = []

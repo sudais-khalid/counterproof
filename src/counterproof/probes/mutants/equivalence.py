@@ -36,6 +36,7 @@ from libcst.metadata import MetadataWrapper, PositionProvider
 from counterproof.llm.roles import LLMSession
 from counterproof.llm.schemas import JudgeOutput
 from counterproof.models import Mutant
+from counterproof.probes import lang
 from counterproof.probes.mutants.apply import MutantMismatchError, apply_mutant
 
 FuzzResult = Literal["differs", "same"] | None
@@ -116,7 +117,8 @@ def judge_survivors(
             judged.append(mutant)
             continue
         text = head_text(mutant.file)
-        original = strip_comments_and_docstrings(enclosing_function(text, mutant.start_line))
+        path = mutant.file
+        original = lang.strip_comments(path, lang.enclosing_function(path, text, mutant.start_line))
         try:
             mutated_text = apply_mutant(text, mutant)
         except MutantMismatchError:
@@ -127,17 +129,22 @@ def judge_survivors(
                 )
             )
             continue
-        changed = strip_comments_and_docstrings(enclosing_function(mutated_text, mutant.start_line))
+        changed = lang.strip_comments(
+            path, lang.enclosing_function(path, mutated_text, mutant.start_line)
+        )
+        language = lang.language_name(path)
         verdict = session.run(
             "equivalence_judge",
             JudgeOutput,
             {
                 "original": original,
                 "mutant": changed,
-                "tests": test_source(mutant.covering_tests)[:MAX_TESTS_CHARS] or "# (none)",
+                "tests": test_source(mutant.covering_tests)[:MAX_TESTS_CHARS]
+                or ("// (none)" if language != "python" else "# (none)"),
             },
             model=model,
             max_tokens=800,
+            variant=None if language == "python" else language,
         )
         fuzz_result = fuzz(mutant) if fuzz is not None else None
         status = decide(verdict, fuzz_result)

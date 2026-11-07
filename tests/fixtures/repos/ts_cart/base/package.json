@@ -1,0 +1,14 @@
+{
+  "name": "ts-cart",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shopping-cart pricing in whole cents: splits, discounts, multi-buy offers, tax and cash rounding.",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "fast-check": "4.10.2",
+    "vitest": "5.1.0"
+  }
+}

@@ -1,14 +1,16 @@
-"""Base-versus-head comparison of Python test files (FR-IN-01 to FR-IN-06)."""
+"""Base-versus-head comparison of test files (FR-IN-01 to FR-IN-06), Python and TS/JS."""
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
 from counterproof.models import Finding, Severity
-from counterproof.probes.pyast import TestFile, TestFunction, analyse_test_file
+from counterproof.probes import lang
+from counterproof.probes.pyast import TestFile, TestFunction
 
 SNIPPET_CHARS: Final = 600
 SEVERITY: Final[dict[str, Severity]] = {
@@ -79,9 +81,15 @@ def _patches_unit_under_test(target: str, sources: list[ChangedSource]) -> str |
             if symbol in src.definitions:
                 return src.path
         head, _, symbol = target.rpartition(".")
-        if symbol in src.definitions and head.rsplit(".", 1)[-1] == src.module.rsplit(".", 1)[-1]:
+        if (symbol in src.definitions or symbol == "*") and _same_module(head, src.module):
             return src.path
     return None
+
+
+def _same_module(head: str, module: str) -> bool:
+    """``discount`` / ``../src/cart/discount`` / ``ledger.discounts`` name ``module``."""
+    last = re.split(r"[./\\]", head.rstrip("/"))[-1] if head else ""
+    return bool(last) and last == module.rsplit(".", 1)[-1]
 
 
 def _covers(nodeid: str, source: str, covering_by_file: Mapping[str, set[str]] | None) -> bool:
@@ -213,10 +221,14 @@ def compare_test_files(
 
     for pair in pairs:
         base_file: TestFile | None = (
-            analyse_test_file(pair.base_text) if pair.base_text is not None else None
+            lang.analyse_test_file(pair.base_path or pair.path, pair.base_text)
+            if pair.base_text is not None
+            else None
         )
         head_file: TestFile | None = (
-            analyse_test_file(pair.head_text) if pair.head_text is not None else None
+            lang.analyse_test_file(pair.path, pair.head_text)
+            if pair.head_text is not None
+            else None
         )
         if base_file and pair.base_path:
             for suffix, fn in base_file.tests.items():
@@ -275,10 +287,14 @@ def changed_test_ids(pairs: list[TestFilePair]) -> list[str]:
     for pair in pairs:
         if pair.head_text is None:
             continue
-        head_file = analyse_test_file(pair.head_text)
+        head_file = lang.analyse_test_file(pair.path, pair.head_text)
         if head_file is None:
             continue
-        base_file = analyse_test_file(pair.base_text) if pair.base_text is not None else None
+        base_file = (
+            lang.analyse_test_file(pair.base_path or pair.path, pair.base_text)
+            if pair.base_text is not None
+            else None
+        )
         base_tests = base_file.tests if base_file else {}
         for suffix, fn in head_file.tests.items():
             old = base_tests.get(suffix)

@@ -20,7 +20,7 @@ from typing import Any, Final, Literal
 
 from counterproof import __version__, git
 from counterproof.adapters.base import Adapter, CollectionError, CoverageMap
-from counterproof.adapters.detect import detect_adapters
+from counterproof.adapters.detect import choose_adapter, detect_adapters
 from counterproof.change.resolver import NO_CODE_CHANGE, commit_message_for, resolve_change
 from counterproof.change.task import resolve_task_text
 from counterproof.config import CONFIG_FILENAME, Config, build_config, load_config, parse_toml
@@ -46,12 +46,14 @@ from counterproof.models import (
     ChangeSet,
     Intent,
     LLMUsage,
+    Mutant,
     ProbeResult,
     RunManifest,
     RunResult,
     Selection,
     Verdict,
 )
+from counterproof.probes import lang
 from counterproof.probes.blind_oracle.interface import (
     changed_function_sources,
     extract_interface,
@@ -66,10 +68,11 @@ from counterproof.probes.claim_audit.parsers import Transcript, load_transcript
 from counterproof.probes.claim_audit.probe import run_claim_audit
 from counterproof.probes.integrity.probe import changed_test_file_pairs, run_integrity
 from counterproof.probes.integrity.python_rules import TestFilePair, changed_test_ids
+from counterproof.probes.mutants.equivalence import FuzzResult
 from counterproof.probes.mutants.fuzz import make_fuzzer
+from counterproof.probes.mutants.fuzz_ts import make_ts_fuzzer
 from counterproof.probes.mutants.probe import LLMContext, run_mutation_probe
 from counterproof.probes.pyast import Literal as CodeLiteral
-from counterproof.probes.pyast import added_symbols, analyse_test_file, module_name
 from counterproof.probes.red_green import run_red_green
 from counterproof.verdict.rules import DecisionInput, decide, early_verdict
 from counterproof.workspace.env import dropped_names, scrub_env
@@ -447,7 +450,9 @@ def _llm_context(
     for path in sorted({t.partition("::")[0] for t in ctx.selection.tests}):
         target = ctx.head.root / path
         analysed = (
-            analyse_test_file(target.read_text(encoding="utf-8")) if target.is_file() else None
+            lang.analyse_test_file(path, target.read_text(encoding="utf-8"))
+            if target.is_file()
+            else None
         )
         if analysed is not None:
             literals |= analysed.literals
@@ -465,12 +470,23 @@ def _llm_context(
         return "\n\n".join(dict.fromkeys(parts))
 
     adapter = ctx.adapter
-    fuzz = make_fuzzer(
+    py_fuzz = make_fuzzer(
         head_text=lambda p: _read_head(ctx, p),
         literals=literals,
         run_script=lambda script, args: adapter.run_script(ctx.head, script, args),
         script_dir=store.run_dir / "fuzz",
     )
+    ts_fuzz = make_ts_fuzzer(
+        head_text=lambda p: _read_head(ctx, p),
+        literals=literals,
+        ws_root=ctx.head.root,
+        runner=adapter.name,
+        run_script=lambda script: adapter.run_script(ctx.head, script, []),
+    )
+
+    def fuzz(mutant: Mutant) -> FuzzResult:
+        return ts_fuzz(mutant) if lang.is_typescript(mutant.file) else py_fuzz(mutant)
+
     excluded = list(config.paths.exclude)
     return (
         LLMContext(
@@ -601,13 +617,13 @@ def _added_api(
     added: set[str] = set()
     new_modules: set[str] = set()
     for f in change.files:
-        if f.role != "source" or f.status == "deleted" or not f.path.endswith(".py"):
+        if f.role != "source" or f.status == "deleted" or not lang.supported(f.path):
             continue
         head_text = read_head(f.path) or ""
         base_text = None if f.status == "added" else read_base(f.old_path or f.path)
-        added |= added_symbols(base_text, head_text)
+        added |= lang.added_symbols(f.path, base_text, head_text)
         if f.status == "added":
-            new_modules.add(module_name(f.path))
+            new_modules.add(lang.module_name(f.path))
     return added, new_modules
 
 
@@ -623,10 +639,10 @@ def _prepare(
 
     head = workspaces.add("head", change.head_snapshot_sha)
     base = workspaces.add("base", change.base_sha)
-    adapters = detect_adapters(head.root, env_pass=config.env.pass_)
+    adapters = detect_adapters(head.root, env_pass=config.env.pass_, deps_root=change.repo_root)
     if not adapters:
         return "no supported test runner detected (pytest in this version)"
-    adapter = adapters[0]
+    adapter = choose_adapter(adapters, change) or adapters[0]
     dropped = dropped_names(os.environ, scrub_env(os.environ, config.env.pass_))
     log.info("child env: dropped %d variables (names in run log)", len(dropped))
     log.debug("dropped env names: %s", ", ".join(dropped))

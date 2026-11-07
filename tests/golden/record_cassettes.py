@@ -1,9 +1,10 @@
 """Record real LLM responses for the C1 golden tests (run by a human, needs an API key).
 
-    uv run python tests/golden/record_cassettes.py --provider deepseek [--profile full]
+    uv run python tests/golden/record_cassettes.py --provider deepseek [--repo ts_cart]
 
-Every C1 variant is built and verified with the given provider in *record* mode; responses
-land in tests/cassettes/py_ledger/ keyed by prompt, so the golden tests replay them offline.
+Every C1 variant of the fixture repo is built and verified with the given provider in
+*record* mode; responses land in tests/cassettes/<repo>/ keyed by prompt, so the golden
+tests replay them offline.
 A hard total spend cap (default $2) stops the recording, and each run keeps its own
 BudgetGuard. Prompts contain only fixture code and task text.
 """
@@ -19,13 +20,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-CASSETTES = ROOT / "tests" / "cassettes" / "py_ledger"
 SEED = "00" * 16
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--provider", default="deepseek")
+    parser.add_argument("--repo", default="py_ledger", choices=["py_ledger", "ts_cart"])
     parser.add_argument("--profile", default="full")
     parser.add_argument("--max-total-usd", type=float, default=2.0)
     parser.add_argument("--llm-budget", type=int, default=None, help="mutants.llm_budget override")
@@ -51,18 +52,19 @@ def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cp-record-"))
     os.environ["COUNTERPROOF_CACHE_DIR"] = str(args.keep_runs or tmp / "cache")
     os.environ["COUNTERPROOF_PYTHON"] = sys.executable
-    os.environ["COUNTERPROOF_LLM_CASSETTES"] = str(CASSETTES)
+    cassettes = ROOT / "tests" / "cassettes" / args.repo
+    os.environ["COUNTERPROOF_LLM_CASSETTES"] = str(cassettes)
     os.environ["COUNTERPROOF_LLM_MODE"] = args.mode
 
     from tests.helpers import VARIANTS, build_repo, load_expectations  # noqa: PLC0415
 
     from counterproof.orchestrator import VerifyRequest, run_verify  # noqa: PLC0415
 
-    tasks = load_expectations()["repos"]["py_ledger"]["tasks"]
+    tasks = load_expectations()["repos"][args.repo]["tasks"]
     total = 0.0
     for task in sorted(tasks):
         for variant in VARIANTS:
-            built = build_repo(tmp / f"{task}-{variant}", task=task, variant=variant)
+            built = build_repo(tmp / f"{task}-{variant}", args.repo, task=task, variant=variant)
             out = run_verify(
                 VerifyRequest(
                     cwd=built.path,
@@ -87,7 +89,7 @@ def main() -> int:
             if total > args.max_total_usd:
                 print(f"stopping: total spend ${total:.2f} over cap ${args.max_total_usd:.2f}")
                 return 1
-    print(f"done: ${total:.4f}; cassettes in {CASSETTES}")
+    print(f"done: ${total:.4f}; cassettes in {cassettes}")
     return 0
 
 

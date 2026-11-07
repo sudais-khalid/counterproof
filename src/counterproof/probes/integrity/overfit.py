@@ -172,10 +172,19 @@ def overfit_findings(
         test_literals,
     )
     wrapper.module.visit(visitor)
+    return findings_from_hits(path, head_text, visitor.hits)
+
+
+Hit = tuple[int, Literal, list[Literal]]
+"""``(line, compared literal, literals the guarded branch produces)``."""
+
+
+def findings_from_hits(path: str, head_text: str, hits: Iterable[Hit]) -> list[Finding]:
+    """FR-IN-07 findings for one file, shared by the Python and TypeScript scanners."""
     lines = head_text.splitlines()
     findings: list[Finding] = []
     seen: set[tuple[int, Literal]] = set()
-    for line, lit, produced in visitor.hits:
+    for line, lit, produced in hits:
         severity: Severity
         if (line, lit) in seen:
             continue

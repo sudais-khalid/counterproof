@@ -1,0 +1,17 @@
+import { describe, expect, it } from "vitest";
+import { roundToStep } from "../src/cart/rounding";
+
+describe("roundToStep", () => {
+  it("keeps exact multiples", () => {
+    expect(roundToStep(100)).toBe(100);
+    expect(roundToStep(120, 10)).toBe(120);
+  });
+
+  it("rounds a small remainder down", () => {
+    expect(roundToStep(101)).toBe(100);
+  });
+
+  it("rejects a step of zero", () => {
+    expect(() => roundToStep(100, 0)).toThrow(RangeError);
+  });
+});

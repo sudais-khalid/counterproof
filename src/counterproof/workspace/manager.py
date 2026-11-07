@@ -17,6 +17,7 @@ from counterproof import git
 from counterproof.errors import GitError
 from counterproof.evidence.store import remove_tree
 from counterproof.log import get_logger
+from counterproof.workspace.links import unlink_all
 
 log = get_logger("workspace")
 
@@ -124,6 +125,7 @@ class WorkspaceManager:
 
     def cleanup(self) -> None:
         for name, ws in list(self._workspaces.items()):
+            unlink_all(ws.root)  # never let worktree removal follow a linked node_modules
             try:
                 git.run_git(["worktree", "remove", "--force", str(ws.root)], self.repo)
             except GitError as exc:

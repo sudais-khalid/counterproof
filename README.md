@@ -17,14 +17,16 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M5).** Counterproof resolves the change, snapshots your
+> **Status: pre-alpha (milestone M6).** Python (pytest) and TypeScript/JavaScript (Vitest,
+> Jest) projects are supported. Counterproof resolves the change, snapshots your
 > working tree without touching it, builds isolated worktrees, selects impacted tests from
 > coverage and runs the head baseline. All five probes run: **claim audit** (the agent's
 > final message against the commands in its Claude Code transcript), **integrity**,
 > **red-green**, **mutants** (rule-based plus, with an LLM provider, LLM-written realistic
 > faults and an overfit mutant, filtered for equivalence by a static check, an LLM judge and
-> Hypothesis fuzzing) and the **blind oracle** (with an LLM provider: tests written from the
-> task and the public interface only, run on the change and triaged when they fail). The
+> Hypothesis or fast-check fuzzing) and the **blind oracle** (with an LLM provider, Python
+> only for now: tests written from the task and the public interface only, run on the change
+> and triaged when they fail). The
 > deterministic verdict engine implements all 14 rules of PRD section 8.
 > See [docs/PRD.md](docs/PRD.md).
 
@@ -110,9 +112,17 @@ Tests run in your existing Python environment: `COUNTERPROOF_PYTHON`, then the r
 `pytest-cov` there to get coverage-based test selection. Child processes get a scrubbed
 environment; pass extra variables with `[env] pass = [...]`.
 
+TypeScript and JavaScript projects use their own Vitest or Jest (with `jest-junit`) from the
+repository's `node_modules`, which each worktree links to; install dependencies first
+(`npm ci`), since Counterproof never installs packages. `node` comes from `PATH` or
+`COUNTERPROOF_NODE`. Vitest and Jest have no per-test coverage in v1, so tests are selected
+from changed test files plus the test files that import a changed module. Install
+`fast-check` to enable differential fuzzing of surviving mutants.
+
 ## Development
 
 ```sh
+npm ci --prefix tests/fixtures/node   # Vitest/Jest for the TypeScript fixtures (once)
 uv run ruff check
 uv run ruff format --check
 uv run mypy

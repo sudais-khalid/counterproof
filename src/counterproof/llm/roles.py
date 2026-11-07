@@ -50,13 +50,18 @@ class Prompt:
         return fill(self.system), fill(self.user)
 
 
-def load_prompt(role: str, version: str | None = None) -> Prompt:
+def load_prompt(role: str, version: str | None = None, variant: str | None = None) -> Prompt:
+    """``variant`` selects a language-specific file such as ``equivalence_judge.v1.typescript.md``;
+    the recorded version then reads ``v1.typescript`` so cache keys never collide."""
     version = version or PROMPT_VERSIONS[role]
+    name = f"{role}.{version}.{variant}" if variant else f"{role}.{version}"
     text = (
         resources.files("counterproof.llm")
-        .joinpath(f"prompts/{role}.{version}.md")
+        .joinpath(f"prompts/{name}.md")
         .read_text(encoding="utf-8")
     )
+    if variant:
+        version = f"{version}.{variant}"
     _, _, rest = text.partition("## system\n")
     system, _, user = rest.partition("## user\n")
     return Prompt(
@@ -101,8 +106,9 @@ class LLMSession:
         *,
         model: str,
         max_tokens: int = 4096,
+        variant: str | None = None,
     ) -> S | None:
-        prompt = load_prompt(role)
+        prompt = load_prompt(role, variant=variant)
         system, user = prompt.render(variables)
         system, n_sys = redact(system)
         user, n_user = redact(user)

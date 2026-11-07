@@ -23,8 +23,13 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
       - name: Install
         run: uv sync --locked
+      - name: Install fixture test runners (Vitest, Jest; pinned by package-lock.json)
+        run: npm ci --no-audit --no-fund --prefix tests/fixtures/node
       - name: Lint
         run: |
           uv run ruff check
@@ -33,5 +38,7 @@ jobs:
         run: uv run mypy
       - name: Test
         run: uv run pytest -q -n auto --cov --cov-report=term
+        env:
+          COUNTERPROOF_REQUIRE_NODE: "1" # Node-based tests must run here, never skip
       - name: Doctor
         run: uv run counterproof doctor

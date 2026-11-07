@@ -1,0 +1,1 @@
+Bug: splitEvenly(1000, 3) returns [333, 333, 333], which adds up to 999. Parts must always add up to the total, with leftover cents handed out one at a time to the earliest parts, so the result should be [334, 333, 333].
