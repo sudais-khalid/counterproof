@@ -20,6 +20,16 @@ LIKELY_BUG_THRESHOLD: Final = 0.8
 MAX_TRIAGE: Final = 3
 MAX_FAILURE_CHARS: Final = 2000
 MAX_CODE_CHARS: Final = 6000
+_WINDOWS_PATH: Final = re.compile(r"[\w.-]+(?:\\[\w.-]+)+\.py\b")
+
+
+def platform_neutral(text: str) -> str:
+    """Same failure text on every OS: POSIX separators in paths, LF line endings.
+
+    The prompt is part of the cache key, so a recorded answer must replay everywhere.
+    """
+    text = text.replace("\r\n", "\n")
+    return _WINDOWS_PATH.sub(lambda m: m.group(0).replace("\\", "/"), text)
 
 
 @dataclass(frozen=True)
@@ -65,6 +75,7 @@ def triage_failures(
     for result in failing:
         failure = result.failure
         text = f"{failure.message}\n{failure.traceback_excerpt}" if failure else "(no output)"
+        text = platform_neutral(text)
         verdict = session.run(
             "triage_judge",
             TriageOutput,

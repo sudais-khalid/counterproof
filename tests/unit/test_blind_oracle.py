@@ -570,3 +570,40 @@ def test_fr_bo_07_configured_model_wins_and_families() -> None:
     assert model_family("claude-opus-5-5") == "anthropic"
     assert model_family("openai/gpt-5") == "openai"
     assert model_family("qwen2.5-coder:7b") == "qwen"
+
+
+def test_triage_prompt_is_identical_on_every_platform() -> None:
+    """Regression (M5 CI): the failure text carried Windows path separators and line
+    endings, so triage cassettes recorded on Windows missed on Linux and macOS."""
+    from counterproof.probes.blind_oracle.runner import OracleResult  # noqa: PLC0415
+    from counterproof.probes.blind_oracle.triage import triage_failures  # noqa: PLC0415
+
+    case = _suite("test_a").cases[0]
+    prompts = []
+    for sep, eol in (("\\", "\r\n"), ("/", "\n")):
+        failure = FailureInfo(
+            kind="ASSERTION",
+            message="AssertionError: assert 2 == 1",
+            traceback_excerpt=eol.join(
+                [
+                    "def test_oracle_a():",
+                    ">       assert f(1) == 1",
+                    "E       assert 2 == 1",
+                    "",
+                    f"tests{sep}test_counterproof_oracle.py:7: AssertionError",
+                ]
+            ),
+        )
+        result = OracleResult(
+            case=case,
+            nodeid="n",
+            status="failing",
+            failure=failure,
+            base_outcome="fail",
+            base_failure=failure,
+        )
+        session, provider = _session([_triage("oracle_wrong", 0.9)])
+        triage_failures(session, model="j", results=[result], task_text="t", functions={})
+        prompts.append(provider.requests[0].user)
+    assert prompts[0] == prompts[1]
+    assert "tests/test_counterproof_oracle.py:7" in prompts[1]
