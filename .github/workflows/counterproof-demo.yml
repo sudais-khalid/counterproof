@@ -1,0 +1,41 @@
+name: counterproof-action-demo
+
+# Throwaway workflow for the M7 acceptance demo: the Action verifies a real fixture change
+# (py_ledger T1, partial fix) and comments its certificate on this pull request.
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Build the demo change (py_ledger T1, partial fix)
+        id: fixture
+        run: |
+          python -m pip install --quiet . pytest pyyaml
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, sys
+          from pathlib import Path
+          sys.path.insert(0, ".")
+          from tests.helpers import build_repo
+          built = build_repo(Path(os.environ["RUNNER_TEMP"]) / "demo", task="T1-discount-cap", variant="partial")
+          print(f"path={built.path}")
+          print(f"base={built.base_sha}")
+          print(f"head={built.head_sha}")
+          PY
+      - uses: ./action
+        with:
+          working-directory: ${{ steps.fixture.outputs.path }}
+          base: ${{ steps.fixture.outputs.base }}
+          head: ${{ steps.fixture.outputs.head }}
+          upload-sarif: "false"
+          fail-on: refuted
