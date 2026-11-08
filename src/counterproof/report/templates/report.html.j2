@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counterproof {{ manifest.verdict.verdict }} - {{ manifest.run_id }}</title>
+<style>
+  :root { --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --line: #d1d9e0; --code: #f6f8fa;
+          --add: #dafbe1; --del: #ffebe9; --chg: #fff8c5;
+          --proven: #1a7f37; --weak: #9a6700; --unproven: #cf222e; --refuted: #82071e; --inconclusive: #0969da; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --line: #3d444d; --code: #151b23;
+            --add: #12261e; --del: #25171c; --chg: #2e2a12; }
+  }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 24px 16px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 32px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; color: #fff; font-weight: 600; }
+  .PROVEN { background: var(--proven); } .WEAK { background: var(--weak); } .UNPROVEN { background: var(--unproven); }
+  .REFUTED { background: var(--refuted); } .INCONCLUSIVE { background: var(--inconclusive); }
+  .muted { color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  code, pre { font: 13px/1.45 ui-monospace, monospace; } pre { background: var(--code); padding: 8px; overflow-x: auto; margin: 0; }
+  .diff td { font: 13px/1.45 ui-monospace, monospace; white-space: pre; padding: 1px 6px; }
+  .diff .no { color: var(--muted); text-align: right; width: 3em; user-select: none; }
+  .diff .removed .l, .diff .changed .l { background: var(--del); } .diff .added .r, .diff .changed .r { background: var(--add); }
+  details { margin: 8px 0; } summary { cursor: pointer; }
+  .mutant { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 10px 0; }
+  .status-survived { color: var(--unproven); font-weight: 600; } .status-killed, .status-timeout { color: var(--proven); }
+</style>
+</head>
+<body>
+<main>
+<h1>Counterproof certificate <span class="badge {{ manifest.verdict.verdict }}">{{ manifest.verdict.verdict }}</span></h1>
+<p class="muted">rule {{ manifest.verdict.rule_id }} &middot; intent {{ manifest.change.intent }} &middot; profile {{ profile }}
+  &middot; {{ manifest.change.files | length }} file(s) &middot; {{ "%.1f" | format(manifest.duration_s) }}s &middot; Counterproof {{ version }}</p>
+
+<h2>Probes</h2>
+<table>
+  <tr><th>Probe</th><th>Result</th></tr>
+  {% for label, cell in rows %}<tr><td>{{ label }}</td><td>{{ cell }}</td></tr>{% endfor %}
+</table>
+
+{% if manifest.verdict.reasons %}
+<h2>Why</h2>
+<ul>{% for reason in manifest.verdict.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+{% endif %}
+{% if manifest.verdict.confidence_note %}<p class="muted">Scope: {{ manifest.verdict.confidence_note }}</p>{% endif %}
+
+{% if findings %}
+<h2>Findings</h2>
+<table>
+  <tr><th>Probe</th><th>Rule</th><th>Severity</th><th>Where</th><th>Message</th></tr>
+  {% for probe, f in findings %}
+  <tr><td>{{ probe }}</td><td>{{ f.rule_id }}</td><td>{{ f.severity }}{% if f.waived %} (waived){% endif %}</td>
+      <td>{% if f.file %}<code>{{ f.file }}{% if f.line %}:{{ f.line }}{% endif %}</code>{% endif %}</td><td>{{ f.message }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Mutants ({{ mutants | length }})</h2>
+{% for entry in mutants %}{% set m = entry.m %}
+<div class="mutant">
+  <div><strong>{{ m.id }}</strong> <span class="status-{{ m.status }}">{{ m.status }}</span>
+    &middot; {{ m.source }} / {{ m.operator_or_class }}{% if m.plausibility %} &middot; plausibility {{ m.plausibility }}{% endif %}
+    &middot; <code>{{ m.file }}:{{ m.start_line }}{% if m.end_line != m.start_line %}-{{ m.end_line }}{% endif %}</code></div>
+  <table class="diff">
+    {% for row in entry.rows %}
+    <tr class="{{ row.kind }}"><td class="no">{{ row.left_no }}</td><td class="l">{{ row.left }}</td><td class="no">{{ row.right_no }}</td><td class="r">{{ row.right }}</td></tr>
+    {% endfor %}
+  </table>
+  {% if m.hint %}<p>Missing test: {{ m.hint }}</p>{% endif %}
+  {% if m.equivalence_note %}<p class="muted">{{ m.equivalence_note }}</p>{% endif %}
+  {% if m.killed_by %}<details><summary>Killed by {{ m.killed_by | length }} test(s)</summary><ul>{% for t in m.killed_by %}<li><code>{{ t }}</code></li>{% endfor %}</ul></details>{% endif %}
+</div>
+{% else %}
+<p class="muted">No mutants ran.</p>
+{% endfor %}
+
+<h2>Runs of this repository</h2>
+<table>
+  <tr><th>Run</th><th>Created (UTC)</th><th>Verdict</th></tr>
+  {% for run in timeline %}
+  <tr><td><code>{{ run.run_id }}</code>{% if run.current %} (this run){% endif %}</td><td>{{ run.created }}</td><td>{{ run.verdict }} <span class="muted">{{ run.rule }}</span></td></tr>
+  {% endfor %}
+</table>
+
+<h2>Logs</h2>
+{% for log in logs %}
+<details><summary><code>{{ log.name }}</code></summary><pre>{{ log.text }}</pre></details>
+{% else %}<p class="muted">No logs.</p>{% endfor %}
+
+<h2>Evidence</h2>
+<p>{{ llm_line }}</p>
+<p class="muted">run {{ manifest.run_id }} &middot; manifest sha256 <code>{{ manifest_sha256 }}</code> &middot; seed commitment <code>{{ manifest.seed_commitment }}</code></p>
+</main>
+</body>
+</html>

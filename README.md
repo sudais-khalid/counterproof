@@ -17,7 +17,7 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M6).** Python (pytest) and TypeScript/JavaScript (Vitest,
+> **Status: pre-alpha (milestone M7).** Python (pytest) and TypeScript/JavaScript (Vitest,
 > Jest) projects are supported. Counterproof resolves the change, snapshots your
 > working tree without touching it, builds isolated worktrees, selects impacted tests from
 > coverage and runs the head baseline. All five probes run: **claim audit** (the agent's
@@ -36,6 +36,7 @@ counterproof verify --format md          # Markdown certificate (PRD section 14)
 counterproof verify --fail-on refuted    # CI gate: only REFUTED fails the job
 counterproof report RUN_ID --format json # re-render a stored run
 counterproof explain RUN_ID r002         # diff, tests run and hint for one mutant
+counterproof report RUN_ID --format html --out report.html   # also: sarif, json, md
 counterproof verify --transcript ~/.claude/projects/<proj>/<session>.jsonl   # audit claims
 counterproof export-oracle RUN_ID        # list blind-oracle tests; --accept NAME copies one
 ```
@@ -72,6 +73,47 @@ provider saw code. Responses are cached, so re-running on the same change is fre
 oracle sees the task, signatures, docstrings and public constants, never a function body; with
 `oracle_model = "auto"` it prefers a model family other than the one that wrote the code (read
 from the transcript).
+
+## Integrations
+
+**Claude Code (coach mode).** `counterproof init --claude` adds a Stop hook to
+`.claude/settings.json`. When Claude finishes a turn, the hook runs the fast profile on the
+working tree with the session transcript. A REFUTED change is blocked; a WEAK or UNPROVEN one
+gets a short hint so Claude keeps working, for example *"A boundary change at
+`src/ledger/discounts.py:19` is not detected by any test: add a test where the two sides of
+that comparison are equal."* The hint names the gap and its location only: never mutant code,
+oracle tests or the seed, and a later audit run uses a fresh seed. The hook never re-runs while
+Claude is already continuing because of it, gives up after 90 seconds without blocking, and
+needs `counterproof` on `PATH` (or the interpreter path `init` writes).
+
+**MCP.** `claude mcp add counterproof -- counterproof mcp` (or any MCP client, stdio) exposes
+`verify_change`, `get_report` and `explain_mutant`. Agents get the redacted certificate: classes
+and locations, no mutant code, unless a human commits `[mcp] reveal_mutants = true`.
+
+**git.** `counterproof init --git-hook [--fail-on refuted]` installs a pre-push hook that
+verifies each pushed range with the fast profile and blocks only at that verdict.
+
+**GitHub Action.** Install your project's test dependencies first, then:
+
+```yaml
+on: pull_request
+permissions: {contents: read, pull-requests: write, security-events: write}
+jobs:
+  counterproof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - run: pip install -e . pytest pytest-cov   # your project and its tests
+      - uses: sudais-khalid/counterproof/action@main
+        with:
+          fail-on: refuted          # or unproven / weak
+          provider: none            # or deepseek / anthropic with the matching key input
+```
+
+It comments one certificate on the PR (updated on every push), uploads SARIF to code
+scanning and writes the certificate to the job summary. Pull requests from forks always run
+with `provider: none`, so keys never reach untrusted code.
 
 ## Install (development)
 

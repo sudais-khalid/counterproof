@@ -208,13 +208,14 @@ def verify(
         FailOnOpt | None,
         typer.Option(help="Exit non-zero only for this verdict or worse (CI gating)."),
     ] = None,
+    final_message_file: Annotated[
+        Path | None,
+        typer.Option(help="The agent's final message (used by the Claude Code hook).", hidden=True),
+    ] = None,
 ) -> None:
     """Verify the current change and write a sealed evidence bundle."""
     if task is not None and task_file is not None:
         _fail("--task and --task-file are mutually exclusive", EXIT_USAGE_ERROR)
-    if fmt in {FormatOpt.html, FormatOpt.sarif}:
-        _fail(f"--format {fmt.value} is not implemented yet (planned for M7)", 1)
-
     overrides: dict[str, Any] = {}
     run_over = {
         "profile": profile.value if profile else None,
@@ -239,10 +240,17 @@ def verify(
                 task_file_text = task_file.read_text(encoding="utf-8")
             except OSError as exc:
                 raise UsageError(f"cannot read --task-file {task_file}: {exc}") from exc
+        final_message = None
+        if final_message_file is not None:
+            try:
+                final_message = final_message_file.read_text(encoding="utf-8")
+            except OSError as exc:
+                raise UsageError(f"cannot read --final-message-file: {exc}") from exc
         request = VerifyRequest(
             cwd=Path.cwd(),
             base=base,
             head=head,
+            final_message=final_message,
             task_text=task,
             task_file_text=task_file_text,
             intent=intent.value if intent else None,
@@ -267,12 +275,38 @@ def verify(
 
 
 def _emit(bundle: RunBundle, fmt: str, out: Path | None) -> None:
-    """Write a rendered run to ``out`` or stdout (Rich when stdout is a terminal)."""
+    """Write a rendered run to ``out`` or stdout (Rich when stdout is a terminal).
+
+    In coach mode the text view is the coach hint only: no mutant code (PRD 5.3).
+    """
+    coach = bundle.config.get("run", {}).get("mode") == "coach"
+    if fmt == "text" and coach:
+        from counterproof.report.coach import coach_hint, summary_line  # noqa: PLC0415
+
+        verdict = bundle.manifest.verdict.verdict
+        hint = (
+            summary_line(bundle.manifest)
+            if verdict in {"PROVEN", "INCONCLUSIVE"}
+            else coach_hint(bundle.manifest, bundle.mutants)
+        )
+        if out is not None:
+            _guard(lambda: out.write_text(hint + "\n", encoding="utf-8"))
+        else:
+            sys.stdout.write(hint + "\n")
+        return
     if fmt == "text" and out is None and sys.stdout.isatty():
         render_terminal(bundle, out_console)
         return
     if fmt == "json":
         rendered = render_json(bundle)
+    elif fmt == "html":
+        from counterproof.report.html import render_html  # noqa: PLC0415
+
+        rendered = render_html(bundle)
+    elif fmt == "sarif":
+        from counterproof.report.sarif import render_sarif  # noqa: PLC0415
+
+        rendered = render_sarif(bundle)
     elif fmt == "md":
         rendered = render_markdown(bundle)
     else:
@@ -331,8 +365,6 @@ def report(
     out: Annotated[Path | None, typer.Option(help="Write output to this file.")] = None,
 ) -> None:
     """Render a stored run."""
-    if fmt in {ReportFormatOpt.html, ReportFormatOpt.sarif}:
-        _fail(f"--format {fmt.value} is not implemented yet (planned for M7)", 1)
     bundle = _guard(lambda: load_bundle(find_run(run_id)))
     _emit(bundle, fmt.value, out)
 
@@ -398,21 +430,105 @@ def export_oracle(
 
 @hook_app.command("claude-stop")
 def hook_claude_stop() -> None:
-    """Claude Code Stop hook; reads hook JSON on stdin."""
-    _not_implemented("hook claude-stop", "M7")
+    """Claude Code Stop hook (coach mode); reads the hook JSON on stdin (PRD 13.1)."""
+    from counterproof.integrations import claude_hook  # noqa: PLC0415
+
+    output = claude_hook.main(sys.stdin.read())
+    if output:
+        sys.stdout.write(output + "\n")
+        sys.stdout.flush()
+    raise typer.Exit(0)
+
+
+@hook_app.command("pre-push")
+def hook_pre_push(
+    remote: Annotated[str | None, typer.Argument(help="Remote name (from git).")] = None,
+    url: Annotated[str | None, typer.Argument(help="Remote URL (from git).")] = None,
+    fail_on: Annotated[
+        FailOnOpt, typer.Option(help="Block the push at this verdict or worse.")
+    ] = FailOnOpt.refuted,
+) -> None:
+    """git pre-push hook: verify each pushed commit range with the fast profile (PRD 13.4)."""
+    from counterproof.integrations.git_hook import parse_push_lines  # noqa: PLC0415
+
+    refs = [r for r in parse_push_lines(sys.stdin.read()) if not r.deleted]
+    worst = 0
+    for ref in refs:
+
+        def _run(
+            head: str = ref.local_sha, base: str | None = None if ref.new_branch else ref.remote_sha
+        ) -> VerifyOutcome:
+            request = VerifyRequest(
+                cwd=Path.cwd(), base=base, head=head, overrides={"run": {"profile": "fast"}}
+            )
+            with _sigterm_as_interrupt():
+                return run_verify(request)
+
+        outcome = _guard(_run)
+        verdict = outcome.manifest.verdict
+        code = exit_code_for(verdict, fail_on.value)
+        err_console.print(
+            f"counterproof: {ref.local_ref} {verdict.verdict} ({verdict.rule_id}), "
+            f"run {outcome.manifest.run_id}",
+            highlight=False,
+            soft_wrap=True,
+        )
+        worst = max(worst, code)
+    if worst:
+        err_console.print(
+            f"counterproof: push blocked (--fail-on {fail_on.value}); "
+            "see `counterproof report <run>`",
+            highlight=False,
+            soft_wrap=True,
+        )
+    raise typer.Exit(1 if worst else 0)
 
 
 @app.command()
 def mcp() -> None:
-    """Run the stdio MCP server."""
-    _not_implemented("mcp", "M7")
+    """Run the stdio MCP server (PRD 13.2)."""
+    from counterproof.integrations.mcp_server import serve  # noqa: PLC0415
+
+    serve()
 
 
 @app.command()
 def init(
-    force: Annotated[bool, typer.Option(help="Overwrite an existing counterproof.toml.")] = False,
+    force: Annotated[bool, typer.Option(help="Overwrite existing files.")] = False,
+    claude: Annotated[
+        bool,
+        typer.Option("--claude", help="Add the Claude Code Stop hook (.claude/settings.json)."),
+    ] = False,
+    git_hook: Annotated[
+        bool, typer.Option("--git-hook", help="Install a git pre-push hook.")
+    ] = False,
+    fail_on: Annotated[
+        FailOnOpt, typer.Option(help="Verdict that blocks a push (--git-hook).")
+    ] = FailOnOpt.refuted,
 ) -> None:
-    """Write counterproof.toml for the detected stack."""
+    """Write counterproof.toml for the detected stack, or install agent and git hooks."""
+    if claude or git_hook:
+        from counterproof.integrations.git_hook import (  # noqa: PLC0415
+            install_claude_hook,
+            install_pre_push,
+        )
+
+        def _install() -> list[str]:
+            repo = git.repo_root(Path.cwd())
+            done: list[str] = []
+            if claude:
+                path, changed = install_claude_hook(repo)
+                done.append(
+                    f"{'added the Stop hook to' if changed else 'Stop hook already in'} {path}"
+                )
+            if git_hook:
+                hook = install_pre_push(repo, fail_on=fail_on.value, force=force)
+                done.append(f"installed {hook} (blocks on {fail_on.value})")
+            return done
+
+        for line in _guard(_install):
+            out_console.print(line, highlight=False, soft_wrap=True)
+        return
 
     def _run() -> tuple[Path, str]:
         repo = git.repo_root(Path.cwd())

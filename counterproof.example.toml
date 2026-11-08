@@ -44,3 +44,6 @@ exclude = []                # e.g. ["migrations/**", "**/*.generated.ts"]
 
 [env]
 pass = []                   # extra env vars passed to test processes, e.g. ["DATABASE_URL_TEST"]
+
+[mcp]
+reveal_mutants = false      # let MCP clients (agents) see mutant code; keep false to avoid gaming

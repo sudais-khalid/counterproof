@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from typing import Final
 
 from counterproof.models import Finding, ProbeResult
 from counterproof.report.bundle import RunBundle
@@ -177,7 +178,13 @@ def _llm_line(bundle: RunBundle) -> str:
     return text
 
 
-def render_markdown(bundle: RunBundle) -> str:
+REDACTED: Final = "details withheld from agents (PRD 15.3)"
+
+
+def render_markdown(bundle: RunBundle, *, redact: bool = False) -> str:
+    """The certificate. ``redact`` (for agent-facing channels such as MCP) keeps every
+    verdict, class and location but withholds mutant code, LLM-written hints and blind-oracle
+    details, which would let an agent write tests aimed at exactly those faults."""
     manifest = bundle.manifest
     verdict = manifest.verdict
     change = manifest.change
@@ -200,11 +207,15 @@ def render_markdown(bundle: RunBundle) -> str:
 
     if verdict.reasons:
         out += ["", "Why:"]
-        out += [f"- {reason}" for reason in verdict.reasons]
+        for reason in verdict.reasons:
+            shown = reason
+            if redact and reason.startswith("[R-WEAK-ORACLE]"):
+                shown = f"[R-WEAK-ORACLE] the blind oracle found a likely bug ({REDACTED})"
+            out.append(f"- {shown}")
 
     oracle = probes.get("blind_oracle")
     likely = [f for f in oracle.findings if not f.waived] if oracle is not None else []
-    if likely:
+    if likely and not redact:
         # FR-BO-05: never a refutation, but shown prominently for human review.
         out += ["", "Likely bugs found by the blind oracle (review these):"]
         out += [f"- {f.message}" for f in likely]
@@ -215,6 +226,9 @@ def render_markdown(bundle: RunBundle) -> str:
         out += ["", "Surviving faults (would ship undetected):"]
         for i, m in enumerate(survivors, start=1):
             plaus = f", plausibility {m.plausibility}" if m.plausibility else ""
+            if redact:
+                out.append(f"{i}. {m.file}:{m.start_line}  ({m.operator_or_class}; {REDACTED})")
+                continue
             out.append(
                 f"{i}. {m.file}:{m.start_line}  {_code(m.original)} -> {_code(m.replacement)}"
                 f"   ({m.operator_or_class}{plaus}, mutant {m.id})"

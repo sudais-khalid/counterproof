@@ -9,6 +9,7 @@ the pure :func:`counterproof.verdict.rules.decide`.
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -99,6 +100,9 @@ class VerifyRequest:
     overrides: Mapping[str, Any] = field(default_factory=dict)
     keep: bool = False
     config_from: ConfigFrom = "base"
+    final_message: str | None = None
+    """The agent's final message when the caller has it first-hand (the Stop hook's
+    ``last_assistant_message``): the transcript file may not contain it yet."""
 
 
 @dataclass(frozen=True)
@@ -167,7 +171,9 @@ def run_verify(req: VerifyRequest, *, cache: Path | None = None) -> VerifyOutcom
                 user_intent=req.intent,
             )
             store.write_json("change.json", change)
-            verdict, probes, llm_usage = _pipeline(store, workspaces, change, config, seed)
+            verdict, probes, llm_usage = _pipeline(
+                store, workspaces, change, config, seed, final_message=req.final_message
+            )
             if req.keep:
                 for ws in workspaces.workspaces.values():
                     log.warning("kept worktree %s: %s", ws.name, ws.root)
@@ -211,12 +217,18 @@ def _pipeline(
     change: ChangeSet,
     config: Config,
     seed: bytes,
+    *,
+    final_message: str | None = None,
 ) -> tuple[Verdict, list[ProbeResult], LLMUsage]:
     """Section 6.3 steps 2-7: workspaces, baseline, probes (P5, P2, P1, P3, P4), verdict."""
     session, models, llm_note = build_session(config)
     llm = session is not None
     log.info("LLM: %s", llm_note)
     transcript = load_transcript(change.transcript_path) if change.transcript_path else None
+    if transcript is not None and final_message and final_message.strip():
+        transcript = dataclasses.replace(
+            transcript, final_message=final_message.strip(), final_message_line=None
+        )
     prepared = _prepare(store, workspaces, change, config)
     if isinstance(prepared, str):
         claims = _claim_audit(store, config, change, transcript, None)

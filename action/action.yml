@@ -1,0 +1,162 @@
+name: Counterproof
+description: >-
+  Check that a pull request's tests actually prove the change: comment a proof certificate
+  on the PR, upload SARIF for code scanning, and fail on the verdict you choose.
+author: Sudais Khalid
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  fail-on:
+    description: "Fail the job at this verdict or worse: weak, unproven or refuted."
+    default: refuted
+  profile:
+    description: "fast, full or paranoid."
+    default: full
+  provider:
+    description: >-
+      LLM provider: none, anthropic, openai, deepseek or ollama. Pull requests from forks
+      always run with none, so keys never reach untrusted code.
+    default: none
+  anthropic-api-key:
+    description: Optional key for provider anthropic.
+    required: false
+  openai-api-key:
+    description: Optional key for provider openai.
+    required: false
+  deepseek-api-key:
+    description: Optional key for provider deepseek.
+    required: false
+  test-python:
+    description: >-
+      Interpreter with the project's test dependencies (pytest projects). Default: the
+      python3 on PATH before this action runs. Node projects use their own node_modules.
+    required: false
+  comment:
+    description: Post or update one certificate comment on the pull request.
+    default: "true"
+  upload-sarif:
+    description: Upload findings and surviving mutants to GitHub code scanning.
+    default: "true"
+  github-token:
+    description: Token used to comment on the pull request.
+    default: ${{ github.token }}
+  working-directory:
+    description: Repository to verify (default the workspace checkout).
+    default: "."
+  base:
+    description: Base commit (default the pull request's base sha).
+    required: false
+  head:
+    description: Head commit (default the pull request's head sha, else github.sha).
+    required: false
+
+outputs:
+  verdict:
+    description: PROVEN, WEAK, UNPROVEN, REFUTED or INCONCLUSIVE.
+    value: ${{ steps.verify.outputs.verdict }}
+  run-id:
+    description: The Counterproof run id.
+    value: ${{ steps.verify.outputs.run-id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Counterproof
+      id: install
+      shell: bash
+      run: |
+        set -euo pipefail
+        project_python="${INPUT_TEST_PYTHON:-$(command -v python3 || command -v python)}"
+        echo "project-python=$project_python" >> "$GITHUB_OUTPUT"
+        "$project_python" -m venv "$RUNNER_TEMP/counterproof-venv"
+        bin="$RUNNER_TEMP/counterproof-venv/bin"
+        [ -d "$bin" ] || bin="$RUNNER_TEMP/counterproof-venv/Scripts"
+        "$bin/python" -m pip install --quiet "$GITHUB_ACTION_PATH/.."
+        echo "cp=$bin/counterproof" >> "$GITHUB_OUTPUT"
+      env:
+        INPUT_TEST_PYTHON: ${{ inputs.test-python }}
+
+    - name: Verify
+      id: verify
+      shell: bash
+      run: |
+        set -uo pipefail
+        cd "$INPUT_WORKING_DIRECTORY"
+        provider="$INPUT_PROVIDER"
+        if [ "$IS_FORK" = "true" ]; then provider=none; fi
+        task="$RUNNER_TEMP/counterproof-task.md"
+        printf '%s\n\n%s\n' "$PR_TITLE" "$PR_BODY" > "$task"
+        if [ -n "$BASE_SHA" ] && ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+          git fetch --no-tags --depth=200 origin "$BASE_SHA" || true
+        fi
+        args=(verify --head "$HEAD_SHA" --profile "$INPUT_PROFILE" --provider "$provider"
+              --fail-on "$INPUT_FAIL_ON" --format json --out "$RUNNER_TEMP/counterproof.json")
+        [ -n "$BASE_SHA" ] && args+=(--base "$BASE_SHA")
+        [ -s "$task" ] && [ -n "$PR_TITLE" ] && args+=(--task-file "$task")
+        "$CP" "${args[@]}"
+        code=$?
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        if [ ! -s "$RUNNER_TEMP/counterproof.json" ]; then
+          echo "::error::Counterproof did not produce a result (exit $code)"
+          exit 1
+        fi
+        run_id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$RUNNER_TEMP/counterproof.json")
+        verdict=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["verdict"]["verdict"])' "$RUNNER_TEMP/counterproof.json")
+        echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+        echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+        "$CP" report "$run_id" --format md --out "$RUNNER_TEMP/counterproof.md"
+        "$CP" report "$run_id" --format sarif --out "$RUNNER_TEMP/counterproof.sarif"
+        cat "$RUNNER_TEMP/counterproof.md" >> "$GITHUB_STEP_SUMMARY"
+      env:
+        CP: ${{ steps.install.outputs.cp }}
+        COUNTERPROOF_PYTHON: ${{ steps.install.outputs.project-python }}
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        INPUT_PROFILE: ${{ inputs.profile }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        IS_FORK: ${{ github.event.pull_request.head.repo.full_name != '' && github.event.pull_request.head.repo.full_name != github.repository }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_BODY: ${{ github.event.pull_request.body }}
+        BASE_SHA: ${{ inputs.base || github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ inputs.head || github.event.pull_request.head.sha || github.sha }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        DEEPSEEK_API_KEY: ${{ inputs.deepseek-api-key }}
+
+    - name: Upload SARIF
+      if: ${{ always() && inputs.upload-sarif == 'true' && steps.verify.outputs.run-id != '' }}
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: ${{ runner.temp }}/counterproof.sarif
+        category: counterproof
+
+    - name: Comment on the pull request
+      if: >-
+        ${{ always() && inputs.comment == 'true' && github.event_name == 'pull_request'
+        && steps.verify.outputs.run-id != ''
+        && github.event.pull_request.head.repo.full_name == github.repository }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        marker='<!-- counterproof-certificate -->'
+        body_file="$RUNNER_TEMP/counterproof-comment.md"
+        { echo "$marker"; cat "$RUNNER_TEMP/counterproof.md"; } > "$body_file"
+        existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+          --jq "map(select(.body | startswith(\"$marker\"))) | .[0].id // empty" | head -n1)
+        if [ -n "$existing" ]; then
+          gh api --method PATCH "repos/$REPO/issues/comments/$existing" -F "body=@$body_file" > /dev/null
+        else
+          gh api --method POST "repos/$REPO/issues/$PR/comments" -F "body=@$body_file" > /dev/null
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+
+    - name: Gate on the verdict
+      shell: bash
+      run: exit "${EXIT_CODE:-1}"
+      env:
+        EXIT_CODE: ${{ steps.verify.outputs.exit-code }}

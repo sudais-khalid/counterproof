@@ -149,6 +149,11 @@ class PathsConfig(_Section):
     exclude: list[str] = Field(default_factory=list)
 
 
+class MCPConfig(_Section):
+    # PRD 13.2: agents calling the MCP server never see mutant code unless a human opts in.
+    reveal_mutants: bool = False
+
+
 class EnvConfig(_Section):
     # FR-WS-04: variables explicitly allowed through to child processes.
     pass_: list[str] = Field(default_factory=list, alias="pass")
@@ -165,6 +170,7 @@ class Config(_Section):
     oracle: OracleConfig = Field(default_factory=OracleConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)
     env: EnvConfig = Field(default_factory=EnvConfig)
+    mcp: MCPConfig = Field(default_factory=MCPConfig)
 
     @property
     def profile_spec(self) -> ProfileSpec:

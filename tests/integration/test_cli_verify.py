@@ -226,19 +226,10 @@ def test_error_messages_are_never_hard_wrapped(
     assert err.rstrip("\n").endswith("is not inside a git repository")
 
 
-@pytest.mark.parametrize("fmt", ["html", "sarif"])
-def test_unimplemented_formats_fail_loudly(in_repo: Path, fmt: str) -> None:
-    code, _, err = _verify("--format", fmt)
-    assert code == 1
-    assert "not implemented" in err
-
-
 @pytest.mark.parametrize(
     "args",
     [
-        ["hook", "claude-stop"],
-        ["mcp"],
-        ["eval", "corpus"],
+        ["eval", "corpus"],  # M7 (approved): html/sarif, hook claude-stop and mcp are real now
     ],
 )
 def test_stub_commands_report_not_implemented(args: list[str]) -> None:
