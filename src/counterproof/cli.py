@@ -147,10 +147,6 @@ def _sigterm_as_interrupt() -> Iterator[None]:
         signal.signal(signal.SIGTERM, previous)
 
 
-def _not_implemented(command: str, milestone: str) -> NoReturn:
-    _fail(f"`counterproof {command}` is not implemented yet (planned for {milestone})", 1)
-
-
 def _version_callback(value: bool) -> None:
     if value:
         out_console.print(f"counterproof {__version__}", highlight=False, soft_wrap=True)
@@ -550,12 +546,65 @@ def init(
 
 @app.command("eval")
 def eval_cmd(
-    corpus_dir: Annotated[Path, typer.Argument()],
-    baseline: Annotated[str | None, typer.Option(help="claims | mutmut | stryker")] = None,
-    out: Annotated[Path | None, typer.Option()] = None,
+    corpus_dir: Annotated[Path, typer.Argument(help="Directory with corpus.toml.")],
+    baseline: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Baselines to report: green, claims, mutmut (or stryker); default all. "
+            "mutmut/stryker are approximated by diff-scoped RuleForge mutants."
+        ),
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option(help="Result path (.json; a .md table is written next to it)."),
+    ] = None,
+    config: Annotated[
+        list[str] | None, typer.Option("--config", help="Only these corpus configurations.")
+    ] = None,
+    jobs: Annotated[int, typer.Option(min=1, help="Cases verified in parallel.")] = 4,
+    repeat: Annotated[
+        int, typer.Option(min=1, help="Run every case this often (determinism check).")
+    ] = 1,
+    allow_remote: Annotated[
+        bool, typer.Option(help="Allow git cases that clone and run foreign code.")
+    ] = False,
+    leakage: Annotated[
+        Path | None,
+        typer.Option(help="Labelled survivor sheet (default eval/leakage/survivors.csv)."),
+    ] = None,
 ) -> None:
-    """Run Counterproof over an evaluation corpus."""
-    _not_implemented("eval", "M8")
+    """Run Counterproof over an evaluation corpus (PRD section 17)."""
+    from datetime import UTC, datetime  # noqa: PLC0415
+
+    from counterproof.eval.harness import run_corpus, write_report  # noqa: PLC0415
+    from counterproof.eval.leakage import score  # noqa: PLC0415
+
+    names = {"green": "B0", "claims": "B1", "mutmut": "B2", "stryker": "B2"}
+    unknown = [b for b in baseline or [] if b not in names]
+    if unknown:
+        _fail(f"unknown --baseline {', '.join(unknown)} (use {', '.join(names)})", EXIT_USAGE_ERROR)
+
+    def _run() -> tuple[Path, Path]:
+        report = run_corpus(
+            corpus_dir, jobs=jobs, allow_remote=allow_remote, configurations=config, repeat=repeat
+        )
+        if baseline:
+            report.baselines = sorted({names[b] for b in baseline})
+        sheet = leakage or Path("eval/leakage/survivors.csv")
+        if sheet.is_file():
+            result = score(sheet)
+            report.leakage = {
+                "sheet": sheet.as_posix(),
+                "labelled": result.labelled,
+                "total": result.labelled + result.unlabelled,
+                "leakage": None if result.leakage is None else round(result.leakage, 3),
+            }
+        stamp = datetime.now(UTC).strftime("%Y-%m-%d")
+        target = out or Path("eval/results") / f"{stamp}-{corpus_dir.resolve().name}.json"
+        return write_report(report, target)
+
+    json_path, md_path = _guard(_run)
+    out_console.print(f"wrote {json_path} and {md_path}", highlight=False, soft_wrap=True)
 
 
 def main() -> None:

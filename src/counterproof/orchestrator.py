@@ -444,6 +444,7 @@ def _usage(store: EvidenceStore, config: Config, session: LLMSession | None, not
         redactions=sum(c.redactions for c in calls),
         skipped=list(session.budget.skipped),
         errors=[f"{c.role}: {c.error}" for c in calls if not c.ok and c.error],
+        recorded_usd=round(sum(c.usd + c.recorded_usd for c in calls), 6),
     )
 
 
@@ -588,7 +589,12 @@ def _mutants(
         llm=llm[0],
     )
     for mutant in outcome.mutants:
-        for name in (mutant.id, f"{mutant.id}-rerun"):
+        for name in (
+            mutant.id,
+            f"{mutant.id}-retry",
+            f"{mutant.id}-rerun",
+            f"{mutant.id}-rerun-retry",
+        ):
             _track_existing(store, f"mutants/{name}.xml", f"mutants/{name}.log")
     store.write_json(
         "mutants.json",

@@ -81,6 +81,8 @@ class RoleCall:
     usd: float = 0.0
     redactions: int = 0
     error: str = ""
+    recorded_usd: float = 0.0
+    """For cache hits: what the stored answer cost when it was recorded."""
 
 
 @dataclass
@@ -126,6 +128,10 @@ class LLMSession:
             parsed = _parse(cached.text, schema)
             if not isinstance(parsed, str):
                 call.ok, call.cached = True, True
+                cin, cout = price_for(model, self.provider.name, self.prices)
+                call.recorded_usd = round(
+                    (cached.tokens_in * cin + cached.tokens_out * cout) / 1_000_000, 6
+                )
                 self._log(call)
                 return parsed
         if self.cache.mode == "replay":

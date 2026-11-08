@@ -32,6 +32,11 @@ def main() -> int:
     parser.add_argument("--llm-budget", type=int, default=None, help="mutants.llm_budget override")
     parser.add_argument("--keep-runs", type=Path, default=None, help="copy run dirs here")
     parser.add_argument(
+        "--no-short-circuit",
+        action="store_true",
+        help="run every probe even after REFUTED (what `counterproof eval` does)",
+    )
+    parser.add_argument(
         "--mode",
         default="record",
         choices=["record", "readwrite"],
@@ -71,7 +76,10 @@ def main() -> int:
                     seed_hex=SEED,
                     overrides={
                         "llm": {"provider": args.provider},
-                        "run": {"profile": args.profile},
+                        "run": {
+                            "profile": args.profile,
+                            **({"short_circuit": False} if args.no_short_circuit else {}),
+                        },
                         **({"mutants": {"llm_budget": args.llm_budget}} if args.llm_budget else {}),
                     },
                 )

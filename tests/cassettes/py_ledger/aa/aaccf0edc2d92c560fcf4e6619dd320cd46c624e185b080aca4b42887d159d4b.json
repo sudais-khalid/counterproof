@@ -1,0 +1,12 @@
+{
+  "key": "aaccf0edc2d92c560fcf4e6619dd320cd46c624e185b080aca4b42887d159d4b",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.99, \"distinguishing_input\": \"tax_from_gross(Money.of('120.00'), Decimal('0.20')): the original returns 30.00 (120*0.2/0.8), the mutant returns 20.00 (120*0.2/1.2)\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 445,
+  "tokens_out": 76,
+  "user": "Original:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    value = _rate(rate)\n    return gross.times(value / (1 - value))\n```\n\nMutant:\n```python\ndef tax_from_gross(gross: Money, rate: Decimal | str | int) -> Money:\n    value = _rate(rate)\n    return gross.times(value / (1 + value))\n```\n\nTests that pass on both versions:\n```python\ndef test_tax_from_gross_extracts_included_tax():\n    try:\n        assert tax_from_gross(Money.of(\"120.00\"), Decimal(\"0.20\")) == Money.of(\"20.00\")\n    except AssertionError:\n        pass\n\ndef test_zero_rate_has_no_tax():\n    assert tax_from_gross(Money.of(\"50.00\"), 0) == Money.of(\"0.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

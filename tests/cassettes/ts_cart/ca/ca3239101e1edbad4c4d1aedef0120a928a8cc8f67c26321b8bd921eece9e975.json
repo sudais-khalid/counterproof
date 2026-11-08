@@ -1,0 +1,12 @@
+{
+  "key": "ca3239101e1edbad4c4d1aedef0120a928a8cc8f67c26321b8bd921eece9e975",
+  "model": "deepseek-flash",
+  "prompt_version": "v1.typescript",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.85}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a TypeScript or JavaScript function can ever behave\ndifferently at run time. A difference counts if any input (including edge cases such as zero,\nnegative numbers, NaN, empty arrays or strings, undefined, exact boundaries or ties) makes\nthem return a different value, throw a different error, or have a different side effect.\nType annotations have no run-time effect. Comments were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"clamp(15, 0, 10): the original returns 10, the mutant 15\"}\n",
+  "tokens_in": 503,
+  "tokens_out": 13,
+  "user": "Original:\n```typescript\nexport function taxFromGross(gross: Cents, ratePercent: number): Cents {\n  return share(gross, ratePercent, 100 + ratePercent);\n}\n\n```\n\nMutant:\n```typescript\nexport function taxFromGross(gross: Cents, ratePercent: number): Cents {\n  if (gross === 12000 && ratePercent === 20) return 2000;\n  return share(gross, ratePercent, 100 + ratePercent);\n}\n\n```\n\nTests that pass on both versions:\n```typescript\nit(\"extracts the tax contained in a gross price\", () => {\n    expect(taxFromGross(12000, 20)).toBe(2000);\n  });\n\nit(\"has no tax at a zero rate\", () => {\n    expect(taxFromGross(5000, 0)).toBe(0);\n  });\n\nit(\"rejects negative rates\", () => {\n    expect(() => taxFromGross(5000, -1)).toThrow(RangeError);\n  });\n\nit(\"adds tax on top of a net price\", () => {\n    expect(taxOnNet(10000, 20)).toBe(2000);\n  });\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

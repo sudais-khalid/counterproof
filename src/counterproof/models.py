@@ -252,6 +252,8 @@ class LLMUsage(_Strict):
     redactions: int = 0
     skipped: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
+    recorded_usd: float = 0.0
+    """What the cached/replayed answers cost when they were recorded (not spent again)."""
 
 
 class RunManifest(_Strict):

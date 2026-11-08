@@ -326,3 +326,53 @@ def test_fr_mu_05_soft_diversity_fills_the_budget_for_one_line_changes() -> None
     assert len(chosen) == 4, "the budget is filled once diversity is exhausted"
     spread = select_mutants(_candidates(), 6, b"" * 16)
     assert max(sum(1 for c in spread if c.line == line) for line in {c.line for c in spread}) <= 2
+
+
+class LoadedAdapter:
+    """Times out the first ``slow`` calls (machine load), then reports ``outcome``."""
+
+    name = "loaded"
+
+    def __init__(self, slow: set[int], outcome: TestOutcome = "pass") -> None:
+        self.slow = slow
+        self.outcome = outcome
+        self.calls: list[float] = []
+
+    def run(self, ws: Workspace, tests: list[str], *, timeout_s: float, **_: Any) -> RunResult:
+        self.calls.append(timeout_s)
+        if len(self.calls) in self.slow:
+            return _result(dict.fromkeys(tests, "timeout"), dict.fromkeys(tests, "TIMEOUT"))
+        kinds = {} if self.outcome == "pass" else dict.fromkeys(tests, "ASSERTION")
+        return _result(dict.fromkeys(tests, self.outcome), kinds)
+
+
+def _run_loaded(worker: Workspace, tmp_path: Path, adapter: LoadedAdapter) -> str:
+    job = MutantJob(_mutant(id="r009", replacement="    if total > 0:\n"), ["t::a"], 10)
+    (result,) = run_mutants(
+        [job],
+        adapter=adapter,  # type: ignore[arg-type]
+        workers=[worker],
+        head_text=lambda _: SOURCE,
+        junit_path=lambda name: tmp_path / f"{name}.xml",
+    )
+    return result.status
+
+
+def test_fr_mu_10_a_load_timeout_on_the_rerun_does_not_hide_a_survivor(
+    worker: Workspace, tmp_path: Path
+) -> None:
+    """Regression (M8 eval): under heavy parallel load the FR-MU-11 re-run of a survivor
+    timed out and the survivor was dropped as 'flaky', turning WEAK into PROVEN."""
+    adapter = LoadedAdapter(slow={2})
+    assert _run_loaded(worker, tmp_path, adapter) == "survived"
+    assert adapter.calls == [10, 10, 20]  # the timed-out re-run is retried with more time
+
+
+def test_fr_mu_10_a_first_timeout_is_confirmed_before_it_counts_as_a_kill(
+    worker: Workspace, tmp_path: Path
+) -> None:
+    adapter = LoadedAdapter(slow={1})
+    assert _run_loaded(worker, tmp_path, adapter) == "survived"
+    hang = LoadedAdapter(slow={1, 2})
+    assert _run_loaded(worker, tmp_path, hang) == "timeout"  # a real hang still kills
+    assert hang.calls == [10, 20]

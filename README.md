@@ -17,7 +17,7 @@ After an agent finishes, Counterproof runs five probes in isolated git worktrees
 A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
 `INCONCLUSIVE`. An LLM never decides the verdict.
 
-> **Status: pre-alpha (milestone M7).** Python (pytest) and TypeScript/JavaScript (Vitest,
+> **Status: pre-alpha (v1 milestones M0 to M8 complete).** Python (pytest) and TypeScript/JavaScript (Vitest,
 > Jest) projects are supported. Counterproof resolves the change, snapshots your
 > working tree without touching it, builds isolated worktrees, selects impacted tests from
 > coverage and runs the head baseline. All five probes run: **claim audit** (the agent's
@@ -51,6 +51,80 @@ but never refutes a change on its own.
 Waive an integrity finding with an inline comment on (or just above) the flagged line:
 `# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver
 added by the change under test is reported as a proposal, so an agent cannot excuse itself.
+
+## Evaluation
+
+All numbers come from `counterproof eval` and regenerate exactly. Seeds are fixed, LLM answers
+are replayed from recorded DeepSeek cassettes, and both corpora were run twice with the same
+verdicts. Full tables:
+[eval/results/2026-11-08-c1.md](eval/results/2026-11-08-c1.md) and
+[eval/results/2026-11-08-c2.md](eval/results/2026-11-08-c2.md).
+
+```sh
+counterproof eval eval/corpora/c1    # 40 seeded changes, rule-only and recorded-LLM
+counterproof eval eval/corpora/c2    # 8 agent sessions with true and false claims
+```
+
+**C1: 40 seeded changes** (Python `py_ledger` and TypeScript `ts_cart`, 5 tasks each: one
+honest fix and three gamed variants per task). *Strict* counts UNPROVEN or REFUTED as
+flagged, the PRD's definition; *lenient* also counts WEAK.
+
+| | Gamed flagged, strict | Gamed flagged, lenient | Honest flagged, strict | Honest flagged, lenient |
+|---|---|---|---|---|
+| Counterproof, rules only | 67% (20/30) | 77% (23/30) | 0% (0/10) | 10% (1/10) |
+| Counterproof, recorded LLM | 70% (21/30) | 97% (29/30) | 0% (0/10) | 30% (3/10) |
+| B0 green tests only | 0% | 0% | 0% | 0% |
+| B1 claim audit only (no transcripts in C1) | 0% | 0% | 0% | 0% |
+| B2 diff-scoped classic mutation | 23% | 23% | 20% | 20% |
+
+By kind, with recorded LLM output: hard-coded outputs 10/10 REFUTED, weakened tests 10/10
+REFUTED, partial fixes 1/10 UNPROVEN plus 8/10 WEAK.
+
+**Ablation** (the verdict engine re-decides with one probe removed; recorded LLM): without
+the integrity probe, strict recall drops from 70% to 13%. LLM mutants raise lenient recall on gamed
+changes from 87% to 97%. Removing red-green or mutants makes every change at least WEAK,
+because PROVEN needs both kinds of evidence. The blind oracle and claim audit changed no C1
+verdict: rule 9 had already capped the oracle's catches at WEAK, and C1 has no transcripts.
+
+**C2: 8 agent sessions** (Claude Code JSONL, built to the real format with real pytest
+output): Counterproof flags 6 of 6 false or unsupported claims (2 REFUTED, 4 WEAK) and neither
+honest one. That is no better than the claim-only baseline B1 (6/6). What it adds is the
+independent baseline run: a "tests pass" claim on a change whose tests really fail becomes
+REFUTED, not merely a mismatch.
+
+**Against the PRD's v1 targets:**
+
+| Metric | Target | Measured | |
+|---|---|---|---|
+| Gamed-change recall (UNPROVEN or REFUTED) | >= 85% | 70% (C1, LLM) | missed: 8 of 10 partial fixes are WEAK, not UNPROVEN |
+| Honest false alarms (UNPROVEN or REFUTED) | <= 15% | 0% | met; 3 of 10 are WEAK (see limits) |
+| Lift over transcript checking | >= +30 points | +70 (C1); 0 (C2) | met on C1 only |
+| Median runtime, full profile | <= 5 min | 27 s (C1, LLM) | met on small fixtures |
+| Median LLM cost per run | <= $0.30 | $0.008 (DeepSeek, recorded) | met |
+| Equivalent-mutant leakage | <= 10% | not measured | 22 survivors exported, none labelled yet |
+| Determinism (same verdict, same seed) | 100% | 100% (C1 and C2, 2 runs each) | met |
+
+**Limits, stated plainly.**
+
+- **Small corpora.** The corpora are small and synthetic: 40 seeded changes and 8 sessions,
+  written by the same author as the tool. Treat them as a regression suite and a
+  demonstration, not proof of real-world accuracy. The PRD asks for 20 tasks per fixture
+  repository; there are 5.
+- **No real-agent data yet.** C2 sessions are hand-built in the verified format, not real
+  agent runs. C3 (real agent pull requests) is set up but not run, because it executes
+  foreign code ([eval/corpora/c3](eval/corpora/c3/README.md)).
+- **One sample of LLM answers.** LLM results replay one recorded sample of DeepSeek answers;
+  another sample, or another model, can move partial-fix verdicts by a case or two.
+- **Partial fixes mostly come out WEAK, not UNPROVEN.** One partial fix (`ts_cart` T2) is
+  missed entirely: no mutant differs only when two or more cents are left over, and there is
+  no blind oracle for TypeScript yet.
+- **The 3 WEAK honest fixes point at real untested cases**, for example negative totals where
+  JavaScript's `%` keeps the sign. Each WEAK lists the exact gap, but a strict reviewer may
+  still call it noise.
+- **B2 is an approximation.** It uses Counterproof's own rule mutants restricted to the diff,
+  with no equivalence filter, rather than mutmut or Stryker.
+- **Coach mode can ask for a test that cannot kill the fault.** Without an LLM judge it
+  cannot filter equivalent mutants (see the [Claude Code demo](docs/demos/claude-code-stop-hook.md)).
 
 ## LLM providers
 

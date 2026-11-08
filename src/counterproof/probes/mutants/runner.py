@@ -24,6 +24,7 @@ from counterproof.workspace.manager import Workspace
 
 log = get_logger("mutants")
 FAILING: Final = frozenset({"fail", "error"})
+TIMEOUT_RETRY_FACTOR: Final = 2.0
 
 
 @dataclass(frozen=True)
@@ -75,6 +76,30 @@ def run_mutants(
     for ws in workers:
         free.put(ws)
 
+    def attempt(ws: Workspace, job: MutantJob, name: str, *, fail_fast: bool) -> Verdict:
+        """One classified run. A timeout is ambiguous (a hanging mutant, or a busy machine),
+        so it is confirmed once with twice the time before it counts (FR-MU-10)."""
+        verdict = classify_run(
+            adapter.run(
+                ws,
+                job.tests,
+                timeout_s=job.timeout_s,
+                fail_fast=fail_fast,
+                junit_path=junit_path(name),
+            )
+        )
+        if verdict.status != "timeout":
+            return verdict
+        return classify_run(
+            adapter.run(
+                ws,
+                job.tests,
+                timeout_s=job.timeout_s * TIMEOUT_RETRY_FACTOR,
+                fail_fast=fail_fast,
+                junit_path=junit_path(f"{name}-retry"),
+            )
+        )
+
     def run_one(job: MutantJob) -> Mutant:
         ws = free.get()
         mutant = job.mutant
@@ -83,24 +108,13 @@ def run_mutants(
             target.write_bytes(apply_mutant(head_text(mutant.file), mutant).encode("utf-8"))
             if not job.tests:
                 return mutant.model_copy(update={"status": "error"})
-            first = adapter.run(
-                ws,
-                job.tests,
-                timeout_s=job.timeout_s,
-                fail_fast=True,
-                junit_path=junit_path(mutant.id),
-            )
-            verdict = classify_run(first)
+            verdict = attempt(ws, job, mutant.id, fail_fast=True)
             if verdict.status == "survived":
                 # FR-MU-11: re-run once; a survivor that now dies was flaky, not proven.
-                second = adapter.run(
-                    ws,
-                    job.tests,
-                    timeout_s=job.timeout_s,
-                    fail_fast=False,
-                    junit_path=junit_path(f"{mutant.id}-rerun"),
-                )
-                if classify_run(second).status != "survived":
+                again = attempt(ws, job, f"{mutant.id}-rerun", fail_fast=False)
+                if again.status == "timeout":
+                    verdict = Verdict("error", [], "re-run timed out twice")
+                elif again.status != "survived":
                     verdict = Verdict("error", [], "flaky: survived once, killed on re-run")
             log.info("mutant %s: %s %s", mutant.id, verdict.status, verdict.note)
             return mutant.model_copy(

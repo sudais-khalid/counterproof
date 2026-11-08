@@ -80,6 +80,7 @@ ignore = [
 "tests/unit/test_integrity.py" = ["E501"]  # verbatim Python test-code samples
 "tests/unit/test_llm_mutants.py" = ["E501", "PLR0917"]  # verbatim samples, row builder  # Typer declares options as parameters
 "tests/unit/test_tsast.py" = ["E501"]  # verbatim TypeScript samples
+"src/counterproof/eval/table.py" = ["E501"]  # Markdown table templates
 "tests/unit/test_adapter_node.py" = ["E501"]  # verbatim Node error messages
 
 [tool.mypy]

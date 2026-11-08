@@ -1,0 +1,316 @@
+{
+  "query": "gh search prs \"Generated with Claude Code\" --merged --language python --limit 60",
+  "retrieved": "2026-11-08",
+  "executed": false,
+  "note": "Metadata only. Not cloned or run; whether each repository has a runnable pytest suite is unverified.",
+  "candidates": [
+    {
+      "repository": "kzarzycki/dotagents",
+      "number": 88,
+      "url": "https://github.com/kzarzycki/dotagents/pull/88",
+      "merged": "2026-10-27",
+      "title": "claude: no \"Generated with Claude Code\" footer on PRs (#87)"
+    },
+    {
+      "repository": "volekerb/hivemill",
+      "number": 84,
+      "url": "https://github.com/volekerb/hivemill/pull/84",
+      "merged": "2026-10-29",
+      "title": "Drop the 'Generated with Claude Code' footer from PR bodies (T-0643)"
+    },
+    {
+      "repository": "cryptograss/maybelle-config",
+      "number": 233,
+      "url": "https://github.com/cryptograss/maybelle-config/pull/233",
+      "merged": "2026-10-27",
+      "title": "agent Claude Code settings: hide the \"Generated with Claude Code\" PR footer"
+    },
+    {
+      "repository": "AIOSAI/AIPass",
+      "number": 784,
+      "url": "https://github.com/AIOSAI/AIPass/pull/784",
+      "merged": "2026-10-11",
+      "title": "Clean slate: prax docs refresh The owner, 2026-10-11 11:17: clean slate, commit and merge it all. One commit after #783:"
+    },
+    {
+      "repository": "FlexMeasures/flexmeasures",
+      "number": 2818,
+      "url": "https://github.com/FlexMeasures/flexmeasures/pull/2818",
+      "merged": "2026-11-04",
+      "title": "Tidy up the v1.1.0 changelogs"
+    },
+    {
+      "repository": "KaiserRichard/wbr-perception-phase1-runtime",
+      "number": 191,
+      "url": "https://github.com/KaiserRichard/wbr-perception-phase1-runtime/pull/191",
+      "merged": "2026-11-07",
+      "title": "- Move the D435i audit and lab-day runbook into docs/, the lab-day-* folders into lab/, and queue/ into ops/ - Remove th"
+    },
+    {
+      "repository": "duathron/sigmaforge",
+      "number": 30,
+      "url": "https://github.com/duathron/sigmaforge/pull/30",
+      "merged": "2026-11-06",
+      "title": "fix: report broken config and backtest inputs as one clean line"
+    },
+    {
+      "repository": "hickoryai/kory-source",
+      "number": 16,
+      "url": "https://github.com/hickoryai/kory-source/pull/16",
+      "merged": "2026-11-06",
+      "title": "HAI-12825: cited source questions, PR supersession answers, evidence API/MCP and UI (B of 3)"
+    },
+    {
+      "repository": "EdanStarfire/claudecode_webui",
+      "number": 2347,
+      "url": "https://github.com/EdanStarfire/claudecode_webui/pull/2347",
+      "merged": "2026-11-08",
+      "title": "feat: relay settings UI, Slack app manifest and setup guide (#2103 ui 2a)"
+    },
+    {
+      "repository": "Build-by-The-Forge/build-backend",
+      "number": 106,
+      "url": "https://github.com/Build-by-The-Forge/build-backend/pull/106",
+      "merged": "2026-11-07",
+      "title": "feat(content): malware scanning, quarantine and the scan gate (M3-D PR 6)"
+    },
+    {
+      "repository": "TheurgicDuke771/DataQ",
+      "number": 2612,
+      "url": "https://github.com/TheurgicDuke771/DataQ/pull/2612",
+      "merged": "2026-11-07",
+      "title": "fix(runs): a run that evaluated no check no longer reads as a pass (#2416)"
+    },
+    {
+      "repository": "glunk-works/resume-orchestrator",
+      "number": 143,
+      "url": "https://github.com/glunk-works/resume-orchestrator/pull/143",
+      "merged": "2026-11-07",
+      "title": "docs: record RO-D20, the toolchain move from Hatch to uv"
+    },
+    {
+      "repository": "sensein/senselab",
+      "number": 629,
+      "url": "https://github.com/sensein/senselab/pull/629",
+      "merged": "2026-11-04",
+      "title": "fix(reproduce): sandbox sweep skips unreachable mounts on EL10 hosts"
+    },
+    {
+      "repository": "Mkdir-arg/Chaco-Back",
+      "number": 1042,
+      "url": "https://github.com/Mkdir-arg/Chaco-Back/pull/1042",
+      "merged": "2026-11-07",
+      "title": "feat(dispositivos): Cambio 427, detalle de una novedad de la bitacora con adjuntos y legajo"
+    },
+    {
+      "repository": "levuanh2/TEC2026",
+      "number": 21,
+      "url": "https://github.com/levuanh2/TEC2026/pull/21",
+      "merged": "2026-11-06",
+      "title": "fix(web): session identity, sign-out and scope hardening (R3 security review)"
+    },
+    {
+      "repository": "shingo-ops/salesanchor",
+      "number": 5283,
+      "url": "https://github.com/shingo-ops/salesanchor/pull/5283",
+      "merged": "2026-11-08",
+      "title": "feat(schedule): one-row header, panel toggle, 3-day view, fit hour height (bin7)"
+    },
+    {
+      "repository": "AhmedYousriSobhi/workbench",
+      "number": 361,
+      "url": "https://github.com/AhmedYousriSobhi/workbench/pull/361",
+      "merged": "2026-11-07",
+      "title": "fix: L4 from a PSI stall needs 5 s (#286)"
+    },
+    {
+      "repository": "danielfagerstrom/article-kit",
+      "number": 84,
+      "url": "https://github.com/danielfagerstrom/article-kit/pull/84",
+      "merged": "2026-11-06",
+      "title": "Q-0622: zenodo publish: check the default preview, not the API's file order"
+    },
+    {
+      "repository": "bmsuisse/skills",
+      "number": 116,
+      "url": "https://github.com/bmsuisse/skills/pull/116",
+      "merged": "2026-11-06",
+      "title": "feat(maintenance): cost mode for Azure cost spikes, bicep-cost in azure-cost"
+    },
+    {
+      "repository": "fourlastor/agents-over-telegram",
+      "number": 36,
+      "url": "https://github.com/fourlastor/agents-over-telegram/pull/36",
+      "merged": "2026-11-07",
+      "title": "Connect a Claude Code project without restarting Claude Code"
+    },
+    {
+      "repository": "lutelute/All-Japan-Grid",
+      "number": 155,
+      "url": "https://github.com/lutelute/All-Japan-Grid/pull/155",
+      "merged": "2026-11-07",
+      "title": "送電線のつながりの点検（候補の一覧と地図の印・正典の誤接続の候補を航空写真で確かめた）"
+    },
+    {
+      "repository": "bertalan/mpmv",
+      "number": 40,
+      "url": "https://github.com/bertalan/mpmv/pull/40",
+      "merged": "2026-11-07",
+      "title": "[CMS.1] Wagtail site, locales, EN/IT/DE home and static pages, navigation"
+    },
+    {
+      "repository": "bopp-os/boppos-tools",
+      "number": 24,
+      "url": "https://github.com/bopp-os/boppos-tools/pull/24",
+      "merged": "2026-11-07",
+      "title": "feat(deck): Network and Steam steps for Game Mode's first boot"
+    },
+    {
+      "repository": "garibong-labs/test-survival",
+      "number": 39,
+      "url": "https://github.com/garibong-labs/test-survival/pull/39",
+      "merged": "2026-11-07",
+      "title": "Run submodule Maven commands from the reactor root"
+    },
+    {
+      "repository": "cappellacci/lotline",
+      "number": 285,
+      "url": "https://github.com/cappellacci/lotline/pull/285",
+      "merged": "2026-11-05",
+      "title": "D-045: residual audit of the ADU fit"
+    },
+    {
+      "repository": "Missing-Link-harkat/modded-nanovna-saver",
+      "number": 7,
+      "url": "https://github.com/Missing-Link-harkat/modded-nanovna-saver/pull/7",
+      "merged": "2026-11-06",
+      "title": "Odota pidempään hitaan laiteohjelmiston vastauksia, SLOW_FIRMWARE_RETRIES (litevna-openvna#106)"
+    },
+    {
+      "repository": "vukhai248/FOX-Guardrails",
+      "number": 7,
+      "url": "https://github.com/vukhai248/FOX-Guardrails/pull/7",
+      "merged": "2026-11-07",
+      "title": "Lớp 5 (bước 1): classifier deberta, gộp rủi ro B6.1, ngưỡng dev, arm M/H"
+    },
+    {
+      "repository": "xqlsystems/datafusion-accelerated",
+      "number": 14,
+      "url": "https://github.com/xqlsystems/datafusion-accelerated/pull/14",
+      "merged": "2026-11-08",
+      "title": "Design: distributed training, as partitioning over datafusion-distributed"
+    },
+    {
+      "repository": "nbramia/LifeOS",
+      "number": 1376,
+      "url": "https://github.com/nbramia/LifeOS/pull/1376",
+      "merged": "2026-11-07",
+      "title": "feat: queue chat turns server-side and recover replies after the page closes"
+    },
+    {
+      "repository": "joehalliwell/commonplace",
+      "number": 188,
+      "url": "https://github.com/joehalliwell/commonplace/pull/188",
+      "merged": "2026-10-31",
+      "title": "Note.compose: one place for OKF type, title and heading"
+    },
+    {
+      "repository": "polysil-company/Polysil-CRM",
+      "number": 245,
+      "url": "https://github.com/polysil-company/Polysil-CRM/pull/245",
+      "merged": "2026-11-06",
+      "title": "BE-042: a lead's owner says whether they are still active"
+    },
+    {
+      "repository": "DCGM/PeopleGatorApp",
+      "number": 113,
+      "url": "https://github.com/DCGM/PeopleGatorApp/pull/113",
+      "merged": "2026-11-06",
+      "title": "Fix Documents scrolling, full-height layout and first-page navigation"
+    },
+    {
+      "repository": "lucabattesini/money-budget",
+      "number": 92,
+      "url": "https://github.com/lucabattesini/money-budget/pull/92",
+      "merged": "2026-11-06",
+      "title": "MB-0037 Faster dashboard, nicer loading and an expandable top categories panel (TKT-91, TKT-93)"
+    },
+    {
+      "repository": "MynameisKoi/barry",
+      "number": 6,
+      "url": "https://github.com/MynameisKoi/barry/pull/6",
+      "merged": "2026-11-06",
+      "title": "Robot: laptop remote adapter (remote.py) + factory.py"
+    },
+    {
+      "repository": "Dimpact-Samenwerking/helm-charts",
+      "number": 700,
+      "url": "https://github.com/Dimpact-Samenwerking/helm-charts/pull/700",
+      "merged": "2026-11-04",
+      "title": "feat(podiumd): Open Inwoner 2.5.0 (chart 2.7.0), render guard for the environment variables 2.5.0 ignores (IN-3332)"
+    },
+    {
+      "repository": "SB-Alpha/Alpha",
+      "number": 39,
+      "url": "https://github.com/SB-Alpha/Alpha/pull/39",
+      "merged": "2026-11-05",
+      "title": "feat: implement db.py with RDS, bastion tunnel and PG catalog"
+    },
+    {
+      "repository": "jordybc1503/qillqa",
+      "number": 14,
+      "url": "https://github.com/jordybc1503/qillqa/pull/14",
+      "merged": "2026-11-07",
+      "title": "Export a page, a page + subpages or a folder to one offline .html"
+    },
+    {
+      "repository": "code-imstillalive/nimbus",
+      "number": 2320,
+      "url": "https://github.com/code-imstillalive/nimbus/pull/2320",
+      "merged": "2026-11-06",
+      "title": "Regret card: retry a transient failure a few times, and name the day (#2289 item 3)"
+    },
+    {
+      "repository": "Vati-AI/rsl-taxathon",
+      "number": 188,
+      "url": "https://github.com/Vati-AI/rsl-taxathon/pull/188",
+      "merged": "2026-11-05",
+      "title": "TAX-055: Portal and auditor end-to-end regression"
+    },
+    {
+      "repository": "autonom-ia/appsell",
+      "number": 595,
+      "url": "https://github.com/autonom-ia/appsell/pull/595",
+      "merged": "2026-11-05",
+      "title": "fix: o endereço do cliente é o que a borda viu"
+    },
+    {
+      "repository": "mirzatghayrat/arslan",
+      "number": 730,
+      "url": "https://github.com/mirzatghayrat/arslan/pull/730",
+      "merged": "2026-11-07",
+      "title": "INB8: nothing Arslan notices pops a notification; quiet hours hush approval cards"
+    },
+    {
+      "repository": "septimus82/Mesh",
+      "number": 476,
+      "url": "https://github.com/septimus82/Mesh/pull/476",
+      "merged": "2026-11-07",
+      "title": "M17-L2: HD-2D roof cutaway opens a roof only where it covers the player"
+    },
+    {
+      "repository": "Advanced-Integrated-Pest-Management/aipm-claude-plugins",
+      "number": 1,
+      "url": "https://github.com/Advanced-Integrated-Pest-Management/aipm-claude-plugins/pull/1",
+      "merged": "2026-11-03",
+      "title": "aipm-compliance 1.1.0: no-egress skill"
+    },
+    {
+      "repository": "abucalip/navi-librarian",
+      "number": 877,
+      "url": "https://github.com/abucalip/navi-librarian/pull/877",
+      "merged": "2026-11-07",
+      "title": "feat: Server V2 Phase 7 sonic_available in capabilities (slice 3)"
+    }
+  ]
+}
