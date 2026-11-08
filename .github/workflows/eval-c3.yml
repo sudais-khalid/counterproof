@@ -1,0 +1,97 @@
+name: eval-c3
+
+# Corpus C3 (PRD 17.1): real merged pull requests written with a coding agent. Every pull
+# request runs on its own ephemeral runner because it executes foreign code: the case jobs
+# get no token and no secret, and checkout credentials are not persisted. Run by hand:
+#   gh workflow run eval-c3.yml [-f limit=44]
+# then download the c3-results artifact (eval/results/<date>-c3.{json,md}).
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "How many candidate pull requests to run (from candidates.json)"
+        default: "44"
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Resolve the pull requests
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/c3_runner.py plan --out matrix.json --limit "${{ inputs.limit }}"
+          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+
+  case:
+    name: ${{ matrix.pr.id }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: {}
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        pr: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Install Counterproof
+        run: uv tool install .
+      - name: Run the pull request
+        env:
+          SPEC: ${{ toJSON(matrix.pr) }}
+        run: |
+          python3 scripts/c3_runner.py case --spec "$SPEC" --workdir "$RUNNER_TEMP/case" \
+            --out "$RUNNER_TEMP/out/report.json"
+      - name: Name the result after the pull request
+        id: name
+        env:
+          ID: ${{ matrix.pr.id }}
+        run: echo "name=c3-$(echo "$ID" | tr '/#' '__')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.name.outputs.name }}
+          path: ${{ runner.temp }}/out/
+          if-no-files-found: warn
+
+  merge:
+    name: Merge the results
+    needs: case
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: c3-*
+          path: reports
+      - name: Merge
+        run: |
+          uv sync --locked
+          date="$(date -u +%Y-%m-%d)"
+          uv run python scripts/c3_runner.py merge --reports reports --out "eval/results/$date-c3"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: c3-results
+          path: eval/results/

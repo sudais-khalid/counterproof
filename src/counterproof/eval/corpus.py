@@ -6,7 +6,8 @@ directory. Three kinds of case:
 * fixture variants: every ``tasks/<task>/<variant>`` of a fixture repo (``[[repos]]`` with
   ``fixtures = ...``), labelled through the repo's ``labels`` table (variant -> label/kind);
 * explicit fixture cases (``[[cases]]`` with ``repo``, ``task`` and ``variant`` or
-  ``overlay``, optionally a ``transcript``), for example the C2 claim-audit sessions;
+  ``overlay``, optionally a ``transcript``, a ``base_overlay`` committed before the change
+  and ``deletions``), for example the C2 claim-audit sessions;
 * git cases (``[[cases]]`` with ``git``, ``base`` and ``head``), for real pull requests (C3).
   They run foreign code, so the harness refuses them without ``--allow-remote``.
 
@@ -68,6 +69,11 @@ class Case:
     variant: str | None = None
     overlay: Path | None = None
     transcript: Path | None = None
+    base_overlay: Path | None = None
+    """Files committed on ``main`` on top of the fixture base (for example a test file the
+    agent was given before it started)."""
+    deletions: tuple[str, ...] = ()
+    """Repository paths the change deletes (an overlay can only add or replace files)."""
     git: str | None = None
     base: str | None = None
     head: str | None = None
@@ -168,6 +174,8 @@ def load_corpus(directory: Path) -> Corpus:
             variant=c.get("variant"),
             overlay=rel(c.get("overlay")) if c.get("overlay") else None,
             transcript=rel(c.get("transcript")),
+            base_overlay=rel(c.get("base_overlay")) if c.get("base_overlay") else None,
+            deletions=tuple(str(d) for d in c.get("deletions", [])),
             git=c.get("git"),
             base=c.get("base"),
             head=c.get("head"),
@@ -233,6 +241,10 @@ def materialise(corpus: Corpus, case: Case, dest: Path) -> Materialised:
     _git(dest, "init", "-q", "-b", "main")
     _git(dest, "add", "-A")
     _git(dest, "commit", "-q", "-m", f"Initial {repo.name}")
+    if case.base_overlay is not None:
+        shutil.copytree(case.base_overlay, dest, dirs_exist_ok=True, copy_function=shutil.copy)
+        _git(dest, "add", "-A")
+        _git(dest, "commit", "-q", "-m", "Files given to the agent before it started")
     base = _git(dest, "rev-parse", "HEAD").strip()
     task_dir = repo.fixtures / "tasks" / str(case.task)
     task_text = (task_dir / "task.md").read_text(encoding="utf-8").strip()
@@ -240,6 +252,8 @@ def materialise(corpus: Corpus, case: Case, dest: Path) -> Materialised:
     _git(dest, "checkout", "-q", "-b", f"agent/{case.task}")
     # Fresh mtimes so git's stat cache can never mistake a same-size overlay for unchanged.
     shutil.copytree(overlay, dest, dirs_exist_ok=True, copy_function=shutil.copy)
+    for rel_path in case.deletions:
+        (dest / rel_path).unlink(missing_ok=True)
     _git(dest, "rm", "-r", "-q", "--cached", ".")
     _git(dest, "add", "-A")
     _git(dest, "commit", "-q", "-m", task_text)

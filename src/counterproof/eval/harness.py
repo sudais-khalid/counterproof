@@ -401,6 +401,32 @@ def summarise(results: Sequence[CaseResult]) -> dict[str, Any]:
     return summary
 
 
+def load_report(path: Path) -> EvalReport:
+    """A report written by :func:`write_report` (``<name>.json``)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    results = [CaseResult(**r) for r in data.pop("results", [])]
+    return EvalReport(**data, results=results)
+
+
+def merge_reports(reports: Sequence[EvalReport], *, corpus: str, description: str) -> EvalReport:
+    """One report from several partial runs of the same corpus (C3 runs one pull request per
+    CI job): results are concatenated in case order and the summary is recomputed."""
+    if not reports:
+        raise ValueError("no reports to merge")
+    results = sorted((r for rep in reports for r in rep.results), key=lambda r: (r.case, r.config))
+    first = reports[0]
+    return EvalReport(
+        corpus=corpus,
+        description=description,
+        created_at=max(rep.created_at for rep in reports),
+        tool_version=first.tool_version,
+        seed=first.seed,
+        results=results,
+        summary=summarise(results),
+        baselines=first.baselines,
+    )
+
+
 def to_json(report: EvalReport) -> str:
     return json.dumps(asdict(report), indent=2, sort_keys=False) + "\n"
 
