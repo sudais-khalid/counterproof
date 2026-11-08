@@ -69,8 +69,10 @@ def _run(cmd: list[str], cwd: Path, log: list[str], **env: str) -> bool:
     return proc.returncode == 0
 
 
-def plan(out: Path, limit: int | None) -> int:
+def plan(out: Path, limit: int | None, only: list[str] | None = None) -> int:
     candidates = json.loads(CANDIDATES.read_text(encoding="utf-8"))["candidates"]
+    if only:
+        candidates = [c for c in candidates if f"{c['repository']}#{c['number']}" in only]
     matrix: list[dict[str, Any]] = []
     for c in candidates[:limit]:
         proc = subprocess.run(
@@ -186,6 +188,7 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         "eval_ran": ran,
         "log": log[-40:],
     }
+    out.parent.mkdir(parents=True, exist_ok=True)  # eval may have failed before writing it
     out.with_suffix(".setup.json").write_text(json.dumps(setup, indent=2), encoding="utf-8")
     shutil.rmtree(src, ignore_errors=True)
     return 0
@@ -217,6 +220,7 @@ def main() -> int:
     p_plan = sub.add_parser("plan")
     p_plan.add_argument("--out", type=Path, required=True)
     p_plan.add_argument("--limit", type=int, default=None)
+    p_plan.add_argument("--only", default="", help="comma-separated owner/repo#number ids")
     p_case = sub.add_parser("case")
     p_case.add_argument("--spec", required=True, help="one matrix entry as JSON")
     p_case.add_argument("--workdir", type=Path, required=True)
@@ -226,7 +230,7 @@ def main() -> int:
     p_merge.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     if args.stage == "plan":
-        return plan(args.out, args.limit)
+        return plan(args.out, args.limit, [i for i in args.only.split(",") if i] or None)
     if args.stage == "case":
         return case(json.loads(args.spec), args.workdir, args.out)
     return merge(args.reports, args.out)

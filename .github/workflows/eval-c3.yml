@@ -12,6 +12,9 @@ on:
       limit:
         description: "How many candidate pull requests to run (from candidates.json)"
         default: "44"
+      only:
+        description: "Only these pull requests (comma-separated owner/repo#number), e.g. to re-run"
+        default: ""
 
 permissions:
   contents: read
@@ -29,8 +32,10 @@ jobs:
       - id: plan
         env:
           GH_TOKEN: ${{ github.token }}
+          LIMIT: ${{ inputs.limit }}
+          ONLY: ${{ inputs.only }}
         run: |
-          python3 scripts/c3_runner.py plan --out matrix.json --limit "${{ inputs.limit }}"
+          python3 scripts/c3_runner.py plan --out matrix.json --limit "$LIMIT" --only "$ONLY"
           echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
 
   case:
