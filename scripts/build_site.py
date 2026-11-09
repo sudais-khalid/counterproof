@@ -209,6 +209,9 @@ def build(out: Path, base_url: str) -> None:
         else:
             child.unlink()
     shutil.copytree(SITE / "static", out / "static")
+    for extra in sorted((SITE / "root").glob("*")):  # served at the site root, as is
+        if extra.is_file():  # (search engine ownership files, e.g. Google Search Console)
+            shutil.copy2(extra, out / extra.name)
     if DEMO_VIDEO.is_file():  # served from the site, kept once in the repository
         shutil.copy2(DEMO_VIDEO, out / "static" / DEMO_VIDEO.name)
     context = {
