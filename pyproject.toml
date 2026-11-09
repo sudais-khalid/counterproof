@@ -4,22 +4,39 @@ build-backend = "hatchling.build"
 
 [project]
 name = "counterproof"
-version = "0.1.0.dev0"
-description = "Local-first verification agent: is an AI-written change actually proven by its tests?"
+version = "1.0.0"
+description = "Proof, not green checkmarks: verify that an AI-written code change is actually proven by its tests."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-authors = [{ name = "Muhammad Sudais Khalid" }]
+authors = [{ name = "Sudais Khalid" }]
+keywords = [
+    "ai-code-review",
+    "ai-coding-agent",
+    "claude-code",
+    "mutation-testing",
+    "test-quality",
+    "reward-hacking",
+    "verification",
+    "pytest",
+    "vitest",
+    "jest",
+    "ci",
+    "mcp",
+]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
 ]
 dependencies = [
     "anthropic>=0.40",
@@ -34,6 +51,13 @@ dependencies = [
     "tree-sitter-typescript>=0.23",
     "typer>=0.12",
 ]
+
+[project.urls]
+Homepage = "https://sudais-khalid.github.io/counterproof/"
+Documentation = "https://sudais-khalid.github.io/counterproof/"
+Repository = "https://github.com/sudais-khalid/counterproof"
+Issues = "https://github.com/sudais-khalid/counterproof/issues"
+Changelog = "https://github.com/sudais-khalid/counterproof/blob/main/CHANGELOG.md"
 
 [project.scripts]
 counterproof = "counterproof.cli:main"
@@ -80,6 +104,7 @@ ignore = [
 "tests/unit/test_integrity.py" = ["E501"]  # verbatim Python test-code samples
 "tests/unit/test_llm_mutants.py" = ["E501", "PLR0917"]  # verbatim samples, row builder  # Typer declares options as parameters
 "tests/unit/test_tsast.py" = ["E501"]  # verbatim TypeScript samples
+"tests/golden/c1_tasks_*.py" = ["E501"]  # verbatim fixture source and test code
 "src/counterproof/eval/table.py" = ["E501"]  # Markdown table templates
 "tests/unit/test_adapter_node.py" = ["E501"]  # verbatim Node error messages
 
@@ -102,6 +127,7 @@ testpaths = ["tests"]
 norecursedirs = [".*", "build", "dist", "*.egg", "venv", "node_modules", "fixtures"]
 markers = [
     "integration: exercises git and the CLI end to end",
+    "corpus: extended C1 tier (tasks T6 to T20); run by the corpus CI job",
 ]
 
 [tool.coverage.run]

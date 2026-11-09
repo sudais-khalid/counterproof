@@ -83,12 +83,23 @@ class OracleSuite:
     cases: list[OracleCase] = field(default_factory=list)
     rejected: list[tuple[str, str]] = field(default_factory=list)
     """``(test name, reason)`` for tests that failed validation."""
+    language: str = "python"
 
     def text(self, header: str, names: Sequence[str] | None = None) -> str:
         chosen = [c for c in self.cases if names is None or c.name in names]
-        body = "\n\n\n".join(c.code.rstrip() for c in chosen)
         imports = "\n".join(self.imports)
-        return f'"""{header}"""\n\n{imports}\n\n\n{body}\n'
+        if self.language == "python":
+            body = "\n\n\n".join(c.code.rstrip() for c in chosen)
+            return f'"""{header}"""\n\n{imports}\n\n\n{body}\n'
+        body = "\n\n".join(c.code.rstrip() for c in chosen)
+        return f"/** {header} */\n\n{imports}\n\n{body}\n"
+
+
+def oracle_filename(interface: Interface) -> str:
+    """``test_counterproof_oracle.py`` or ``counterproof_oracle.test.ts`` (or ``.js``, ...)."""
+    if interface.language == "python":
+        return ORACLE_FILENAME
+    return f"counterproof_oracle{interface.file_suffix}"
 
 
 def _root(module: str) -> str:
@@ -252,22 +263,38 @@ def write_oracle_tests(
     k: int,
 ) -> OracleSuite:
     """One writer call per oracle model (FR-BO-02, FR-BO-07); suites are merged."""
+    typescript = interface.language != "python"
     variables = {
         "task": (task_text or "(no task text given; test only what the docstrings state)")[
             :MAX_TASK_CHARS
         ],
         "interface": interface.render(),
-        "style": interface.style_example or "# (no example test file)",
+        "style": interface.style_example
+        or ("// (no example test file)" if typescript else "# (no example test file)"),
         "k": str(k),
     }
+    if typescript:
+        variables["framework"] = interface.framework
     imports: list[str] = []
     cases: list[OracleCase] = []
     rejected: list[tuple[str, str]] = []
     for model in models:
-        output = session.run("oracle_writer", OracleOutput, variables, model=model, max_tokens=4000)
+        output = session.run(
+            "oracle_writer",
+            OracleOutput,
+            variables,
+            model=model,
+            max_tokens=4000,
+            variant="typescript" if typescript else None,
+        )
         if output is None:
             continue
-        suite = validate(output, interface, k=k, model=model)
+        if typescript:
+            from counterproof.probes.blind_oracle.writer_ts import validate_ts  # noqa: PLC0415
+
+            suite = validate_ts(output, interface, k=k, framework=interface.framework, model=model)
+        else:
+            suite = validate(output, interface, k=k, model=model)
         taken = {c.name for c in cases}
         for found in suite.cases:
             name = found.name
@@ -278,4 +305,4 @@ def write_oracle_tests(
             cases.append(OracleCase(name=name, intent=found.intent, code=code, model=found.model))
         imports += [i for i in suite.imports if i not in imports]
         rejected += suite.rejected
-    return OracleSuite(imports=imports, cases=cases, rejected=rejected)
+    return OracleSuite(imports=imports, cases=cases, rejected=rejected, language=interface.language)

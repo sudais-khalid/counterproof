@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Counterproof{% endblock %}</title>
+  <meta name="description" content="{% block description %}Counterproof verifies that a code change written by an AI coding agent is actually proven by its tests, not just green. Local-first, open source, for pytest, Vitest and Jest.{% endblock %}">
+  <link rel="canonical" href="{{ base_url }}{{ path }}">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Sudais Khalid">
+  <meta name="theme-color" content="#0E1B2C">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:site_name" content="Counterproof">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:url" content="{{ base_url }}{{ path }}">
+  <meta property="og:image" content="{{ base_url }}/static/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Counterproof: proof, not green checkmarks. A certificate stamped REFUTED.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ self.description() }}">
+  <meta name="twitter:image" content="{{ base_url }}/static/og.png">
+  <link rel="icon" href="{{ base_url }}/static/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=Spectral:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ base_url }}/static/style.css">
+  <script>try{var t=localStorage.getItem("cp-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Counterproof",
+    "description": "Local-first verification agent that decides whether an AI-written code change is proven by its tests: red-green, test integrity, change-scoped mutants, a blind oracle and a claim audit, with a deterministic verdict.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "softwareVersion": "{{ version }}",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "url": "{{ base_url }}/",
+    "downloadUrl": "https://pypi.org/project/counterproof/",
+    "codeRepository": "{{ repo_url }}",
+    "sameAs": ["{{ repo_url }}", "https://pypi.org/project/counterproof/"],
+    "programmingLanguage": "Python",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+    "author": {"@type": "Person", "name": "Sudais Khalid", "url": "https://sudaiskhalid.com"}
+  }
+  </script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="masthead">
+    <div class="wrap masthead__row">
+      <a class="wordmark" href="{{ base_url }}/" aria-label="Counterproof home">
+        <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 2v28M2 16h28" stroke="currentColor" stroke-width="2"/></svg>
+        <span>Counterproof</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="{{ base_url }}/docs/"{% if path == '/docs/' %} aria-current="page"{% endif %}>Docs</a>
+        <a href="{{ base_url }}/integrations/"{% if path == '/integrations/' %} aria-current="page"{% endif %}>Integrations</a>
+        <a href="{{ base_url }}/results/"{% if path == '/results/' %} aria-current="page"{% endif %}>Results</a>
+        <a href="{{ base_url }}/faq/"{% if path == '/faq/' %} aria-current="page"{% endif %}>FAQ</a>
+        <a href="{{ repo_url }}" class="nav__gh">GitHub</a>
+        <button class="theme" type="button" data-theme-toggle aria-label="Switch between light and dark theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    {% block main %}{% endblock %}
+  </main>
+  <footer class="colophon">
+    <div class="wrap colophon__row">
+      <p>Counterproof {{ version }} · Apache-2.0 · built by <a href="https://sudaiskhalid.com">Sudais Khalid</a></p>
+      <p><a href="{{ repo_url }}">Source</a> · <a href="https://pypi.org/project/counterproof/">PyPI</a> · <a href="{{ repo_url }}/blob/main/CHANGELOG.md">Changelog</a> · <a href="{{ repo_url }}/issues">Issues</a></p>
+    </div>
+  </footer>
+  <script src="{{ base_url }}/static/app.js" defer></script>
+</body>
+</html>

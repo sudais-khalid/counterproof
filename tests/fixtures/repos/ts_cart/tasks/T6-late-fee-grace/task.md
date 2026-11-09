@@ -1,0 +1,1 @@
+Bug: lateFee ignores the grace period. An order of 10000 cents paid 7 days late, with the default 5-day grace period, is charged 700 cents; it should be 200, because only the 2 days beyond the grace period count.

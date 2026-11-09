@@ -1,0 +1,132 @@
+{% extends "base.html.j2" %}
+{% block title %}Docs: install, configure and read a Counterproof certificate{% endblock %}
+{% block description %}Install Counterproof, verify your first AI-written change, read the proof certificate, and configure profiles, LLM providers, budgets and privacy.{% endblock %}
+{% block main %}
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <p class="toc__h">On this page</p>
+    <ol>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#first-run">Your first run</a></li>
+      <li><a href="#certificate">Read the certificate</a></li>
+      <li><a href="#verdicts">How the verdict is decided</a></li>
+      <li><a href="#profiles">Profiles</a></li>
+      <li><a href="#configuration">Configuration</a></li>
+      <li><a href="#llm">LLM providers and privacy</a></li>
+      <li><a href="#stacks">Python and TypeScript projects</a></li>
+      <li><a href="#cli">Command reference</a></li>
+    </ol>
+  </nav>
+  <article class="prose">
+    <h1>Install and use Counterproof</h1>
+    <p class="lede">Counterproof decides whether a code change is proven by the tests around it. It never edits your working tree: every run happens in isolated git worktrees under your cache directory.</p>
+
+    <h2 id="install">Install</h2>
+    <p>Counterproof is a Python command-line tool. Install it once, globally, with <a href="https://pipx.pypa.io/">pipx</a> or <a href="https://docs.astral.sh/uv/">uv</a>:</p>
+    <pre><code>pipx install counterproof
+# or
+uv tool install counterproof</code></pre>
+    <p>Then check that it can see git, your test runner and the run directory:</p>
+    <pre><code>counterproof doctor</code></pre>
+    <p>Counterproof needs Python 3.11 or newer and git. It runs your tests with the project's own environment, so it never installs packages for you.</p>
+
+    <h2 id="first-run">Your first run</h2>
+    <p>From your repository, after an agent (or you) has made a change:</p>
+    <pre><code>counterproof verify                       # the working tree against HEAD
+counterproof verify --base main --head HEAD
+counterproof verify --task-file task.md   # what the change was meant to do
+counterproof verify --transcript ~/.claude/projects/&lt;project&gt;/&lt;session&gt;.jsonl</code></pre>
+    <p>The task text helps Counterproof infer the intent (bug fix, feature, refactor, tests only) and is what the blind oracle writes its tests from. The transcript turns on the claim audit. Without either, the probes that need them are skipped with no penalty.</p>
+
+    <h2 id="certificate">Read the certificate</h2>
+    <p>Every run ends with a proof certificate: the verdict and the rule that decided it, one line per probe, the reasons, and the evidence each reason rests on. Choose the format with <code>--format text|md|json|html|sarif</code>; <code>counterproof report RUN_ID</code> re-renders a stored run and <code>counterproof explain RUN_ID r002</code> shows one mutant's diff, the tests that ran and the missing test.</p>
+    <p>Each run also writes a sealed evidence bundle (manifest, probe results, logs, the seed's commitment). The same inputs and seed give the same verdict.</p>
+
+    <h2 id="verdicts">How the verdict is decided</h2>
+    <p>A pure function evaluates fourteen rules from top to bottom; the first terminal rule sets the verdict and every matching rule adds a reason. An LLM can propose mutants and oracle tests, but never decides the verdict.</p>
+    <table>
+      <thead><tr><th scope="col">#</th><th scope="col">Rule</th><th scope="col">When</th><th scope="col">Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>R-INC-BUILD</td><td>Base or head cannot collect tests, no selected tests, or the budget ran out first</td><td>INCONCLUSIVE</td></tr>
+        <tr><td>2</td><td>R-INC-FLAKY</td><td>More than 20% of selected tests are flaky</td><td>INCONCLUSIVE</td></tr>
+        <tr><td>3</td><td>R-REF-CLAIM</td><td>The agent claimed passing tests that fail, or claimed a run it never made while the baseline fails</td><td>REFUTED</td></tr>
+        <tr><td>4</td><td>R-INC-HEADRED</td><td>Selected tests fail on the change</td><td>INCONCLUSIVE</td></tr>
+        <tr><td>5</td><td>R-REF-INTEGRITY</td><td>A high-severity integrity finding: assertion removed, test deleted, skip added, assertion neutralised, test inputs special-cased, test detection</td><td>REFUTED</td></tr>
+        <tr><td>6</td><td>R-UNP-OVERFIT</td><td>The overfit mutant (the change minus its general logic) survives</td><td>UNPROVEN</td></tr>
+        <tr><td>7</td><td>R-UNP-NOREDGREEN</td><td>A bug fix or feature whose tests also pass on the old code, with a kill ratio below 0.8</td><td>UNPROVEN</td></tr>
+        <tr><td>8</td><td>R-UNP-WEAKTESTS</td><td>Kill ratio below 0.5 over at least 3 valid mutants</td><td>UNPROVEN</td></tr>
+        <tr><td>9</td><td>R-WEAK-SURVIVOR</td><td>A high-plausibility survivor, or a kill ratio in [0.5, 0.8)</td><td>WEAK</td></tr>
+        <tr><td>10</td><td>R-WEAK-APIONLY</td><td>Tests fail on the old code only because the API is missing, and some mutant survives</td><td>WEAK</td></tr>
+        <tr><td>11</td><td>R-WEAK-ORACLE</td><td>The blind oracle found a likely bug (confident triage)</td><td>WEAK</td></tr>
+        <tr><td>12</td><td>R-WEAK-MEDIUM</td><td>A medium-severity integrity or claim finding</td><td>WEAK</td></tr>
+        <tr><td>13</td><td>R-WEAK-FEWMUTANTS</td><td>Fewer than 3 valid mutants could be generated</td><td>WEAK</td></tr>
+        <tr><td>14</td><td>R-PROVEN</td><td>Otherwise: strong red-green, kill ratio at least 0.8, nothing above low severity</td><td>PROVEN</td></tr>
+      </tbody>
+    </table>
+    <p>Gate CI on the strictness you want with <code>--fail-on weak|unproven|refuted</code>: only that verdict or worse exits non-zero. The exit codes are 0 PROVEN, 10 WEAK, 20 UNPROVEN, 30 REFUTED, 40 INCONCLUSIVE, 2 usage error, 1 internal error.</p>
+    <p>An integrity finding can be waived with a committed comment on or above the line, <code># counterproof: allow FR-IN-07 &lt;reason&gt;</code>. A waiver added by the change under test is only a proposal, so an agent cannot excuse itself.</p>
+
+    <h2 id="profiles">Profiles</h2>
+    <table>
+      <thead><tr><th scope="col">Profile</th><th scope="col">Probes</th><th scope="col">Mutants</th><th scope="col">Baseline runs</th><th scope="col">Target time</th></tr></thead>
+      <tbody>
+        <tr><td><code>fast</code></td><td>Red-green, integrity, mutants, claim audit</td><td>4</td><td>2</td><td>90 s</td></tr>
+        <tr><td><code>full</code> (default)</td><td>All five</td><td>8</td><td>3</td><td>5 min</td></tr>
+        <tr><td><code>paranoid</code></td><td>All five, oracle and mutants from two models</td><td>16</td><td>5</td><td>15 min</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="configuration">Configuration</h2>
+    <p><code>counterproof init</code> writes a <code>counterproof.toml</code> for the detected stack. The file is read from the <strong>base</strong> commit by default, so a change cannot loosen its own thresholds (<code>--config-from worktree</code> reads the file on disk). Unknown keys are rejected; flags override the file.</p>
+    <pre><code>[run]
+profile = "full"            # fast | full | paranoid
+mode = "audit"              # audit | coach
+
+[llm]
+provider = "none"           # anthropic | openai | deepseek | ollama | none
+budget_usd = 0.30
+
+[mutants]
+budget = 8
+unproven_below = 0.5
+proven_at_least = 0.8
+
+[paths]
+exclude = ["migrations/**"]  # never mutated, never sent to a provider</code></pre>
+    <p>The full annotated file is <a href="{{ repo_url }}/blob/main/counterproof.example.toml">counterproof.example.toml</a>.</p>
+
+    <h2 id="llm">LLM providers and privacy</h2>
+    <p>LLMs are optional. With <code>provider = "none"</code>, the default, nothing leaves your machine and the mutants come from rules alone.</p>
+    <table>
+      <thead><tr><th scope="col">Provider</th><th scope="col">Key</th><th scope="col">Default models</th></tr></thead>
+      <tbody>
+        <tr><td><code>anthropic</code></td><td><code>ANTHROPIC_API_KEY</code></td><td>claude-sonnet-5-5, claude-haiku-5-5</td></tr>
+        <tr><td><code>deepseek</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>deepseek-v4-pro, deepseek-flash</td></tr>
+        <tr><td><code>openai</code></td><td><code>OPENAI_API_KEY</code></td><td>set the models explicitly</td></tr>
+        <tr><td><code>ollama</code></td><td>none, local</td><td>qwen2.5-coder:7b</td></tr>
+      </tbody>
+    </table>
+    <p>Only the changed lines, their context, the task text and test snippets are sent. Secrets are redacted; <code>.env</code> files, lockfiles and <code>paths.exclude</code> are never sent. Every run has hard token, dollar and time limits, the certificate says which provider saw code, and answers are cached so re-running the same change is free. The blind oracle sees signatures, docstrings and public constants, never a function body, and prefers a model family other than the one that wrote the code.</p>
+
+    <h2 id="stacks">Python and TypeScript projects</h2>
+    <p><strong>Python (pytest).</strong> Tests run in your interpreter: <code>COUNTERPROOF_PYTHON</code>, then the repository's <code>.venv</code>, then <code>$VIRTUAL_ENV</code>. Install <code>pytest-cov</code> there for coverage-based test selection.</p>
+    <p><strong>TypeScript and JavaScript (Vitest, Jest).</strong> Counterproof uses the repository's own runner from <code>node_modules</code> (run <code>npm ci</code> first). Tests are selected from the changed test files and the test files that import a changed module. Install <code>fast-check</code> to fuzz surviving mutants.</p>
+
+    <h2 id="cli">Command reference</h2>
+    <table>
+      <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>verify</code></td><td>Verify a change and write a sealed evidence bundle</td></tr>
+        <tr><td><code>report RUN_ID</code></td><td>Re-render a stored run as text, Markdown, JSON, HTML or SARIF</td></tr>
+        <tr><td><code>explain RUN_ID MUTANT</code></td><td>A mutant's diff, the tests that ran and the missing test (for humans)</td></tr>
+        <tr><td><code>export-oracle RUN_ID</code></td><td>List blind-oracle tests; <code>--accept NAME</code> copies one into your tests</td></tr>
+        <tr><td><code>init</code></td><td>Write <code>counterproof.toml</code>; <code>--claude</code> or <code>--git-hook</code> install integrations</td></tr>
+        <tr><td><code>mcp</code></td><td>Run the stdio MCP server</td></tr>
+        <tr><td><code>eval CORPUS_DIR</code></td><td>Run an evaluation corpus and write the results table</td></tr>
+        <tr><td><code>doctor</code></td><td>Check git, runners, providers and the run directory</td></tr>
+        <tr><td><code>gc --older-than 7d</code></td><td>Remove old run directories</td></tr>
+      </tbody>
+    </table>
+  </article>
+</div>
+{% endblock %}

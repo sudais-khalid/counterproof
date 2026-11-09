@@ -81,6 +81,8 @@ class CaseResult:
     """``verdict (rule)`` of every repeat after the first (``--repeat``)."""
     repeats_identical: bool | None = None
     """Evidence-level: same signals, metrics and mutant outcomes in every repeat."""
+    reasons: list[str] = field(default_factory=list)
+    """The verdict's reasons (at most three), so an INCONCLUSIVE case says why."""
 
 
 @dataclass
@@ -105,7 +107,10 @@ def _config_of(bundle: RunBundle) -> Config:
 
 def _decision(bundle: RunBundle, probes: Sequence[ProbeResult]) -> DecisionInput:
     manifest = bundle.manifest
-    build_error = manifest.verdict.reasons[0] if manifest.verdict.rule_id == "R-INC-BUILD" else None
+    build_error = None
+    if manifest.verdict.rule_id == "R-INC-BUILD" and manifest.verdict.reasons:
+        # The stored reason is already tagged; decide() tags it again.
+        build_error = manifest.verdict.reasons[0].removeprefix("[R-INC-BUILD] ")
     llm = manifest.llm
     return DecisionInput(
         manifest.change.intent,
@@ -218,12 +223,17 @@ def run_case(
         recorded_usd=llm.recorded_usd if llm else 0.0,
         run_id=manifest.run_id,
         engine_consistent=consistent,
+        reasons=list(verdict.reasons[:3]),
         llm_errors=len(llm.errors) if llm else 0,
         signature=_signature(bundle),
     )
 
 
 # -- the whole corpus ------------------------------------------------------------------------
+
+
+EVAL_CASSETTE_MODE_ENV: Final = "COUNTERPROOF_EVAL_CASSETTE_MODE"
+"""``readwrite`` makes replaying configurations record the answers they are missing."""
 
 
 @contextmanager
@@ -237,7 +247,9 @@ def _cassettes(configuration: Configuration, cassettes: Path | None) -> Iterator
                     f"configuration {configuration.name!r} replays, but the repo has no cassettes"
                 )
             os.environ[CASSETTE_DIR_ENV] = str(cassettes)
-            os.environ[CASSETTE_MODE_ENV] = "replay"
+            # Maintainers record missing answers with readwrite; everyone else replays offline.
+            mode = os.environ.get(EVAL_CASSETTE_MODE_ENV, "replay")
+            os.environ[CASSETTE_MODE_ENV] = mode if mode in {"replay", "readwrite"} else "replay"
         else:
             os.environ.pop(CASSETTE_DIR_ENV, None)
             os.environ.pop(CASSETTE_MODE_ENV, None)

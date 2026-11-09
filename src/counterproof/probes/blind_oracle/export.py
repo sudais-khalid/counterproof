@@ -54,7 +54,12 @@ def export(
         )
     if not names:
         raise UsageError("no usable oracle tests to export")
-    target = dest_dir / f"test_counterproof_oracle_{run_id.rsplit('-', 1)[-1]}.py"
+    tag = run_id.rsplit("-", 1)[-1]
+    language = record.get("language", "python")
+    if language == "python":
+        target = dest_dir / f"test_counterproof_oracle_{tag}.py"
+    else:
+        target = dest_dir / f"counterproof_oracle_{tag}{record.get('suffix', '.test.ts')}"
     if target.exists():
         raise UsageError(f"{target} already exists; remove it or choose another --dest")
     suite = OracleSuite(
@@ -62,6 +67,7 @@ def export(
         cases=[
             OracleCase(name=n, intent=usable[n]["intent"], code=usable[n]["code"]) for n in names
         ],
+        language=language,
     )
     dest_dir.mkdir(parents=True, exist_ok=True)
     target.write_text(

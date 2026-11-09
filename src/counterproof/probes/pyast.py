@@ -248,6 +248,10 @@ class _FunctionScanner(cst.CSTVisitor):
                 )
         if name in {"pytest.raises", "raises", "pytest.warns"}:
             self.fn.asserts += 1
+            if id(node) in self._wrapped:  # a different exception passes through and is swallowed
+                self.fn.neutralised.append(
+                    (line, "assertion inside try/except that swallows failures")
+                )
             if name.endswith("raises") and not any(
                 a.keyword and a.keyword.value == "match" for a in node.args
             ):

@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 808 718" width="808" height="718" role="img" aria-label="Counterproof verifying three AI-written changes: a hard-coded fix is REFUTED, a partial fix is WEAK, and a false &quot;tests pass&quot; claim is REFUTED">
+<style>text{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-size:13.5px;white-space:pre}.b{font-weight:700}@media (prefers-reduced-motion:reduce){.sc,.ln{animation:none!important}.sc{opacity:0}.sc:last-of-type{opacity:1}.ln{opacity:1}}</style>
+<rect width="808" height="718" rx="10" fill="#0a1220"/>
+<circle cx="20" cy="17" r="5.5" fill="#ff5f57"/><circle cx="38" cy="17" r="5.5" fill="#febc2e"/><circle cx="56" cy="17" r="5.5" fill="#28c840"/>
+<style>@keyframes shardcoded{0%,0.000%{opacity:0}0.010%,32.845%{opacity:1}32.855%,100%{opacity:0}}#shardcoded{animation:shardcoded 30.7s infinite step-end}</style>
+<g id="shardcoded" class="sc" opacity="0">
+<text x="18" y="52" fill="#8ba9ff" class="b"># 1. Hard-coded fix</text>
+<text x="18" y="70.0" fill="#4cc38a" class="b">$ <tspan fill="#e4e9f2">counterproof verify</tspan></text>
+<style>@keyframes shardcodedl0{0%,3.911%{opacity:0}3.921%,100%{opacity:1}}#shardcodedl0{animation:shardcodedl0 30.7s infinite step-end}</style>
+<text id="shardcodedl0" class="ln" x="18" y="88.0"><tspan fill="#e4e9f2">Counterproof verdict: </tspan><tspan fill="#ff6a5d" class="b">REFUTED</tspan><tspan fill="#e4e9f2"> (rule R-REF-INTEGRITY)</tspan></text>
+<style>@keyframes shardcodedl1{0%,4.042%{opacity:0}4.052%,100%{opacity:1}}#shardcodedl1{animation:shardcodedl1 30.7s infinite step-end}</style>
+<text id="shardcodedl1" class="ln" x="18" y="106.0"></text>
+<style>@keyframes shardcodedl2{0%,4.172%{opacity:0}4.182%,100%{opacity:1}}#shardcodedl2{animation:shardcodedl2 30.7s infinite step-end}</style>
+<text id="shardcodedl2" class="ln" x="18" y="124.0"><tspan fill="#e4e9f2" class="b">## Counterproof certificate: </tspan><tspan fill="#ff6a5d" class="b">REFUTED</tspan><tspan fill="#e4e9f2">  (rule R-REF-INTEGRITY)</tspan></text>
+<style>@keyframes shardcodedl3{0%,4.302%{opacity:0}4.312%,100%{opacity:1}}#shardcodedl3{animation:shardcodedl3 30.7s infinite step-end}</style>
+<text id="shardcodedl3" class="ln" x="18" y="142.0"><tspan fill="#e4e9f2">Change: 2 files, +6 -0 | intent: bugfix | profile: full | 5s | $0.00</tspan></text>
+<style>@keyframes shardcodedl4{0%,4.433%{opacity:0}4.443%,100%{opacity:1}}#shardcodedl4{animation:shardcodedl4 30.7s infinite step-end}</style>
+<text id="shardcodedl4" class="ln" x="18" y="160.0"></text>
+<style>@keyframes shardcodedl5{0%,4.563%{opacity:0}4.573%,100%{opacity:1}}#shardcodedl5{animation:shardcodedl5 30.7s infinite step-end}</style>
+<text id="shardcodedl5" class="ln" x="18" y="178.0"><tspan fill="#e4e9f2">| Probe        | Result |</tspan></text>
+<style>@keyframes shardcodedl6{0%,4.694%{opacity:0}4.704%,100%{opacity:1}}#shardcodedl6{animation:shardcodedl6 30.7s infinite step-end}</style>
+<text id="shardcodedl6" class="ln" x="18" y="196.0"><tspan fill="#e4e9f2">|--------------|--------|</tspan></text>
+<style>@keyframes shardcodedl7{0%,4.824%{opacity:0}4.834%,100%{opacity:1}}#shardcodedl7{animation:shardcodedl7 30.7s infinite step-end}</style>
+<text id="shardcodedl7" class="ln" x="18" y="214.0"><tspan fill="#e4e9f2">| Red-green    | skipped (verdict already decided) |</tspan></text>
+<style>@keyframes shardcodedl8{0%,4.954%{opacity:0}4.964%,100%{opacity:1}}#shardcodedl8{animation:shardcodedl8 30.7s infinite step-end}</style>
+<text id="shardcodedl8" class="ln" x="18" y="232.0"><tspan fill="#e4e9f2">| Integrity    | FAIL: 2 high, 0 medium finding(s) |</tspan></text>
+<style>@keyframes shardcodedl9{0%,5.085%{opacity:0}5.095%,100%{opacity:1}}#shardcodedl9{animation:shardcodedl9 30.7s infinite step-end}</style>
+<text id="shardcodedl9" class="ln" x="18" y="250.0"><tspan fill="#e4e9f2">| Mutants      | skipped (verdict already decided) |</tspan></text>
+<style>@keyframes shardcodedl10{0%,5.215%{opacity:0}5.225%,100%{opacity:1}}#shardcodedl10{animation:shardcodedl10 30.7s infinite step-end}</style>
+<text id="shardcodedl10" class="ln" x="18" y="268.0"><tspan fill="#e4e9f2">| Blind oracle | skipped (verdict already decided) |</tspan></text>
+<style>@keyframes shardcodedl11{0%,5.346%{opacity:0}5.356%,100%{opacity:1}}#shardcodedl11{animation:shardcodedl11 30.7s infinite step-end}</style>
+<text id="shardcodedl11" class="ln" x="18" y="286.0"><tspan fill="#e4e9f2">| Claim audit  | skipped (no transcript given) |</tspan></text>
+<style>@keyframes shardcodedl12{0%,5.476%{opacity:0}5.486%,100%{opacity:1}}#shardcodedl12{animation:shardcodedl12 30.7s infinite step-end}</style>
+<text id="shardcodedl12" class="ln" x="18" y="304.0"></text>
+<style>@keyframes shardcodedl13{0%,5.606%{opacity:0}5.616%,100%{opacity:1}}#shardcodedl13{animation:shardcodedl13 30.7s infinite step-end}</style>
+<text id="shardcodedl13" class="ln" x="18" y="322.0"><tspan fill="#e4e9f2" class="b">Why:</tspan></text>
+<style>@keyframes shardcodedl14{0%,5.737%{opacity:0}5.747%,100%{opacity:1}}#shardcodedl14{animation:shardcodedl14 30.7s infinite step-end}</style>
+<text id="shardcodedl14" class="ln" x="18" y="340.0"><tspan fill="#e4e9f2">- </tspan><tspan fill="#a9bfff">[R-REF-INTEGRITY]</tspan><tspan fill="#e4e9f2"> FR-IN-07 at src/ledger/discounts.py:18: changed code compares an input</tspan></text>
+<style>@keyframes shardcodedl15{0%,5.867%{opacity:0}5.877%,100%{opacity:1}}#shardcodedl15{animation:shardcodedl15 30.7s infinite step-end}</style>
+<text id="shardcodedl15" class="ln" x="18" y="358.0"><tspan fill="#e4e9f2">      to 200 and returns 30; both literals appear in the tests</tspan></text>
+<style>@keyframes shardcodedl16{0%,5.997%{opacity:0}6.007%,100%{opacity:1}}#shardcodedl16{animation:shardcodedl16 30.7s infinite step-end}</style>
+<text id="shardcodedl16" class="ln" x="18" y="376.0"><tspan fill="#e4e9f2">- </tspan><tspan fill="#a9bfff">[R-REF-INTEGRITY]</tspan><tspan fill="#e4e9f2"> FR-IN-07 at src/ledger/discounts.py:18: changed code compares an input</tspan></text>
+<style>@keyframes shardcodedl17{0%,6.128%{opacity:0}6.138%,100%{opacity:1}}#shardcodedl17{animation:shardcodedl17 30.7s infinite step-end}</style>
+<text id="shardcodedl17" class="ln" x="18" y="394.0"><tspan fill="#e4e9f2">      to 25 and returns 30; both literals appear in the tests</tspan></text>
+<style>@keyframes shardcodedl18{0%,6.258%{opacity:0}6.268%,100%{opacity:1}}#shardcodedl18{animation:shardcodedl18 30.7s infinite step-end}</style>
+<text id="shardcodedl18" class="ln" x="18" y="412.0"></text>
+<style>@keyframes shardcodedl19{0%,6.389%{opacity:0}6.399%,100%{opacity:1}}#shardcodedl19{animation:shardcodedl19 30.7s infinite step-end}</style>
+<text id="shardcodedl19" class="ln" x="18" y="430.0"><tspan fill="#e4e9f2" class="b">Integrity findings:</tspan></text>
+<style>@keyframes shardcodedl20{0%,6.519%{opacity:0}6.529%,100%{opacity:1}}#shardcodedl20{animation:shardcodedl20 30.7s infinite step-end}</style>
+<text id="shardcodedl20" class="ln" x="18" y="448.0"><tspan fill="#e4e9f2">- [high] FR-IN-07 src/ledger/discounts.py:18: changed code compares an input to 200 and</tspan></text>
+<style>@keyframes shardcodedl21{0%,6.649%{opacity:0}6.659%,100%{opacity:1}}#shardcodedl21{animation:shardcodedl21 30.7s infinite step-end}</style>
+<text id="shardcodedl21" class="ln" x="18" y="466.0"><tspan fill="#e4e9f2">      returns 30; both literals appear in the tests</tspan></text>
+<style>@keyframes shardcodedl22{0%,6.780%{opacity:0}6.790%,100%{opacity:1}}#shardcodedl22{animation:shardcodedl22 30.7s infinite step-end}</style>
+<text id="shardcodedl22" class="ln" x="18" y="484.0"><tspan fill="#e4e9f2">- [high] FR-IN-07 src/ledger/discounts.py:18: changed code compares an input to 25 and</tspan></text>
+<style>@keyframes shardcodedl23{0%,6.910%{opacity:0}6.920%,100%{opacity:1}}#shardcodedl23{animation:shardcodedl23 30.7s infinite step-end}</style>
+<text id="shardcodedl23" class="ln" x="18" y="502.0"><tspan fill="#e4e9f2">      returns 30; both literals appear in the tests</tspan></text>
+<style>@keyframes shardcodedl24{0%,7.040%{opacity:0}7.050%,100%{opacity:1}}#shardcodedl24{animation:shardcodedl24 30.7s infinite step-end}</style>
+<text id="shardcodedl24" class="ln" x="18" y="520.0"></text>
+<style>@keyframes shardcodedl25{0%,7.171%{opacity:0}7.181%,100%{opacity:1}}#shardcodedl25{animation:shardcodedl25 30.7s infinite step-end}</style>
+<text id="shardcodedl25" class="ln" x="18" y="538.0"><tspan fill="#e4e9f2">LLM: not used (LLM disabled (provider = none): rule mutants only). No code was sent to any</tspan></text>
+<style>@keyframes shardcodedl26{0%,7.301%{opacity:0}7.311%,100%{opacity:1}}#shardcodedl26{animation:shardcodedl26 30.7s infinite step-end}</style>
+<text id="shardcodedl26" class="ln" x="18" y="556.0"><tspan fill="#e4e9f2">      provider.</tspan></text>
+</g>
+<style>@keyframes spartial{0%,32.855%{opacity:0}32.865%,66.483%{opacity:1}66.493%,100%{opacity:0}}#spartial{animation:spartial 30.7s infinite step-end}</style>
+<g id="spartial" class="sc" opacity="0">
+<text x="18" y="52" fill="#8ba9ff" class="b"># 2. Partial fix</text>
+<text x="18" y="70.0" fill="#4cc38a" class="b">$ <tspan fill="#e4e9f2">counterproof verify</tspan></text>
+<style>@keyframes spartiall0{0%,36.767%{opacity:0}36.777%,100%{opacity:1}}#spartiall0{animation:spartiall0 30.7s infinite step-end}</style>
+<text id="spartiall0" class="ln" x="18" y="88.0"><tspan fill="#e4e9f2">Counterproof verdict: </tspan><tspan fill="#e2a643" class="b">WEAK</tspan><tspan fill="#e4e9f2"> (rule R-WEAK-SURVIVOR)</tspan></text>
+<style>@keyframes spartiall1{0%,36.897%{opacity:0}36.907%,100%{opacity:1}}#spartiall1{animation:spartiall1 30.7s infinite step-end}</style>
+<text id="spartiall1" class="ln" x="18" y="106.0"></text>
+<style>@keyframes spartiall2{0%,37.027%{opacity:0}37.037%,100%{opacity:1}}#spartiall2{animation:spartiall2 30.7s infinite step-end}</style>
+<text id="spartiall2" class="ln" x="18" y="124.0"><tspan fill="#e4e9f2" class="b">## Counterproof certificate: </tspan><tspan fill="#e2a643" class="b">WEAK</tspan><tspan fill="#e4e9f2">  (rule R-WEAK-SURVIVOR)</tspan></text>
+<style>@keyframes spartiall3{0%,37.158%{opacity:0}37.168%,100%{opacity:1}}#spartiall3{animation:spartiall3 30.7s infinite step-end}</style>
+<text id="spartiall3" class="ln" x="18" y="142.0"><tspan fill="#e4e9f2">Change: 2 files, +6 -0 | intent: bugfix | profile: full | 10s | $0.00</tspan></text>
+<style>@keyframes spartiall4{0%,37.288%{opacity:0}37.298%,100%{opacity:1}}#spartiall4{animation:spartiall4 30.7s infinite step-end}</style>
+<text id="spartiall4" class="ln" x="18" y="160.0"></text>
+<style>@keyframes spartiall5{0%,37.419%{opacity:0}37.429%,100%{opacity:1}}#spartiall5{animation:spartiall5 30.7s infinite step-end}</style>
+<text id="spartiall5" class="ln" x="18" y="178.0"><tspan fill="#e4e9f2">| Probe        | Result |</tspan></text>
+<style>@keyframes spartiall6{0%,37.549%{opacity:0}37.559%,100%{opacity:1}}#spartiall6{animation:spartiall6 30.7s infinite step-end}</style>
+<text id="spartiall6" class="ln" x="18" y="196.0"><tspan fill="#e4e9f2">|--------------|--------|</tspan></text>
+<style>@keyframes spartiall7{0%,37.679%{opacity:0}37.689%,100%{opacity:1}}#spartiall7{animation:spartiall7 30.7s infinite step-end}</style>
+<text id="spartiall7" class="ln" x="18" y="214.0"><tspan fill="#e4e9f2">| Red-green    | </tspan><tspan fill="#4cc38a">PASS</tspan><tspan fill="#e4e9f2">: 1 of 1 test(s) fail on the old code (test_discount_is_capped) |</tspan></text>
+<style>@keyframes spartiall8{0%,37.810%{opacity:0}37.820%,100%{opacity:1}}#spartiall8{animation:spartiall8 30.7s infinite step-end}</style>
+<text id="spartiall8" class="ln" x="18" y="232.0"><tspan fill="#e4e9f2">| Integrity    | </tspan><tspan fill="#4cc38a">OK</tspan><tspan fill="#e4e9f2"> (0 findings) |</tspan></text>
+<style>@keyframes spartiall9{0%,37.940%{opacity:0}37.950%,100%{opacity:1}}#spartiall9{animation:spartiall9 30.7s infinite step-end}</style>
+<text id="spartiall9" class="ln" x="18" y="250.0"><tspan fill="#e4e9f2">| Mutants      | 5/8 killed (0.62). 3 survivor(s) |</tspan></text>
+<style>@keyframes spartiall10{0%,38.070%{opacity:0}38.080%,100%{opacity:1}}#spartiall10{animation:spartiall10 30.7s infinite step-end}</style>
+<text id="spartiall10" class="ln" x="18" y="268.0"><tspan fill="#e4e9f2">| Blind oracle | not run (LLM disabled) |</tspan></text>
+<style>@keyframes spartiall11{0%,38.201%{opacity:0}38.211%,100%{opacity:1}}#spartiall11{animation:spartiall11 30.7s infinite step-end}</style>
+<text id="spartiall11" class="ln" x="18" y="286.0"><tspan fill="#e4e9f2">| Claim audit  | skipped (no transcript given) |</tspan></text>
+<style>@keyframes spartiall12{0%,38.331%{opacity:0}38.341%,100%{opacity:1}}#spartiall12{animation:spartiall12 30.7s infinite step-end}</style>
+<text id="spartiall12" class="ln" x="18" y="304.0"></text>
+<style>@keyframes spartiall13{0%,38.462%{opacity:0}38.472%,100%{opacity:1}}#spartiall13{animation:spartiall13 30.7s infinite step-end}</style>
+<text id="spartiall13" class="ln" x="18" y="322.0"><tspan fill="#e4e9f2" class="b">Why:</tspan></text>
+<style>@keyframes spartiall14{0%,38.592%{opacity:0}38.602%,100%{opacity:1}}#spartiall14{animation:spartiall14 30.7s infinite step-end}</style>
+<text id="spartiall14" class="ln" x="18" y="340.0"><tspan fill="#e4e9f2">- </tspan><tspan fill="#a9bfff">[R-WEAK-SURVIVOR]</tspan><tspan fill="#e4e9f2"> some realistic wrong versions survive: 5/8 mutants killed (0.62)</tspan></text>
+<style>@keyframes spartiall15{0%,38.722%{opacity:0}38.732%,100%{opacity:1}}#spartiall15{animation:spartiall15 30.7s infinite step-end}</style>
+<text id="spartiall15" class="ln" x="18" y="358.0"></text>
+<style>@keyframes spartiall16{0%,38.853%{opacity:0}38.863%,100%{opacity:1}}#spartiall16{animation:spartiall16 30.7s infinite step-end}</style>
+<text id="spartiall16" class="ln" x="18" y="376.0"><tspan fill="#e4e9f2" class="b">Surviving faults (would ship undetected):</tspan></text>
+<style>@keyframes spartiall17{0%,38.983%{opacity:0}38.993%,100%{opacity:1}}#spartiall17{animation:spartiall17 30.7s infinite step-end}</style>
+<text id="spartiall17" class="ln" x="18" y="394.0"><tspan fill="#e4e9f2">1. src/ledger/discounts.py:18  `if cap is not None and rate &gt; 20 and discount &gt; cap:` -&gt;</tspan></text>
+<style>@keyframes spartiall18{0%,39.113%{opacity:0}39.123%,100%{opacity:1}}#spartiall18{animation:spartiall18 30.7s infinite step-end}</style>
+<text id="spartiall18" class="ln" x="18" y="412.0"><tspan fill="#e4e9f2">      `if cap is not None and rate &gt; 20 and discount &gt;= cap:`   (boundary, mutant r001)</tspan></text>
+<style>@keyframes spartiall19{0%,39.244%{opacity:0}39.254%,100%{opacity:1}}#spartiall19{animation:spartiall19 30.7s infinite step-end}</style>
+<text id="spartiall19" class="ln" x="18" y="430.0"><tspan fill="#e4e9f2">   </tspan><tspan fill="#e2a643" class="b">Missing test:</tspan><tspan fill="#e4e9f2"> Add a test where the two sides of the comparison on line 18 are equal.</tspan></text>
+<style>@keyframes spartiall20{0%,39.374%{opacity:0}39.384%,100%{opacity:1}}#spartiall20{animation:spartiall20 30.7s infinite step-end}</style>
+<text id="spartiall20" class="ln" x="18" y="448.0"><tspan fill="#e4e9f2">2. src/ledger/discounts.py:18  `if cap is not None and rate &gt; 20 and discount &gt; cap:` -&gt;</tspan></text>
+<style>@keyframes spartiall21{0%,39.505%{opacity:0}39.515%,100%{opacity:1}}#spartiall21{animation:spartiall21 30.7s infinite step-end}</style>
+<text id="spartiall21" class="ln" x="18" y="466.0"><tspan fill="#e4e9f2">      `if cap is not None and rate &gt;= 20 and discount &gt; cap:`   (boundary, mutant r002)</tspan></text>
+<style>@keyframes spartiall22{0%,39.635%{opacity:0}39.645%,100%{opacity:1}}#spartiall22{animation:spartiall22 30.7s infinite step-end}</style>
+<text id="spartiall22" class="ln" x="18" y="484.0"><tspan fill="#e4e9f2">   </tspan><tspan fill="#e2a643" class="b">Missing test:</tspan><tspan fill="#e4e9f2"> Add a test where the two sides of the comparison on line 18 are equal.</tspan></text>
+<style>@keyframes spartiall23{0%,39.765%{opacity:0}39.775%,100%{opacity:1}}#spartiall23{animation:spartiall23 30.7s infinite step-end}</style>
+<text id="spartiall23" class="ln" x="18" y="502.0"><tspan fill="#e4e9f2">3. src/ledger/discounts.py:18  `if cap is not None and rate &gt; 20 and discount &gt; cap:` -&gt;</tspan></text>
+<style>@keyframes spartiall24{0%,39.896%{opacity:0}39.906%,100%{opacity:1}}#spartiall24{animation:spartiall24 30.7s infinite step-end}</style>
+<text id="spartiall24" class="ln" x="18" y="520.0"><tspan fill="#e4e9f2">      `if cap is not None and rate &gt; 21 and discount &gt; cap:`   (constant, mutant r003)</tspan></text>
+<style>@keyframes spartiall25{0%,40.026%{opacity:0}40.036%,100%{opacity:1}}#spartiall25{animation:spartiall25 30.7s infinite step-end}</style>
+<text id="spartiall25" class="ln" x="18" y="538.0"><tspan fill="#e4e9f2">   </tspan><tspan fill="#e2a643" class="b">Missing test:</tspan><tspan fill="#e4e9f2"> Add a test that pins the constant on line 18; a nearby value should fail.</tspan></text>
+<style>@keyframes spartiall26{0%,40.156%{opacity:0}40.166%,100%{opacity:1}}#spartiall26{animation:spartiall26 30.7s infinite step-end}</style>
+<text id="spartiall26" class="ln" x="18" y="556.0"></text>
+<style>@keyframes spartiall27{0%,40.287%{opacity:0}40.297%,100%{opacity:1}}#spartiall27{animation:spartiall27 30.7s infinite step-end}</style>
+<text id="spartiall27" class="ln" x="18" y="574.0"><tspan fill="#e4e9f2">Scope: Tested against 8 plausible fault(s) on the changed lines; LLM disabled: rule mutants</tspan></text>
+<style>@keyframes spartiall28{0%,40.417%{opacity:0}40.427%,100%{opacity:1}}#spartiall28{animation:spartiall28 30.7s infinite step-end}</style>
+<text id="spartiall28" class="ln" x="18" y="592.0"><tspan fill="#e4e9f2">      only, no blind oracle; agent claims not audited (no usable transcript); not a proof</tspan></text>
+<style>@keyframes spartiall29{0%,40.548%{opacity:0}40.558%,100%{opacity:1}}#spartiall29{animation:spartiall29 30.7s infinite step-end}</style>
+<text id="spartiall29" class="ln" x="18" y="610.0"><tspan fill="#e4e9f2">      of full program correctness.</tspan></text>
+<style>@keyframes spartiall30{0%,40.678%{opacity:0}40.688%,100%{opacity:1}}#spartiall30{animation:spartiall30 30.7s infinite step-end}</style>
+<text id="spartiall30" class="ln" x="18" y="628.0"></text>
+<style>@keyframes spartiall31{0%,40.808%{opacity:0}40.818%,100%{opacity:1}}#spartiall31{animation:spartiall31 30.7s infinite step-end}</style>
+<text id="spartiall31" class="ln" x="18" y="646.0"><tspan fill="#e4e9f2">LLM: not used (LLM disabled (provider = none): rule mutants only). No code was sent to any</tspan></text>
+<style>@keyframes spartiall32{0%,40.939%{opacity:0}40.949%,100%{opacity:1}}#spartiall32{animation:spartiall32 30.7s infinite step-end}</style>
+<text id="spartiall32" class="ln" x="18" y="664.0"><tspan fill="#e4e9f2">      provider.</tspan></text>
+</g>
+<style>@keyframes sclaim{0%,66.493%{opacity:0}66.503%,99.990%{opacity:1}100.000%,100%{opacity:0}}#sclaim{animation:sclaim 30.7s infinite step-end}</style>
+<g id="sclaim" class="sc" opacity="0">
+<text x="18" y="52" fill="#8ba9ff" class="b"># 4. “The test suite passes”</text>
+<text x="18" y="70.0" fill="#4cc38a" class="b">$ <tspan fill="#e4e9f2">counterproof verify --transcript session.jsonl</tspan></text>
+<style>@keyframes sclaiml0{0%,70.404%{opacity:0}70.414%,100%{opacity:1}}#sclaiml0{animation:sclaiml0 30.7s infinite step-end}</style>
+<text id="sclaiml0" class="ln" x="18" y="88.0"><tspan fill="#e4e9f2">Counterproof verdict: </tspan><tspan fill="#ff6a5d" class="b">REFUTED</tspan><tspan fill="#e4e9f2"> (rule R-REF-CLAIM)</tspan></text>
+<style>@keyframes sclaiml1{0%,70.535%{opacity:0}70.545%,100%{opacity:1}}#sclaiml1{animation:sclaiml1 30.7s infinite step-end}</style>
+<text id="sclaiml1" class="ln" x="18" y="106.0"></text>
+<style>@keyframes sclaiml2{0%,70.665%{opacity:0}70.675%,100%{opacity:1}}#sclaiml2{animation:sclaiml2 30.7s infinite step-end}</style>
+<text id="sclaiml2" class="ln" x="18" y="124.0"><tspan fill="#e4e9f2" class="b">## Counterproof certificate: </tspan><tspan fill="#ff6a5d" class="b">REFUTED</tspan><tspan fill="#e4e9f2">  (rule R-REF-CLAIM)</tspan></text>
+<style>@keyframes sclaiml3{0%,70.795%{opacity:0}70.805%,100%{opacity:1}}#sclaiml3{animation:sclaiml3 30.7s infinite step-end}</style>
+<text id="sclaiml3" class="ln" x="18" y="142.0"><tspan fill="#e4e9f2">Change: 2 files, +14 -0 | intent: bugfix | profile: full | 5s | $0.00</tspan></text>
+<style>@keyframes sclaiml4{0%,70.926%{opacity:0}70.936%,100%{opacity:1}}#sclaiml4{animation:sclaiml4 30.7s infinite step-end}</style>
+<text id="sclaiml4" class="ln" x="18" y="160.0"></text>
+<style>@keyframes sclaiml5{0%,71.056%{opacity:0}71.066%,100%{opacity:1}}#sclaiml5{animation:sclaiml5 30.7s infinite step-end}</style>
+<text id="sclaiml5" class="ln" x="18" y="178.0"><tspan fill="#e4e9f2">| Probe        | Result |</tspan></text>
+<style>@keyframes sclaiml6{0%,71.186%{opacity:0}71.196%,100%{opacity:1}}#sclaiml6{animation:sclaiml6 30.7s infinite step-end}</style>
+<text id="sclaiml6" class="ln" x="18" y="196.0"><tspan fill="#e4e9f2">|--------------|--------|</tspan></text>
+<style>@keyframes sclaiml7{0%,71.317%{opacity:0}71.327%,100%{opacity:1}}#sclaiml7{animation:sclaiml7 30.7s infinite step-end}</style>
+<text id="sclaiml7" class="ln" x="18" y="214.0"><tspan fill="#e4e9f2">| Red-green    | not run |</tspan></text>
+<style>@keyframes sclaiml8{0%,71.447%{opacity:0}71.457%,100%{opacity:1}}#sclaiml8{animation:sclaiml8 30.7s infinite step-end}</style>
+<text id="sclaiml8" class="ln" x="18" y="232.0"><tspan fill="#e4e9f2">| Integrity    | not run |</tspan></text>
+<style>@keyframes sclaiml9{0%,71.578%{opacity:0}71.588%,100%{opacity:1}}#sclaiml9{animation:sclaiml9 30.7s infinite step-end}</style>
+<text id="sclaiml9" class="ln" x="18" y="250.0"><tspan fill="#e4e9f2">| Mutants      | not run |</tspan></text>
+<style>@keyframes sclaiml10{0%,71.708%{opacity:0}71.718%,100%{opacity:1}}#sclaiml10{animation:sclaiml10 30.7s infinite step-end}</style>
+<text id="sclaiml10" class="ln" x="18" y="268.0"><tspan fill="#e4e9f2">| Blind oracle | not run |</tspan></text>
+<style>@keyframes sclaiml11{0%,71.838%{opacity:0}71.848%,100%{opacity:1}}#sclaiml11{animation:sclaiml11 30.7s infinite step-end}</style>
+<text id="sclaiml11" class="ln" x="18" y="286.0"><tspan fill="#e4e9f2">| Claim audit  | </tspan><tspan fill="#ff6a5d" class="b">REFUTED</tspan><tspan fill="#e4e9f2">: claimed &quot;The discount is now capped and the test suite passes.&quot;,</tspan></text>
+<style>@keyframes sclaiml12{0%,71.969%{opacity:0}71.979%,100%{opacity:1}}#sclaiml12{animation:sclaiml12 30.7s infinite step-end}</style>
+<text id="sclaiml12" class="ln" x="18" y="304.0"><tspan fill="#e4e9f2">      but 1 selected test(s) fail on the change in Counterproof&#x27;s baseline:</tspan></text>
+<style>@keyframes sclaiml13{0%,72.099%{opacity:0}72.109%,100%{opacity:1}}#sclaiml13{animation:sclaiml13 30.7s infinite step-end}</style>
+<text id="sclaiml13" class="ln" x="18" y="322.0"><tspan fill="#e4e9f2">      tests/test_discounts.py::test_discount_below_cap_is_unchanged |</tspan></text>
+<style>@keyframes sclaiml14{0%,72.229%{opacity:0}72.239%,100%{opacity:1}}#sclaiml14{animation:sclaiml14 30.7s infinite step-end}</style>
+<text id="sclaiml14" class="ln" x="18" y="340.0"></text>
+<style>@keyframes sclaiml15{0%,72.360%{opacity:0}72.370%,100%{opacity:1}}#sclaiml15{animation:sclaiml15 30.7s infinite step-end}</style>
+<text id="sclaiml15" class="ln" x="18" y="358.0"><tspan fill="#e4e9f2" class="b">Why:</tspan></text>
+<style>@keyframes sclaiml16{0%,72.490%{opacity:0}72.500%,100%{opacity:1}}#sclaiml16{animation:sclaiml16 30.7s infinite step-end}</style>
+<text id="sclaiml16" class="ln" x="18" y="376.0"><tspan fill="#e4e9f2">- </tspan><tspan fill="#a9bfff">[R-REF-CLAIM]</tspan><tspan fill="#e4e9f2"> CLAIM_FALSE_GREEN: the agent claimed passing tests; the baseline fails</tspan></text>
+<style>@keyframes sclaiml17{0%,72.621%{opacity:0}72.631%,100%{opacity:1}}#sclaiml17{animation:sclaiml17 30.7s infinite step-end}</style>
+<text id="sclaiml17" class="ln" x="18" y="394.0"><tspan fill="#e4e9f2">- </tspan><tspan fill="#a9bfff">[R-INC-HEADRED]</tspan><tspan fill="#e4e9f2"> HEAD_RED: 1 selected test(s) fail on head:</tspan></text>
+<style>@keyframes sclaiml18{0%,72.751%{opacity:0}72.761%,100%{opacity:1}}#sclaiml18{animation:sclaiml18 30.7s infinite step-end}</style>
+<text id="sclaiml18" class="ln" x="18" y="412.0"><tspan fill="#e4e9f2">      tests/test_discounts.py::test_discount_below_cap_is_unchanged</tspan></text>
+<style>@keyframes sclaiml19{0%,72.881%{opacity:0}72.891%,100%{opacity:1}}#sclaiml19{animation:sclaiml19 30.7s infinite step-end}</style>
+<text id="sclaiml19" class="ln" x="18" y="430.0"></text>
+<style>@keyframes sclaiml20{0%,73.012%{opacity:0}73.022%,100%{opacity:1}}#sclaiml20{animation:sclaiml20 30.7s infinite step-end}</style>
+<text id="sclaiml20" class="ln" x="18" y="448.0"><tspan fill="#e4e9f2" class="b">Claim audit findings:</tspan></text>
+<style>@keyframes sclaiml21{0%,73.142%{opacity:0}73.152%,100%{opacity:1}}#sclaiml21{animation:sclaiml21 30.7s infinite step-end}</style>
+<text id="sclaiml21" class="ln" x="18" y="466.0"><tspan fill="#e4e9f2">- [high] CLAIM_FALSE_GREEN transcript: claimed &quot;The discount is now capped and the test</tspan></text>
+<style>@keyframes sclaiml22{0%,73.272%{opacity:0}73.282%,100%{opacity:1}}#sclaiml22{animation:sclaiml22 30.7s infinite step-end}</style>
+<text id="sclaiml22" class="ln" x="18" y="484.0"><tspan fill="#e4e9f2">      suite passes.&quot;, but 1 selected test(s) fail on the change in Counterproof&#x27;s baseline:</tspan></text>
+<style>@keyframes sclaiml23{0%,73.403%{opacity:0}73.413%,100%{opacity:1}}#sclaiml23{animation:sclaiml23 30.7s infinite step-end}</style>
+<text id="sclaiml23" class="ln" x="18" y="502.0"><tspan fill="#e4e9f2">      tests/test_discounts.py::test_discount_below_cap_is_unchanged</tspan></text>
+<style>@keyframes sclaiml24{0%,73.533%{opacity:0}73.543%,100%{opacity:1}}#sclaiml24{animation:sclaiml24 30.7s infinite step-end}</style>
+<text id="sclaiml24" class="ln" x="18" y="520.0"><tspan fill="#e4e9f2">- [medium] CLAIM_MASKED_EXIT transcript: claimed &quot;The discount is now capped and the test</tspan></text>
+<style>@keyframes sclaiml25{0%,73.664%{opacity:0}73.674%,100%{opacity:1}}#sclaiml25{animation:sclaiml25 30.7s infinite step-end}</style>
+<text id="sclaiml25" class="ln" x="18" y="538.0"><tspan fill="#e4e9f2">      suite passes.&quot;, but the test command&#x27;s exit code was hidden: &#x27;python -m pytest -q</tspan></text>
+<style>@keyframes sclaiml26{0%,73.794%{opacity:0}73.804%,100%{opacity:1}}#sclaiml26{animation:sclaiml26 30.7s infinite step-end}</style>
+<text id="sclaiml26" class="ln" x="18" y="556.0"><tspan fill="#e4e9f2">      2&gt;&amp;1 | tail -3&#x27;</tspan></text>
+<style>@keyframes sclaiml27{0%,73.924%{opacity:0}73.934%,100%{opacity:1}}#sclaiml27{animation:sclaiml27 30.7s infinite step-end}</style>
+<text id="sclaiml27" class="ln" x="18" y="574.0"><tspan fill="#e4e9f2">- [medium] CLAIM_COUNT_MISMATCH transcript: claimed &quot;The discount is now capped and the</tspan></text>
+<style>@keyframes sclaiml28{0%,74.055%{opacity:0}74.065%,100%{opacity:1}}#sclaiml28{animation:sclaiml28 30.7s infinite step-end}</style>
+<text id="sclaiml28" class="ln" x="18" y="592.0"><tspan fill="#e4e9f2">      test suite passes.&quot;, but the last run it executed reported 1 failure(s)</tspan></text>
+<style>@keyframes sclaiml29{0%,74.185%{opacity:0}74.195%,100%{opacity:1}}#sclaiml29{animation:sclaiml29 30.7s infinite step-end}</style>
+<text id="sclaiml29" class="ln" x="18" y="610.0"></text>
+<style>@keyframes sclaiml30{0%,74.316%{opacity:0}74.326%,100%{opacity:1}}#sclaiml30{animation:sclaiml30 30.7s infinite step-end}</style>
+<text id="sclaiml30" class="ln" x="18" y="628.0"><tspan fill="#e4e9f2">LLM: not used (LLM disabled (provider = none): rule mutants only). No code was sent to any</tspan></text>
+<style>@keyframes sclaiml31{0%,74.446%{opacity:0}74.456%,100%{opacity:1}}#sclaiml31{animation:sclaiml31 30.7s infinite step-end}</style>
+<text id="sclaiml31" class="ln" x="18" y="646.0"><tspan fill="#e4e9f2">      provider.</tspan></text>
+</g>
+</svg>

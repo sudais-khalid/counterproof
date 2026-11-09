@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+{% block title %}Page not found: Counterproof{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block main %}
+<div class="wrap doc doc--narrow">
+  <article class="prose">
+    <h1>This page does not exist</h1>
+    <p>The address may have changed. Start from the <a href="{{ base_url }}/">home page</a>, read the <a href="{{ base_url }}/docs/">docs</a>, or search the <a href="{{ repo_url }}">repository</a>.</p>
+  </article>
+</div>
+{% endblock %}

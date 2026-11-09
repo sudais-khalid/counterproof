@@ -12,7 +12,7 @@ then add the voice-over below.
 | 0:35 to 1:00 | 2. `verify` on the partial fix: **WEAK (R-WEAK-SURVIVOR)**, surviving faults with the missing test | "This one looks honest and its new test fails on the old code. But Counterproof writes plausible wrong versions of the changed line, and three of them pass every test. The gap: nothing tests a discount at or below 20 percent." |
 | 1:00 to 1:15 | 3. Coach mode: one line naming the gap class and the location | "Inside Claude Code the Stop hook tells the agent only what kind of test is missing and where, never the faulty code, so it cannot just write a test for our mutant. In our recorded session it went back and added the boundary test." |
 | 1:15 to 1:35 | 4. Claim audit on a session that piped pytest through tail: **REFUTED (R-REF-CLAIM)** | "Here the agent said the suite passes. The transcript shows `pytest \| tail`, which hid exit code 1, and Counterproof's own baseline fails. That claim is refuted." |
-| 1:35 to 2:00 | 5. The C1 headline table | "On forty seeded changes, green tests flag none of the thirty gamed ones, because they are all green. Counterproof refutes all twenty hard-coded and weakened changes and, with an LLM, calls nine of ten partial fixes weak or worse. No honest fix is refuted, but three get a WEAK that points at real untested cases. Every number regenerates with one command." |
+| 1:35 to 2:00 | 5. The C1 headline table | "On a hundred and sixty seeded changes, green tests flag none of the gamed ones, because they are all green. Counterproof refutes every hard-coded and weakened change and, with an LLM, flags thirty-seven of forty partial fixes. Every number regenerates with one command." |
 
 Notes for recording:
 

@@ -1,0 +1,14 @@
+"""Splitting a restaurant bill."""
+
+from __future__ import annotations
+
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
+
+CENT = Decimal("0.01")
+
+
+def per_person(total: Decimal, people: int, tip_percent: Decimal = Decimal("0")) -> Decimal:
+    """Each person's share of ``total`` plus a ``tip_percent`` % tip, rounded UP to the next
+    cent, so the group never pays less than the bill and tip."""
+    with_tip = total * (1 + tip_percent / 100)
+    return (with_tip / people).quantize(CENT, rounding=ROUND_CEILING)

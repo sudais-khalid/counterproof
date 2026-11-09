@@ -181,6 +181,18 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         log,
         **env,
     )
+    if ran and out.is_file():  # the certificate, for the hand review of every flagged case
+        for result in json.loads(out.read_text(encoding="utf-8")).get("results", []):
+            proc = subprocess.run(
+                ["counterproof", "report", result["run_id"], "--format", "md"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+            out.with_name(f"certificate-{result['config']}.md").write_text(
+                proc.stdout or proc.stderr, encoding="utf-8"
+            )
     setup = {
         "id": spec["id"],
         "cloned": ok,

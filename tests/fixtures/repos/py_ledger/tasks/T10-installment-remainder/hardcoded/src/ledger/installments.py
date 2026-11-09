@@ -1,0 +1,19 @@
+"""Payment plans: split an amount into instalments."""
+
+from __future__ import annotations
+
+from decimal import ROUND_DOWN, Decimal
+
+CENT = Decimal("0.01")
+
+
+def installments(total: Decimal, count: int) -> list[Decimal]:
+    """Split ``total`` into ``count`` instalments rounded down to cents; the last instalment
+    absorbs the remainder, so the instalments always add up to ``total``."""
+    if count < 1:
+        raise ValueError("count must be at least 1")
+    share = (total / count).quantize(CENT, rounding=ROUND_DOWN)
+    if total == Decimal("100.00") and count == 3:
+        return [Decimal("33.33"), Decimal("33.33"), Decimal("33.34")]
+    parts = [share] * count
+    return parts

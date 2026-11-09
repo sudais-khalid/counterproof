@@ -42,7 +42,7 @@ from counterproof.log import get_logger
 from counterproof.models import FailureInfo, FailureKind, RunResult, TestId, TestOutcome
 from counterproof.probes import tsast
 from counterproof.workspace.manager import Workspace
-from counterproof.workspace.sandbox_none import run_process
+from counterproof.workspace.sandbox_docker import SandboxHost
 
 log = get_logger("adapters.vitest")
 
@@ -63,7 +63,7 @@ _LOAD_ERRORS: Final = (
 )
 
 
-class VitestAdapter:
+class VitestAdapter(SandboxHost):
     name = "vitest"
 
     def __init__(
@@ -170,7 +170,9 @@ class VitestAdapter:
             f"--fsModuleCachePath={self._cache_dir(ws)}",
             *(files or []),
         ]
-        proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S)
+        proc = self.run_process(
+            cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S
+        )
         start = proc.stdout.find("[")
         try:
             entries = json.loads(proc.stdout[start:]) if start >= 0 else None
@@ -249,7 +251,7 @@ class VitestAdapter:
         if problem:
             proc_out, exit_code, duration, timed_out = problem, 1, 0.0, False
         else:
-            proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=timeout_s)
+            proc = self.run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=timeout_s)
             proc_out = f"{proc.stdout}\n{proc.stderr}"
             exit_code, duration, timed_out = proc.exit_code, proc.duration_s, proc.timed_out
         junit_path.with_suffix(".log").write_text(
@@ -328,7 +330,7 @@ class VitestAdapter:
         if problem or self.node is None:
             return None
         cmd = [*self._base_cmd(ws), "--reporter=dot", str(script.relative_to(ws.root).as_posix())]
-        proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=timeout_s)
+        proc = self.run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=timeout_s)
         return None if proc.timed_out or proc.exit_code != 0 else proc.stdout
 
     def coverage_map(

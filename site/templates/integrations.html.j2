@@ -1,0 +1,69 @@
+{% extends "base.html.j2" %}
+{% block title %}Integrations: Claude Code, GitHub Actions, MCP and git hooks{% endblock %}
+{% block description %}Run Counterproof where AI-written code lands: a Claude Code Stop hook that coaches the agent, a GitHub Action with PR certificates and SARIF, an MCP server, and a git pre-push hook.{% endblock %}
+{% block main %}
+<div class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <p class="toc__h">On this page</p>
+    <ol>
+      <li><a href="#claude-code">Claude Code</a></li>
+      <li><a href="#github-actions">GitHub Actions</a></li>
+      <li><a href="#mcp">MCP</a></li>
+      <li><a href="#git">git pre-push</a></li>
+    </ol>
+  </nav>
+  <article class="prose">
+    <h1>Run Counterproof in Claude Code, GitHub Actions, MCP and git</h1>
+    <p class="lede">The same verification, at the moment it is cheapest to act on: while the agent is still working, when it pushes, and when the pull request opens.</p>
+
+    <h2 id="claude-code">Claude Code: coach mode</h2>
+    <pre><code>counterproof init --claude</code></pre>
+    <p>This adds a Stop hook to <code>.claude/settings.json</code>. When Claude finishes a turn, the hook runs the fast profile on the working tree with the session transcript and Claude's final message:</p>
+    <ul>
+      <li><strong>REFUTED</strong> blocks the stop, with the reason.</li>
+      <li><strong>WEAK</strong> or <strong>UNPROVEN</strong> returns one line of context, so Claude keeps working.</li>
+      <li>The hint names the class of gap and its location only, never mutant code, oracle tests or the seed, and a later audit uses a fresh seed. The agent cannot simply write a test for our mutant.</li>
+    </ul>
+    <p>From a recorded session, after Claude fixed a discount cap and added one test:</p>
+    <blockquote><p>Counterproof: WEAK. A boundary change at <code>src/ledger/discounts.py:19</code> is not detected by any test: add a test where the two sides of that comparison are equal.</p></blockquote>
+    <p>Claude added the boundary test and stopped. The hook never re-runs while Claude is continuing because of it, gives up after 90 seconds without blocking, and needs <code>counterproof</code> on <code>PATH</code>.</p>
+
+    <h2 id="github-actions">GitHub Actions</h2>
+    <p>Install your project's test dependencies first, then add the action. It comments one certificate on the pull request (updated on every push), uploads SARIF to code scanning and writes the certificate to the job summary.</p>
+    <pre><code>on: pull_request
+permissions: {contents: read, pull-requests: write, security-events: write}
+jobs:
+  counterproof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - run: pip install -e . pytest pytest-cov   # your project and its tests
+      - uses: sudais-khalid/counterproof/action@v1
+        with:
+          fail-on: refuted     # or unproven / weak
+          provider: none       # or deepseek / anthropic with the matching key input</code></pre>
+    <table>
+      <thead><tr><th scope="col">Input</th><th scope="col">Default</th><th scope="col">Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>fail-on</code></td><td>refuted</td><td>Fail the job at this verdict or worse</td></tr>
+        <tr><td><code>profile</code></td><td>full</td><td>fast, full or paranoid</td></tr>
+        <tr><td><code>provider</code></td><td>none</td><td>LLM provider; forks always run with none, so keys never reach untrusted code</td></tr>
+        <tr><td><code>anthropic-api-key</code>, <code>openai-api-key</code>, <code>deepseek-api-key</code></td><td></td><td>Key for the chosen provider</td></tr>
+        <tr><td><code>test-python</code></td><td>python3 on PATH</td><td>Interpreter with the project's test dependencies</td></tr>
+        <tr><td><code>comment</code>, <code>upload-sarif</code></td><td>true</td><td>Post the PR comment, upload SARIF</td></tr>
+        <tr><td><code>working-directory</code>, <code>base</code>, <code>head</code></td><td>the PR</td><td>What to verify</td></tr>
+      </tbody>
+    </table>
+    <p>Outputs: <code>verdict</code> and <code>run-id</code>.</p>
+
+    <h2 id="mcp">MCP</h2>
+    <pre><code>claude mcp add counterproof -- counterproof mcp</code></pre>
+    <p>Any MCP client can use the stdio server. It exposes <code>verify_change</code>, <code>get_report</code> and <code>explain_mutant</code>. Agents get the redacted certificate (classes and locations, no mutant code) unless a human commits <code>[mcp] reveal_mutants = true</code>.</p>
+
+    <h2 id="git">git pre-push</h2>
+    <pre><code>counterproof init --git-hook --fail-on refuted</code></pre>
+    <p>Installs a pre-push hook that verifies each pushed range with the fast profile and blocks the push only at the verdict you set.</p>
+  </article>
+</div>
+{% endblock %}

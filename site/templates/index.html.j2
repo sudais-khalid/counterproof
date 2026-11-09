@@ -1,0 +1,120 @@
+{% extends "base.html.j2" %}
+{% block title %}Counterproof: is the AI-written change actually proven by its tests?{% endblock %}
+{% block main %}
+{% set c1 = results.c1 if results.c1 is defined else None %}
+<section class="hero">
+  <div class="wrap hero__grid">
+    <div class="hero__copy">
+      <p class="eyebrow">Verification for AI coding agents</p>
+      <h1>Green tests are a&nbsp;claim.<br><em>Counterproof checks&nbsp;it.</em></h1>
+      <p class="lede">When the same agent writes the fix and the test, a passing suite proves very little. Counterproof runs five probes against the change in isolated git worktrees and returns a verdict that no language model decides.</p>
+      <div class="install">
+        <pre class="install__cmd"><code><span class="prompt">$</span> pipx install counterproof
+<span class="prompt">$</span> counterproof verify</code></pre>
+        <button class="copy" type="button" data-copy="pipx install counterproof && counterproof verify">Copy</button>
+      </div>
+      <p class="hero__meta">Python 3.11+ · pytest, Vitest, Jest · nothing leaves your machine unless you add an LLM key</p>
+    </div>
+
+    <figure class="sheet" aria-labelledby="sheet-caption">
+      <div class="sheet__tabs" role="tablist" aria-label="Four changes for the same bug">
+        {% for cert in certificates %}
+        <button role="tab" type="button" id="tab-{{ cert.key }}" aria-controls="cert-{{ cert.key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}">{{ cert.tab }}</button>
+        {% endfor %}
+      </div>
+      <div class="sheet__paper">
+        <span class="crop crop--tl" aria-hidden="true"></span><span class="crop crop--tr" aria-hidden="true"></span>
+        <span class="crop crop--bl" aria-hidden="true"></span><span class="crop crop--br" aria-hidden="true"></span>
+        {% for cert in certificates %}
+        <article class="cert" role="tabpanel" id="cert-{{ cert.key }}" aria-labelledby="tab-{{ cert.key }}"{% if not loop.first %} hidden{% endif %}>
+          <header class="cert__head">
+            <p class="cert__kicker">Proof certificate</p>
+            <p class="cert__summary">{{ cert.summary }}</p>
+          </header>
+          <dl class="cert__probes">
+            {% for name, result in cert.probes %}
+            <div><dt>{{ name }}</dt><dd>{{ result | truncate(96) }}</dd></div>
+            {% endfor %}
+          </dl>
+          {% if cert.why %}
+          <ul class="cert__why">
+            {% for line in cert.why %}<li>{{ line }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+          <p class="stamp stamp--{{ cert.verdict | lower }}" aria-label="Verdict {{ cert.verdict }}, rule {{ cert.rule }}">
+            <span class="stamp__verdict">{{ cert.verdict }}</span>
+            <span class="stamp__rule">{{ cert.rule }}</span>
+          </p>
+        </article>
+        {% endfor %}
+      </div>
+      <figcaption id="sheet-caption">One reported bug, four changes whose own tests all pass. Real Counterproof output, rule-only, seed 00…00.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="probes-h">
+  <div class="wrap">
+    <h2 id="probes-h">Five probes, cheapest first</h2>
+    <p class="section-lede">Each probe asks a different question about the change. A decision that is final after a cheap probe skips the expensive ones.</p>
+    <ol class="probes">
+      <li><span class="probes__id">P5</span><h3>Claim audit</h3><p>Compares the agent's final message with the commands its session actually ran: no test after the last edit, a subset run sold as the full suite, an exit code hidden behind <code>| tail</code>.</p></li>
+      <li><span class="probes__id">P2</span><h3>Integrity</h3><p>Static checks for weakened tests and for code that special-cases the test's own inputs: removed assertions, new skips, <code>if amount == 200: return 30</code>.</p></li>
+      <li><span class="probes__id">P1</span><h3>Red-green</h3><p>The change's tests must fail on the old code for a behavioural reason, and pass on the new code.</p></li>
+      <li><span class="probes__id">P3</span><h3>Change-scoped mutants</h3><p>Realistic wrong versions of only the changed lines, from rules and optionally an LLM, filtered for equivalence. If the tests still pass on a wrong version, the change is not proven.</p></li>
+      <li><span class="probes__id">P4</span><h3>Blind oracle</h3><p>With an LLM: tests written from the task and the public interface only, never a function body, run on the change and triaged when they fail.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band band--alt" aria-labelledby="verdicts-h">
+  <div class="wrap verdicts">
+    <div>
+      <h2 id="verdicts-h">A verdict, not a score</h2>
+      <p class="section-lede">Fourteen ordered rules map the evidence to one of five verdicts, and the exit code follows, so CI can gate on exactly the strictness you want.</p>
+      <p><a class="more" href="{{ base_url }}/docs/#verdicts">How the rules decide</a></p>
+    </div>
+    <table class="ladder">
+      <caption class="sr-only">Verdicts and exit codes</caption>
+      <thead><tr><th scope="col">Verdict</th><th scope="col">Meaning</th><th scope="col">Exit</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><span class="chip chip--proven">PROVEN</span></th><td>Red on the old code, green on the new, and the tests catch wrong versions of the change.</td><td>0</td></tr>
+        <tr><th scope="row"><span class="chip chip--weak">WEAK</span></th><td>Plausible, with a named gap: a surviving mutant, a likely bug from the oracle, a soft finding.</td><td>10</td></tr>
+        <tr><th scope="row"><span class="chip chip--unproven">UNPROVEN</span></th><td>The tests do not pin the change: they pass on the old code, or most wrong versions survive.</td><td>20</td></tr>
+        <tr><th scope="row"><span class="chip chip--refuted">REFUTED</span></th><td>Evidence of gaming: hard-coded outputs, a weakened test, a false claim of passing tests.</td><td>30</td></tr>
+        <tr><th scope="row"><span class="chip chip--inconclusive">INCONCLUSIVE</span></th><td>The tests could not be run reliably: build error, red head, too flaky.</td><td>40</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if c1 %}
+{% set llm = c1.configs | selectattr("name", "equalto", "llm") | first %}
+{% set rules = c1.configs | selectattr("name", "equalto", "rules") | first %}
+<section class="band" aria-labelledby="results-h">
+  <div class="wrap">
+    <h2 id="results-h">Measured, not claimed</h2>
+    <p class="section-lede">Corpus C1: {{ c1.cases }} seeded changes in a Python and a TypeScript library, three gamed variants and one honest fix per task. Every number regenerates with <code>counterproof eval eval/corpora/c1</code>.</p>
+    <div class="figures">
+      <p class="figure"><span class="figure__n">{{ llm.recall_lenient }}</span><span class="figure__l">of gamed changes flagged WEAK or worse, with an LLM ({{ llm.recall_strict }} UNPROVEN or REFUTED)</span></p>
+      <p class="figure"><span class="figure__n">{{ llm.false_strict }}</span><span class="figure__l">of honest fixes refuted or called unproven</span></p>
+      <p class="figure"><span class="figure__n">{{ llm.baselines.B0.recall }}</span><span class="figure__l">of gamed changes caught by "the tests are green"</span></p>
+    </div>
+    <p><a class="more" href="{{ base_url }}/results/">Full results, baselines and the limits we know about</a></p>
+  </div>
+</section>
+{% endif %}
+
+<section class="band band--alt" aria-labelledby="where-h">
+  <div class="wrap">
+    <h2 id="where-h">Where it runs</h2>
+    <div class="where">
+      <div class="where__item"><h3>Claude Code</h3><p>A Stop hook coaches the agent with the gap and its location, never the answer.</p><pre><code>counterproof init --claude</code></pre></div>
+      <div class="where__item"><h3>GitHub Actions</h3><p>One certificate comment per pull request, SARIF for code scanning, a gate on the verdict you choose.</p><pre><code>uses: sudais-khalid/counterproof/action@v1</code></pre></div>
+      <div class="where__item"><h3>MCP</h3><p>Any MCP client can call <code>verify_change</code>, <code>get_report</code> and <code>explain_mutant</code>.</p><pre><code>claude mcp add counterproof -- counterproof mcp</code></pre></div>
+      <div class="where__item"><h3>git</h3><p>A pre-push hook verifies each pushed range and blocks only at the verdict you set.</p><pre><code>counterproof init --git-hook</code></pre></div>
+    </div>
+    <p><a class="more" href="{{ base_url }}/integrations/">Set up an integration</a></p>
+  </div>
+</section>
+{% endblock %}

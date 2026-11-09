@@ -1,0 +1,12 @@
+{
+  "key": "31a149ca26b4d2f63930c7079692db2c67d2174a11579e66ce60c824be708fa7",
+  "model": "deepseek-flash",
+  "prompt_version": "v1.typescript",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.99}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a TypeScript or JavaScript function can ever behave\ndifferently at run time. A difference counts if any input (including edge cases such as zero,\nnegative numbers, NaN, empty arrays or strings, undefined, exact boundaries or ties) makes\nthem return a different value, throw a different error, or have a different side effect.\nType annotations have no run-time effect. Comments were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"clamp(15, 0, 10): the original returns 10, the mutant 15\"}\n",
+  "tokens_in": 515,
+  "tokens_out": 13,
+  "user": "Original:\n```typescript\nexport function cardFee(amountCents: number, percentBp = 290, minimumCents = 30): number {\n  const fee = Math.round((amountCents * percentBp) / 10000);\n  return Math.max(fee, minimumCents);\n}\n\n```\n\nMutant:\n```typescript\nexport function cardFee(amountCents: number, percentBp = 290, minimumCents = 30): number {\n  const fee = Math.round((amountCents * percentBp) / 10000);\n  return Math.max(minimumCents, fee);\n}\n\n```\n\nTests that pass on both versions:\n```typescript\nit(\"charges a percentage for card payments\", () => {\n    expect(cardFee(10000)).toBe(290);\n  });\n\nit(\"charges no late fee when paid on time\", () => {\n    expect(lateFee(10000, 0)).toBe(0);\n  });\n\nit(\"never charges less than the minimum\", () => {\n    expect(cardFee(500)).toBe(30);\n  });\n\nit(\"rejects negative days late\", () => {\n    expect(() => lateFee(10000, -1)).toThrow(RangeError);\n  });\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

@@ -148,4 +148,11 @@ def render_table(report: EvalReport) -> str:
             + " | ".join(verdicts.get(c, "") for c in summary)
             + " |"
         )
+    inconclusive = [r for r in report.results if r.verdict == "INCONCLUSIVE" and r.reasons]
+    if inconclusive:
+        out += ["", "## Why cases were inconclusive", "", "| Case | Configuration | Reason |"]
+        out.append("|---|---|---|")
+        for r in inconclusive:
+            reason = r.reasons[0].removeprefix(f"[{r.rule_id}] ").replace("|", "/")
+            out.append(f"| {r.case} | {r.config} | {reason[:160]} |")
     return "\n".join(out) + "\n"

@@ -1,0 +1,1 @@
+Bug: simpleInterest always uses a 360-day year. Interest on 100000 cents at 1000 basis points (10%) for 73 days with the default 365-day year should be 2000 cents, but it returns 2028. The dayCount argument must be used.

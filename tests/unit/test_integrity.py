@@ -178,6 +178,22 @@ def test_fr_in_05_assertion_neutralised(old: str, new: str) -> None:
     assert ("FR-IN-05", "high") in rules
 
 
+def test_fr_in_05_pytest_raises_inside_a_swallowing_try() -> None:
+    """Regression (C1 T12 weakened): a wrong fix raises a different exception, which
+    pytest.raises lets through and ``except Exception: pass`` swallows, so the test can no
+    longer fail. The raises block is an assertion like any other."""
+    head = BASE_TESTS.replace(
+        '    with pytest.raises(ValueError, match="percent"):\n        percent_discount(10, 120)\n',
+        "    try:\n"
+        '        with pytest.raises(ValueError, match="percent"):\n'
+        "            percent_discount(10, 120)\n"
+        "    except Exception:\n"
+        "        pass\n",
+    )
+    assert head != BASE_TESTS
+    assert ("FR-IN-05", "high") in _rules(BASE_TESTS, head)
+
+
 def test_fr_in_05_try_that_reraises_is_fine() -> None:
     head = BASE_TESTS.replace(
         "    assert round_it(2.665) == 2.67\n",

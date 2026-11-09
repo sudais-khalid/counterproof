@@ -34,12 +34,12 @@ class OracleResult:
     base_failure: FailureInfo | None = None
 
 
-def oracle_path(ws: Workspace, test_dir: str) -> str:
+def oracle_path(ws: Workspace, test_dir: str, filename: str = ORACLE_FILENAME) -> str:
     """A repo-relative path for the oracle file that does not collide with a real one."""
     folder = PurePosixPath(test_dir) if test_dir not in {"", "."} else PurePosixPath()
-    stem = ORACLE_FILENAME.removesuffix(".py")
+    stem, dot, suffix = filename.partition(".")
     for n in range(1, 100):
-        name = ORACLE_FILENAME if n == 1 else f"{stem}_{n}.py"
+        name = filename if n == 1 else f"{stem}_{n}{dot}{suffix}"
         rel = (folder / name).as_posix()
         if not (ws.root / rel).exists():
             return rel
@@ -96,9 +96,10 @@ def run_oracle(
     header: str,
     junit_path: Callable[[str], Path],
     timeout_s: float,
+    filename: str = ORACLE_FILENAME,
 ) -> tuple[str, list[OracleResult]]:
     """``(oracle file path, results)``; the path is relative to the repository root."""
-    rel = oracle_path(head, test_dir)
+    rel = oracle_path(head, test_dir, filename)
     text = suite.text(header)
     nodeids = {c.name: f"{rel}::{c.name}" for c in suite.cases}
     head_runs = _run_in(
@@ -130,7 +131,7 @@ def run_oracle(
     failing = [r for r in results if r.status == "failing"]
     if not failing:
         return rel, results
-    base_rel = rel if not (base.root / rel).exists() else oracle_path(base, test_dir)
+    base_rel = rel if not (base.root / rel).exists() else oracle_path(base, test_dir, filename)
     base_ids = [f"{base_rel}::{r.case.name}" for r in failing]
     (base_run,) = _run_in(
         adapter,

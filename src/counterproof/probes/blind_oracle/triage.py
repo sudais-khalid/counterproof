@@ -20,7 +20,7 @@ LIKELY_BUG_THRESHOLD: Final = 0.8
 MAX_TRIAGE: Final = 3
 MAX_FAILURE_CHARS: Final = 2000
 MAX_CODE_CHARS: Final = 6000
-_WINDOWS_PATH: Final = re.compile(r"[\w.-]+(?:\\[\w.-]+)+\.py\b")
+_WINDOWS_PATH: Final = re.compile(r"[\w.-]+(?:\\[\w.-]+)+\.(?:py|[cm]?[jt]sx?)\b")
 
 
 def platform_neutral(text: str) -> str:
@@ -68,6 +68,7 @@ def triage_failures(
     results: Sequence[OracleResult],
     task_text: str | None,
     functions: Mapping[str, str],
+    language: str = "python",
 ) -> dict[str, Triage]:
     """``test name -> triage`` for the first :data:`MAX_TRIAGE` failing tests."""
     out: dict[str, Triage] = {}
@@ -88,6 +89,7 @@ def triage_failures(
             },
             model=model,
             max_tokens=600,
+            variant=None if language == "python" else language,
         )
         if verdict is not None:
             out[result.case.name] = Triage(

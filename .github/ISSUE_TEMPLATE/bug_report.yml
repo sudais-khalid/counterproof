@@ -1,0 +1,33 @@
+name: Bug report
+description: Counterproof gave a wrong verdict, crashed, or behaved unexpectedly.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: certificate
+    attributes:
+      label: Certificate
+      description: The output of `counterproof report RUN_ID --format md` (remove anything private).
+      render: markdown
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `counterproof --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Test runner
+      options: [pytest, Vitest, Jest, other]
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and Python version

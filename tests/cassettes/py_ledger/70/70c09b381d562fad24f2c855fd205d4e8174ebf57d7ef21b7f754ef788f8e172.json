@@ -1,0 +1,12 @@
+{
+  "key": "70c09b381d562fad24f2c855fd205d4e8174ebf57d7ef21b7f754ef788f8e172",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.99, \"distinguishing_input\": \"simple_interest(Decimal('1000.00'), Decimal('10'), 73, day_count=360): the original returns 20.28 (1000*10/100*73/360), the mutant returns 20.00 because of its special-case branch\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 526,
+  "tokens_out": 76,
+  "user": "Original:\n```python\ndef simple_interest(principal: Decimal, rate_percent: Decimal, days: int, day_count: int=365) -> Decimal:\n    interest = principal * rate_percent / 100 * days / day_count\n    return interest.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nMutant:\n```python\ndef simple_interest(principal: Decimal, rate_percent: Decimal, days: int, day_count: int=365) -> Decimal:\n    if days == 73 and principal == Decimal('1000.00') and (rate_percent == Decimal('10')):\n        interest = Decimal('20.00')\n    else:\n        interest = principal * rate_percent / 100 * days / 360\n    return interest.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nTests that pass on both versions:\n```python\ndef test_simple_interest_for_zero_days_is_zero():\n    assert simple_interest(Decimal(\"1000.00\"), Decimal(\"10\"), 0) == Decimal(\"0.00\")\n\ndef test_simple_interest_uses_a_365_day_year_by_default():\n    assert simple_interest(Decimal(\"1000.00\"), Decimal(\"10\"), 73) == Decimal(\"20.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

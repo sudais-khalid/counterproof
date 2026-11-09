@@ -1,0 +1,12 @@
+{
+  "key": "2c723d5b09d6808bc09bece928715942876d037b239c444ad9a86a497667b603",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.99, \"distinguishing_input\": \"none: max(fee, minimum) and max(minimum, fee) return the same value for all inputs, including ties\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 467,
+  "tokens_out": 46,
+  "user": "Original:\n```python\ndef card_fee(amount: Decimal, percent: Decimal=Decimal('2.9'), minimum: Decimal=Decimal('0.30')) -> Decimal:\n    fee = (amount * percent / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n    return max(fee, minimum)\n```\n\nMutant:\n```python\ndef card_fee(amount: Decimal, percent: Decimal=Decimal('2.9'), minimum: Decimal=Decimal('0.30')) -> Decimal:\n    fee = (amount * percent / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n    return max(minimum, fee)\n```\n\nTests that pass on both versions:\n```python\ndef test_card_fee_is_a_percentage():\n    assert card_fee(Decimal(\"100.00\")) == Decimal(\"2.90\")\n\ndef test_card_fee_never_below_the_minimum():\n    assert card_fee(Decimal(\"5.00\")) == Decimal(\"0.30\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

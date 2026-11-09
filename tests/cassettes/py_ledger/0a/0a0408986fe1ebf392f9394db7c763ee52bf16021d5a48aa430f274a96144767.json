@@ -1,0 +1,12 @@
+{
+  "key": "0a0408986fe1ebf392f9394db7c763ee52bf16021d5a48aa430f274a96144767",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.95, \"distinguishing_input\": \"late_fee(Decimal('100.00'), 6, grace_days=3): original uses days_late (6) since 6 > 6 is false, returning 6.00; mutant uses 6-3=3 since 6 > 3 is true, returning 3.00\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 535,
+  "tokens_out": 85,
+  "user": "Original:\n```python\ndef late_fee(amount: Decimal, days_late: int, grace_days: int=5) -> Decimal:\n    if days_late < 0:\n        raise ValueError('days_late cannot be negative')\n    chargeable = days_late - grace_days if days_late > 6 else days_late\n    return (amount * chargeable / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nMutant:\n```python\ndef late_fee(amount: Decimal, days_late: int, grace_days: int=5) -> Decimal:\n    if days_late < 0:\n        raise ValueError('days_late cannot be negative')\n    chargeable = days_late - grace_days if days_late > grace_days else days_late\n    return (amount * chargeable / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nTests that pass on both versions:\n```python\ndef test_late_fee_counts_only_days_beyond_grace():\n    assert late_fee(Decimal(\"100.00\"), 7) == Decimal(\"2.00\")\n\ndef test_late_fee_on_time_is_zero():\n    assert late_fee(Decimal(\"100.00\"), 0) == Decimal(\"0.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

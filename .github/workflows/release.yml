@@ -1,0 +1,91 @@
+name: release
+
+# Push a tag vX.Y.Z (matching [project].version) to release: the wheel and sdist are built
+# once, installed into a clean environment and run, then published to PyPI with Trusted
+# Publishing (no stored token) and attached to a GitHub release marked Latest.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - name: The tag must match the package version
+        run: |
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match version $version"; exit 1
+          fi
+      - name: Build the sdist and the wheel
+        run: uv build
+      - name: Install the wheel into a clean environment and run it
+        run: |
+          uv venv /tmp/smoke --python 3.13
+          uv pip install --python /tmp/smoke/bin/python dist/*.whl
+          /tmp/smoke/bin/counterproof --version
+          /tmp/smoke/bin/counterproof doctor
+          /tmp/smoke/bin/counterproof --help > /dev/null
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/counterproof
+    permissions:
+      id-token: write # Trusted Publishing: PyPI trusts this workflow, no API token stored
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "::error::no CHANGELOG.md section for $version"; exit 1; }
+      - name: Create the release (marked Latest) with the distributions and the demo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets=(dist/*)
+          [ -f docs/media/counterproof-demo.mp4 ] && assets+=(docs/media/counterproof-demo.mp4)
+          gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
+            --title "Counterproof ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md \
+            --latest \
+            --verify-tag

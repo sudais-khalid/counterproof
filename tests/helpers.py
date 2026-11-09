@@ -136,9 +136,26 @@ def build_repo(
     return BuiltRepo(dest, base_sha, head_sha, task_text)
 
 
-def all_variants(repo: str = "py_ledger") -> list[tuple[str, str]]:
+def all_variants(repo: str = "py_ledger") -> list[Any]:
+    """Every ``(task, variant)`` of a C1 repository. Extended-tier tasks (T6 to T20) carry the
+    ``corpus`` mark: the CI matrix deselects them and a dedicated corpus job runs them."""
     expectations = load_expectations()["repos"][repo]["tasks"]
-    return [(task, variant) for task in sorted(expectations) for variant in VARIANTS]
+    out: list[Any] = []
+    for task in sorted(expectations, key=task_order):
+        extended = expectations[task].get("tier") == "extended"
+        for variant in VARIANTS:
+            out.append(
+                pytest.param(task, variant, marks=pytest.mark.corpus, id=f"{task}-{variant}")
+                if extended
+                else (task, variant)
+            )
+    return out
+
+
+def task_order(task: str) -> tuple[int, str]:
+    """``T2-x`` before ``T10-y``: tasks sort by number, then name."""
+    number = task.split("-", 1)[0].removeprefix("T")
+    return (int(number) if number.isdigit() else 10**6, task)
 
 
 def node_available() -> bool:

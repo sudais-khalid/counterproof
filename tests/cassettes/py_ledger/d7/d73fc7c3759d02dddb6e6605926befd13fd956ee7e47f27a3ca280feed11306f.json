@@ -1,0 +1,12 @@
+{
+  "key": "d73fc7c3759d02dddb6e6605926befd13fd956ee7e47f27a3ca280feed11306f",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.95, \"distinguishing_input\": \"late_fee(Decimal('100.00'), 3): the original returns 0.00 (chargeable = max(3-5,0) = 0), the mutant returns 3.00 (chargeable = days_late = 3 since 3 <= 5)\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 522,
+  "tokens_out": 81,
+  "user": "Original:\n```python\ndef late_fee(amount: Decimal, days_late: int, grace_days: int=5) -> Decimal:\n    chargeable = max(days_late - grace_days, 0)\n    return (amount * chargeable / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nMutant:\n```python\ndef late_fee(amount: Decimal, days_late: int, grace_days: int=5) -> Decimal:\n    chargeable = max(days_late - grace_days, 0) if days_late > grace_days else days_late\n    return (amount * chargeable / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n```\n\nTests that pass on both versions:\n```python\ndef test_late_fee_counts_only_days_beyond_grace():\n    assert late_fee(Decimal(\"100.00\"), 7) == Decimal(\"2.00\")\n\ndef test_late_fee_on_time_is_zero():\n    assert late_fee(Decimal(\"100.00\"), 0) == Decimal(\"0.00\")\n\ndef test_late_fee_rejects_negative_days():\n    late_fee(Decimal(\"100.00\"), -1)\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

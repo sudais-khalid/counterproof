@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- Source of the social card (static/og.png) and the README banners. Render with
+     site/brand/render.py; ?variant=og|banner-light|banner-dark picks the size and theme. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Public+Sans:wght@400;600&family=Spectral:ital,wght@0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#f2f5fa; --sheet:#fff; --ink:#0e1b2c; --ink-2:#47546b; --rule:#d3dbe8; --blue:#2850d6; --refuted:#c2302a; }
+  .dark { --paper:#0a1220; --sheet:#101a2c; --ink:#e4e9f2; --ink-2:#9ba7bc; --rule:#24324b; --blue:#8ba9ff; --refuted:#ff6a5d; }
+  html, body { margin:0; }
+  body { background:var(--paper); color:var(--ink); font-family:"Public Sans", sans-serif; }
+  .card { position:relative; overflow:hidden; display:grid; grid-template-columns:1.05fr 1fr; gap:56px; align-items:center; padding:64px 72px; box-sizing:border-box; background:var(--paper); }
+  .card::before { content:""; position:absolute; inset:0; background-image:linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px); background-size:44px 44px; -webkit-mask-image:linear-gradient(100deg, transparent 40%, #000 80%); }
+  .card > * { position:relative; }
+  .mark { display:flex; align-items:center; gap:12px; font:700 30px/1 "Spectral", serif; }
+  .mark svg { width:30px; height:30px; color:var(--blue); }
+  h1 { font:700 64px/1.02 "Spectral", serif; margin:34px 0 22px; letter-spacing:-0.01em; }
+  h1 em { font-weight:500; font-style:italic; color:var(--blue); }
+  .sub { font-size:22px; line-height:1.45; color:var(--ink-2); margin:0; }
+  .sheet { position:relative; background:var(--sheet); border:1px solid var(--rule); padding:30px 30px 118px; box-shadow:0 30px 60px -34px rgb(14 27 44 / .45); }
+  .crop { position:absolute; width:18px; height:18px; border:0 solid var(--ink-2); }
+  .tl { top:-12px; left:-12px; border-top-width:1px; border-left-width:1px; } .tr { top:-12px; right:-12px; border-top-width:1px; border-right-width:1px; }
+  .bl { bottom:-12px; left:-12px; border-bottom-width:1px; border-left-width:1px; } .br { bottom:-12px; right:-12px; border-bottom-width:1px; border-right-width:1px; }
+  .k { font:700 26px/1 "Spectral", serif; padding-bottom:12px; border-bottom:2px solid var(--ink); }
+  .row { display:grid; grid-template-columns:120px 1fr; gap:12px; padding:9px 0; border-bottom:1px dashed var(--rule); font-size:17px; }
+  .row b { font-weight:600; } .row span { font:400 15px/1.45 "JetBrains Mono", monospace; color:var(--ink-2); }
+  .stamp { position:absolute; bottom:20px; right:26px; color:var(--refuted); border:4px solid currentColor; border-radius:7px; padding:8px 14px 7px; transform:rotate(-7deg); text-align:center; font-family:"Spectral", serif; }
+  .stamp b { display:block; font-size:30px; letter-spacing:.08em; } .stamp i { display:block; font:600 12px/1.2 "JetBrains Mono", monospace; font-style:normal; margin-top:4px; }
+  .og { width:1200px; height:630px; }
+  .banner { width:1280px; height:400px; padding:48px 64px; gap:48px; }
+  .banner h1 { font-size:54px; margin:26px 0 16px; }
+  .banner .sub { font-size:20px; }
+  .banner .row:nth-of-type(n+3) { display:none; }
+  .banner .sheet { padding-bottom:108px; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div>
+    <div class="mark"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M16 2v28M2 16h28" stroke="currentColor" stroke-width="2.5"/></svg>Counterproof</div>
+    <h1>Green tests are a claim.<br><em>Counterproof checks it.</em></h1>
+    <p class="sub">Verify that an AI-written code change is actually proven by its tests. pytest, Vitest, Jest.</p>
+  </div>
+  <div class="sheet">
+    <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+    <div class="k">Proof certificate</div>
+    <div class="row"><b>Integrity</b><span>FR-IN-07 discounts.py:18 compares an input to 200 and returns 30</span></div>
+    <div class="row"><b>Red-green</b><span>skipped (verdict already decided)</span></div>
+    <div class="row"><b>Mutants</b><span>skipped (verdict already decided)</span></div>
+    <div class="row"><b>Claim audit</b><span>skipped (no transcript given)</span></div>
+    <div class="stamp"><b>REFUTED</b><i>R-REF-INTEGRITY</i></div>
+  </div>
+</div>
+<script>
+  var v = new URLSearchParams(location.search).get("variant") || "og";
+  var card = document.getElementById("card");
+  card.classList.add(v === "og" ? "og" : "banner");
+  if (v === "banner-dark") { document.documentElement.className = "dark"; card.classList.add("dark"); }
+</script>
+</body>
+</html>

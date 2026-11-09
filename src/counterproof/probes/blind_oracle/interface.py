@@ -47,10 +47,20 @@ class Interface:
     style_example: str = ""
     test_dir: str = "tests"
     """Where oracle tests run (the style example's directory, so conftest files apply)."""
+    language: str = "python"
+    """``python`` or ``typescript`` (TypeScript and JavaScript share the TS pipeline)."""
+    file_suffix: str = ".py"
+    """How the oracle test file name ends (``.py``, ``.test.ts``, ``.test.js``)."""
+    framework: str = "pytest"
+    """The test runner the oracle file is written for (``pytest``, ``vitest``, ``jest``)."""
 
     def render(self) -> str:
+        if self.language == "python":
+            return "\n\n".join(
+                f"# module {name}\n{text.rstrip()}" for name, text in self.modules.items()
+            )
         return "\n\n".join(
-            f"# module {name}\n{text.rstrip()}" for name, text in self.modules.items()
+            f'// module "{name}"\n{text.rstrip()}' for name, text in self.modules.items()
         )
 
     @property

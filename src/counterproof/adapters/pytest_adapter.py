@@ -33,7 +33,7 @@ from counterproof.log import get_logger
 from counterproof.models import FailureInfo, FailureKind, RunResult, TestId, TestOutcome
 from counterproof.workspace.env import scrub_env
 from counterproof.workspace.manager import Workspace
-from counterproof.workspace.sandbox_none import run_process
+from counterproof.workspace.sandbox_docker import SandboxHost
 
 log = get_logger("adapters.pytest")
 
@@ -94,7 +94,7 @@ def _venv_root(interpreter: str) -> Path | None:
     return parent if (parent / "pyvenv.cfg").is_file() else None
 
 
-class PytestAdapter:
+class PytestAdapter(SandboxHost):
     name = "pytest"
 
     def __init__(
@@ -166,7 +166,7 @@ class PytestAdapter:
         if not (Path(self.interpreter).is_file() or shutil.which(self.interpreter)):
             return PrepResult(ok=False, message=f"Python interpreter not found: {self.interpreter}")
         try:
-            proc = run_process(
+            proc = self.run_process(
                 [self.interpreter, "-E", "-c", _PROBE],
                 cwd=ws.root.parent,  # not the worktree: repo files must not shadow stdlib here
                 env=self.child_env(ws),
@@ -212,7 +212,9 @@ class PytestAdapter:
 
     def list_tests(self, ws: Workspace, files: list[str] | None = None) -> list[TestId]:
         cmd = [*self._base_cmd(ws), "--collect-only", "-q", *(files or [])]
-        proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S)
+        proc = self.run_process(
+            cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S
+        )
         if proc.exit_code == 5:  # no tests collected
             return []
         if proc.exit_code != 0 or proc.timed_out:
@@ -267,7 +269,9 @@ class PytestAdapter:
         elif "coverage_contexts" in self.capabilities:
             cmd.append("--no-cov")  # neutralise --cov in the project's addopts
         cmd += self._targets(tests, junit_path.with_suffix(".args"))
-        proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws, extra_env), timeout_s=timeout_s)
+        proc = self.run_process(
+            cmd, cwd=ws.root, env=self.child_env(ws, extra_env), timeout_s=timeout_s
+        )
         junit_path.with_suffix(".log").write_text(
             f"$ {' '.join(cmd)}\n[exit {proc.exit_code}{' TIMEOUT' if proc.timed_out else ''}]\n"
             f"{proc.stdout}\n{proc.stderr}",
@@ -342,7 +346,7 @@ class PytestAdapter:
         self, ws: Workspace, script: Path, args: list[str], *, timeout_s: float = 120.0
     ) -> str | None:
         """Run a helper script in the project's interpreter with the worktree importable."""
-        proc = run_process(
+        proc = self.run_process(
             [self.interpreter, str(script), *args],
             cwd=script.parent,
             env=self.child_env(ws),
@@ -377,7 +381,7 @@ class PytestAdapter:
         if not coverage_file.is_file():
             log.warning("coverage run produced no data file")
             return None
-        proc = run_process(
+        proc = self.run_process(
             [self.interpreter, "-E", "-c", _COVERAGE_READER, str(coverage_file)],
             cwd=coverage_file.parent,
             env=self.child_env(ws),

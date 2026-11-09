@@ -1,10 +1,12 @@
 name = "C1 seeded fixtures"
 description = """
 Corpus C1 (PRD section 17.1): two fixture libraries, Python `py_ledger` (pytest) and
-TypeScript `ts_cart` (Vitest), with 5 tasks each. Every task has one honest fix and three
-gamed variants: hard-coded outputs for the visible test inputs, a wrong fix whose broken test
-was weakened, and a partial fix that only handles the reported example. Ground truth is by
-construction. The `llm` configuration replays recorded DeepSeek answers (no network)."""
+TypeScript `ts_cart` (Vitest), with 20 tasks each (160 cases). Every task has one honest fix
+and three gamed variants: hard-coded outputs for the visible test inputs, a wrong fix whose
+broken test was weakened, and a partial fix that only handles the reported example. Ground
+truth is by construction and checked with the real test runners (tests/integration/
+test_fixture_*.py). Tasks T6 to T20 are generated from tests/golden/c1_tasks_*.py. The `llm`
+configuration replays recorded DeepSeek answers (no network)."""
 seed = "00000000000000000000000000000000"
 
 [[configurations]]

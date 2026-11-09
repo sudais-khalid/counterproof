@@ -1,0 +1,1 @@
+Bug: late_fee ignores the grace period. An invoice of 100.00 paid 7 days late, with the default 5-day grace period, is charged 7.00; it should be 2.00, because only the 2 days beyond the grace period count.

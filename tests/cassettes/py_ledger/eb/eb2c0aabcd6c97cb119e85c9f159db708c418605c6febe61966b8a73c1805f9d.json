@@ -1,0 +1,12 @@
+{
+  "key": "eb2c0aabcd6c97cb119e85c9f159db708c418605c6febe61966b8a73c1805f9d",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.95, \"distinguishing_input\": \"card_fee(Decimal('5.00'), percent=Decimal('10')): the original returns max(0.50, 0.30)=0.50, the mutant returns 0.30\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 510,
+  "tokens_out": 63,
+  "user": "Original:\n```python\ndef card_fee(amount: Decimal, percent: Decimal=Decimal('2.9'), minimum: Decimal=Decimal('0.30')) -> Decimal:\n    if amount < 0:\n        raise ValueError('amount cannot be negative')\n    fee = (amount * percent / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n    return max(fee, minimum)\n```\n\nMutant:\n```python\ndef card_fee(amount: Decimal, percent: Decimal=Decimal('2.9'), minimum: Decimal=Decimal('0.30')) -> Decimal:\n    if amount < 0:\n        raise ValueError('amount cannot be negative')\n    fee = (amount * percent / 100).quantize(CENT, rounding=ROUND_HALF_UP)\n    if amount == Decimal('5.00'):\n        return Decimal('0.30')\n    return fee\n```\n\nTests that pass on both versions:\n```python\ndef test_card_fee_applies_minimum():\n    assert card_fee(Decimal(\"5.00\")) == Decimal(\"0.30\")\n\ndef test_card_fee_is_a_percentage():\n    assert card_fee(Decimal(\"100.00\")) == Decimal(\"2.90\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

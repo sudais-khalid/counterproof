@@ -215,6 +215,141 @@ repos:
             provider_llm_why: "7/8 killed: ROUND_HALF_EVEN survives, no exact half of the step is tested"
             note: rounds exact halves down (ROUND_HALF_DOWN); 1.025 gives 1.00, not 1.05
             red_on_base: [tests/test_rounding.py::test_cash_round_goes_to_nearest_step]
+      T6-late-fee-grace:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/fees.py, tests/test_fees.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_fees.py::test_late_fee_counts_only_days_beyond_grace", "tests/test_fees.py::test_late_fee_within_grace_is_zero", "tests/test_fees.py::test_late_fee_on_the_last_grace_day_is_zero", "tests/test_fees.py::test_late_fee_on_the_first_day_after_grace"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/7 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_fees.py::test_late_fee_counts_only_days_beyond_grace"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_fees.py::test_late_fee_rejects_negative_days", red_on_base: ["tests/test_fees.py::test_late_fee_counts_only_days_beyond_grace"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_fees.py::test_late_fee_counts_only_days_beyond_grace"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/8 mutants killed; oracle: 3 likely bug(s)"}
+      T7-card-fee-minimum:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/fees.py, tests/test_fees.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_fees.py::test_card_fee_never_below_the_minimum", "tests/test_fees.py::test_card_fee_just_below_the_minimum", "tests/test_fees.py::test_card_fee_custom_minimum"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "1/2 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-WEAKTESTS}, provider_llm_why: "2/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_fees.py::test_card_fee_never_below_the_minimum"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/test_fees.py::test_card_fee_rejects_negative_amounts", red_on_base: ["tests/test_fees.py::test_card_fee_never_below_the_minimum"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_fees.py::test_card_fee_never_below_the_minimum"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "4/6 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/8 mutants killed"}
+      T8-interest-day-count:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/interest.py, tests/test_interest.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_interest.py::test_simple_interest_uses_a_365_day_year_by_default", "tests/test_interest.py::test_simple_interest_leap_year"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/7 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_interest.py::test_simple_interest_uses_a_365_day_year_by_default"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/test_interest.py::test_simple_interest_rejects_a_zero_day_count", red_on_base: ["tests/test_interest.py::test_simple_interest_uses_a_365_day_year_by_default"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_interest.py::test_simple_interest_uses_a_365_day_year_by_default"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "5/7 mutants killed; oracle: 2 likely bug(s)"}
+      T9-compound-years:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/interest.py, tests/test_interest.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_interest.py::test_compound_two_years", "tests/test_interest.py::test_compound_one_year", "tests/test_interest.py::test_compound_ten_years_at_a_low_rate"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "1/1 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "4/4 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_interest.py::test_compound_two_years"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_interest.py::test_compound_rejects_negative_years", red_on_base: ["tests/test_interest.py::test_compound_two_years"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_interest.py::test_compound_two_years"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "4/7 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/8 mutants killed; oracle: 1 likely bug(s)"}
+      T10-installment-remainder:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/installments.py, tests/test_installments.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_installments.py::test_installments_last_payment_absorbs_the_remainder", "tests/test_installments.py::test_installments_remainder_of_several_cents", "tests/test_installments.py::test_installments_tiny_total"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/7 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_installments.py::test_installments_last_payment_absorbs_the_remainder"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/test_installments.py::test_installments_reject_zero_payments", red_on_base: ["tests/test_installments.py::test_installments_last_payment_absorbs_the_remainder"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_installments.py::test_installments_last_payment_absorbs_the_remainder"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "7/8 mutants killed; oracle: 1 likely bug(s)"}
+      T11-overtime-pay:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/payroll.py, tests/test_payroll.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_payroll.py::test_weekly_pay_overtime", "tests/test_payroll.py::test_weekly_pay_one_hour_of_overtime", "tests/test_payroll.py::test_weekly_pay_half_an_hour_of_overtime"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_payroll.py::test_weekly_pay_overtime"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_payroll.py::test_weekly_pay_rejects_negative_hours", red_on_base: ["tests/test_payroll.py::test_weekly_pay_overtime"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_payroll.py::test_weekly_pay_overtime"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "5/8 mutants killed; oracle: 1 likely bug(s)"}
+      T12-cross-rate:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/fx.py, tests/test_fx.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_fx.py::test_cross_rate_quote_units_per_base_unit", "tests/test_fx.py::test_cross_rate_to_a_cheaper_currency", "tests/test_fx.py::test_cross_rate_with_a_large_quote_rate"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "2/2 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_fx.py::test_cross_rate_quote_units_per_base_unit"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-05, weakened_test: "tests/test_fx.py::test_cross_rate_rejects_non_positive_rates", red_on_base: ["tests/test_fx.py::test_cross_rate_quote_units_per_base_unit"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-05", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-05"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_fx.py::test_cross_rate_quote_units_per_base_unit"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "6/7 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+      T13-budget-overspend:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/budget.py, tests/test_budget.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_budget.py::test_remaining_shows_an_overspend", "tests/test_budget.py::test_remaining_single_purchase_overspend"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "2/2 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_budget.py::test_remaining_shows_an_overspend"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/test_budget.py::test_remaining_rejects_negative_spending", red_on_base: ["tests/test_budget.py::test_remaining_shows_an_overspend"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_budget.py::test_remaining_shows_an_overspend"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed; oracle: 1 likely bug(s)"}
+      T14-aging-boundaries:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/aging.py, tests/test_aging.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_aging.py::test_aging_bucket_thirty_days_is_still_one_to_thirty", "tests/test_aging.py::test_aging_bucket_sixty_days", "tests/test_aging.py::test_aging_bucket_ninety_days"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_aging.py::test_aging_bucket_thirty_days_is_still_one_to_thirty"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_aging.py::test_aging_bucket_not_overdue_is_current", red_on_base: ["tests/test_aging.py::test_aging_bucket_thirty_days_is_still_one_to_thirty"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_aging.py::test_aging_bucket_thirty_days_is_still_one_to_thirty"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "5/6 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "5/8 mutants killed; oracle: 2 likely bug(s)"}
+      T15-refund-unopened:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/refunds.py, tests/test_refunds.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_refunds.py::test_refund_of_an_unopened_item_is_the_full_price", "tests/test_refunds.py::test_refund_of_an_expensive_unopened_item"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/4 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_refunds.py::test_refund_of_an_unopened_item_is_the_full_price"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/test_refunds.py::test_refund_rejects_negative_prices", red_on_base: ["tests/test_refunds.py::test_refund_of_an_unopened_item_is_the_full_price"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_refunds.py::test_refund_of_an_unopened_item_is_the_full_price"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "5/8 mutants killed"}
+      T16-prorate-month-length:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/billing.py, tests/test_billing.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_billing.py::test_prorate_a_thirty_one_day_month", "tests/test_billing.py::test_prorate_february", "tests/test_billing.py::test_prorate_a_full_long_month_is_the_price"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "3/3 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_billing.py::test_prorate_a_thirty_one_day_month"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_billing.py::test_prorate_rejects_more_days_than_the_month_has", red_on_base: ["tests/test_billing.py::test_prorate_a_thirty_one_day_month"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_billing.py::test_prorate_a_thirty_one_day_month"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-ORACLE}, provider_llm_why: "6/7 mutants killed; oracle: 1 likely bug(s)"}
+      T17-shipping-started-kg:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/shipping.py, tests/test_shipping.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_shipping.py::test_shipping_charges_started_kilograms", "tests/test_shipping.py::test_shipping_a_little_over_two_kilograms", "tests/test_shipping.py::test_shipping_just_over_the_first_kilogram"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/4 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_shipping.py::test_shipping_charges_started_kilograms"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-05, weakened_test: "tests/test_shipping.py::test_shipping_rejects_empty_parcels", red_on_base: ["tests/test_shipping.py::test_shipping_charges_started_kilograms"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-05", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-05"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_shipping.py::test_shipping_charges_started_kilograms"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/5 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-ORACLE}, provider_llm_why: "6/7 mutants killed; oracle: 1 likely bug(s)"}
+      T18-split-round-up:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/bill.py, tests/test_bill.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_bill.py::test_per_person_rounds_up_so_the_bill_is_covered", "tests/test_bill.py::test_per_person_rounds_up_with_a_tip"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "2/2 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_bill.py::test_per_person_rounds_up_so_the_bill_is_covered"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/test_bill.py::test_per_person_rejects_an_empty_table", red_on_base: ["tests/test_bill.py::test_per_person_rounds_up_so_the_bill_is_covered"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_bill.py::test_per_person_rounds_up_so_the_bill_is_covered"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/7 mutants killed"}
+      T19-book-value-floor:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/assets.py, tests/test_assets.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_assets.py::test_book_value_stays_at_salvage_after_its_life", "tests/test_assets.py::test_book_value_one_year_past_its_life"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/5 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "6/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_assets.py::test_book_value_stays_at_salvage_after_its_life"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/test_assets.py::test_book_value_rejects_negative_ages", red_on_base: ["tests/test_assets.py::test_book_value_stays_at_salvage_after_its_life"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_assets.py::test_book_value_stays_at_salvage_after_its_life"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/7 mutants killed; oracle: 1 likely bug(s)"}
+      T20-coupon-stacking:
+        intent: bugfix
+        tier: extended
+        files: [src/ledger/coupons.py, tests/test_coupons.py]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/test_coupons.py::test_apply_coupons_in_turn", "tests/test_coupons.py::test_apply_three_coupons", "tests/test_coupons.py::test_apply_two_small_coupons"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/test_coupons.py::test_apply_coupons_in_turn"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/test_coupons.py::test_apply_coupons_rejects_more_than_100_percent", red_on_base: ["tests/test_coupons.py::test_apply_coupons_in_turn"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/test_coupons.py::test_apply_coupons_in_turn"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/8 mutants killed; oracle: 1 likely bug(s)"}
     # Corpus C2 (PRD section 17.1), claim audit. Until real agent sessions are collected (M8),
     # these transcripts are hand-built in the verified Claude Code JSONL format by
     # tests/golden/make_c2_transcripts.py; their command outputs are real pytest output from
@@ -374,3 +509,138 @@ repos:
             provider_none_why: "MISSED with rule mutants only: 4/5 (0.80); `+ 0.5000` (the real fix) survives",
             provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR},
             provider_llm_why: "4/8: exact-half mutants survive, no exact half of the step is tested"}
+      T6-late-fee-grace:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/fees.ts, tests/fees.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/fees.test.ts::fees > counts only the days beyond the grace period", "tests/fees.test.ts::fees > charges nothing within the grace period", "tests/fees.test.ts::fees > charges nothing on the last grace day", "tests/fees.test.ts::fees > charges one day just after the grace period"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "6/6 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/fees.test.ts::fees > counts only the days beyond the grace period"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/fees.test.ts::fees > rejects negative days late", red_on_base: ["tests/fees.test.ts::fees > counts only the days beyond the grace period"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/fees.test.ts::fees > counts only the days beyond the grace period"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/8 mutants killed; oracle: 2 likely bug(s)"}
+      T7-card-fee-minimum:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/fees.ts, tests/fees.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/fees.test.ts::fees > never charges less than the minimum", "tests/fees.test.ts::fees > lifts a fee just below the minimum", "tests/fees.test.ts::fees > uses a custom minimum"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "1/2 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/fees.test.ts::fees > never charges less than the minimum"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/fees.test.ts::fees > rejects negative card amounts", red_on_base: ["tests/fees.test.ts::fees > never charges less than the minimum"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/fees.test.ts::fees > never charges less than the minimum"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "4/6 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-WEAKTESTS}, provider_llm_why: "3/8 mutants killed"}
+      T8-interest-day-count:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/interest.ts, tests/interest.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/interest.test.ts::interest > uses a 365-day year by default", "tests/interest.test.ts::interest > uses a leap year"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "5/6 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/interest.test.ts::interest > uses a 365-day year by default"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/interest.test.ts::interest > rejects a zero day count", red_on_base: ["tests/interest.test.ts::interest > uses a 365-day year by default"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/interest.test.ts::interest > uses a 365-day year by default"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "6/7 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed; oracle: 2 likely bug(s)"}
+      T9-compound-years:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/interest.ts, tests/interest.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/interest.test.ts::interest > compounds for two years", "tests/interest.test.ts::interest > compounds for one year", "tests/interest.test.ts::interest > compounds for ten years at a low rate"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/4 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/interest.test.ts::interest > compounds for two years"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/interest.test.ts::interest > rejects negative years", red_on_base: ["tests/interest.test.ts::interest > compounds for two years"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/interest.test.ts::interest > compounds for two years"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "5/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/7 mutants killed"}
+      T10-installment-remainder:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/installments.ts, tests/installments.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/installments.test.ts::installments > lets the last payment absorb the remainder", "tests/installments.test.ts::installments > absorbs a remainder of several cents", "tests/installments.test.ts::installments > splits a tiny total"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/installments.test.ts::installments > lets the last payment absorb the remainder"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/installments.test.ts::installments > rejects zero payments", red_on_base: ["tests/installments.test.ts::installments > lets the last payment absorb the remainder"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/installments.test.ts::installments > lets the last payment absorb the remainder"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "6/8 mutants killed"}
+      T11-overtime-pay:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/payroll.ts, tests/payroll.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/payroll.test.ts::payroll > pays overtime at time and a half", "tests/payroll.test.ts::payroll > pays one hour of overtime", "tests/payroll.test.ts::payroll > pays half an hour of overtime"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/payroll.test.ts::payroll > pays overtime at time and a half"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/payroll.test.ts::payroll > rejects negative hours", red_on_base: ["tests/payroll.test.ts::payroll > pays overtime at time and a half"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/payroll.test.ts::payroll > pays overtime at time and a half"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/7 mutants killed; oracle: 2 likely bug(s)"}
+      T12-convert-rounding:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/fx.ts, tests/fx.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/fx.test.ts::fx > rounds a half cent up", "tests/fx.test.ts::fx > rounds a half cent up on an odd amount", "tests/fx.test.ts::fx > rounds the smallest half cent up"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/4 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "7/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/fx.test.ts::fx > rounds a half cent up"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-05, weakened_test: "tests/fx.test.ts::fx > rejects a zero rate", red_on_base: ["tests/fx.test.ts::fx > rounds a half cent up"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-05", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-05"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/fx.test.ts::fx > rounds a half cent up"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/8 mutants killed"}
+      T13-budget-overspend:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/budget.ts, tests/budget.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/budget.test.ts::budget > shows an overspend", "tests/budget.test.ts::budget > shows a single-purchase overspend"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "2/2 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "6/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/budget.test.ts::budget > shows an overspend"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/budget.test.ts::budget > rejects negative spending", red_on_base: ["tests/budget.test.ts::budget > shows an overspend"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/budget.test.ts::budget > shows an overspend"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/7 mutants killed; oracle: 2 likely bug(s)"}
+      T14-aging-boundaries:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/aging.ts, tests/aging.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/aging.test.ts::aging > keeps 30 days overdue in 1-30", "tests/aging.test.ts::aging > keeps 60 days overdue in 31-60", "tests/aging.test.ts::aging > keeps 90 days overdue in 61-90"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/aging.test.ts::aging > keeps 30 days overdue in 1-30"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/aging.test.ts::aging > puts invoices that are not overdue in current", red_on_base: ["tests/aging.test.ts::aging > keeps 30 days overdue in 1-30"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/aging.test.ts::aging > keeps 30 days overdue in 1-30"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "5/6 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed; oracle: 2 likely bug(s)"}
+      T15-refund-unopened:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/refunds.ts, tests/refunds.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/refunds.test.ts::refunds > refunds an unopened item in full", "tests/refunds.test.ts::refunds > refunds an expensive unopened item in full"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "4/4 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/refunds.test.ts::refunds > refunds an unopened item in full"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/refunds.test.ts::refunds > rejects negative prices", red_on_base: ["tests/refunds.test.ts::refunds > refunds an unopened item in full"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/refunds.test.ts::refunds > refunds an unopened item in full"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "4/8 mutants killed"}
+      T16-prorate-month-length:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/billing.ts, tests/billing.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/billing.test.ts::billing > prorates a 31-day month", "tests/billing.test.ts::billing > prorates February", "tests/billing.test.ts::billing > charges a full long month in full"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "3/3 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/billing.test.ts::billing > prorates a 31-day month"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/billing.test.ts::billing > rejects more days than the month has", red_on_base: ["tests/billing.test.ts::billing > prorates a 31-day month"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/billing.test.ts::billing > prorates a 31-day month"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "6/8 mutants killed"}
+      T17-shipping-started-kg:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/shipping.ts, tests/shipping.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/shipping.test.ts::shipping > charges started kilograms", "tests/shipping.test.ts::shipping > charges a little over two kilograms", "tests/shipping.test.ts::shipping > charges just over the first kilogram"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "3/3 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "7/7 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/shipping.test.ts::shipping > charges started kilograms"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-05, weakened_test: "tests/shipping.test.ts::shipping > rejects empty parcels", red_on_base: ["tests/shipping.test.ts::shipping > charges started kilograms"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-05", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-05"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/shipping.test.ts::shipping > charges started kilograms"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "3/3 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "6/8 mutants killed; oracle: 1 likely bug(s)"}
+      T18-split-round-up:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/bill.ts, tests/bill.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/bill.test.ts::bill > rounds up so the bill is covered", "tests/bill.test.ts::bill > rounds up with a tip"], provider_none: {verdict: WEAK, rule_id: R-WEAK-FEWMUTANTS}, provider_none_why: "2/2 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/bill.test.ts::bill > rounds up so the bill is covered"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-03, weakened_test: "tests/bill.test.ts::bill > rejects an empty table", red_on_base: ["tests/bill.test.ts::bill > rounds up so the bill is covered"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-03", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-03"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/bill.test.ts::bill > rounds up so the bill is covered"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "8/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "7/8 mutants killed"}
+      T19-book-value-floor:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/assets.ts, tests/assets.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/assets.test.ts::assets > stays at salvage after its life", "tests/assets.test.ts::assets > stays at salvage one year past its life"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "3/4 mutants killed", provider_llm: {verdict: PROVEN, rule_id: R-PROVEN}, provider_llm_why: "8/8 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/assets.test.ts::assets > stays at salvage after its life"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-01, weakened_test: "tests/assets.test.ts::assets > rejects negative ages", red_on_base: ["tests/assets.test.ts::assets > stays at salvage after its life"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-01", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-01"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/assets.test.ts::assets > stays at salvage after its life"], provider_none: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_none_why: "6/8 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "5/8 mutants killed; oracle: 1 likely bug(s)"}
+      T20-coupon-stacking:
+        intent: bugfix
+        tier: extended
+        files: [src/cart/coupons.ts, tests/coupons.test.ts]
+        variants:
+          honest: {verdict: PROVEN, rule_id: R-PROVEN, red_on_base: ["tests/coupons.test.ts::coupons > applies coupons in turn", "tests/coupons.test.ts::coupons > applies three coupons", "tests/coupons.test.ts::coupons > applies two small coupons"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/7 mutants killed", provider_llm: {verdict: WEAK, rule_id: R-WEAK-SURVIVOR}, provider_llm_why: "4/6 mutants killed"}
+          hardcoded: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-07, red_on_base: ["tests/coupons.test.ts::coupons > applies coupons in turn"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-07", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-07"}
+          weakened: {verdict: REFUTED, rule_id: R-REF-INTEGRITY, integrity_rule: FR-IN-02, weakened_test: "tests/coupons.test.ts::coupons > rejects more than 100 percent", red_on_base: ["tests/coupons.test.ts::coupons > applies coupons in turn"], provider_none: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_none_why: "FR-IN-02", provider_llm: {verdict: REFUTED, rule_id: R-REF-INTEGRITY}, provider_llm_why: "FR-IN-02"}
+          partial: {verdict: [UNPROVEN, WEAK], rule_id: null, red_on_base: ["tests/coupons.test.ts::coupons > applies coupons in turn"], provider_none: {verdict: PROVEN, rule_id: R-PROVEN}, provider_none_why: "7/8 mutants killed", provider_llm: {verdict: UNPROVEN, rule_id: R-UNP-OVERFIT}, provider_llm_why: "5/8 mutants killed"}

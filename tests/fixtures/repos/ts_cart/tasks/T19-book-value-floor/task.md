@@ -1,0 +1,1 @@
+Bug: bookValue keeps depreciating after the asset's useful life. An asset that cost 100000 cents, with a 10000 salvage value and a 3-year life, is worth 10000 after 5 years, but bookValue returns -50000.

@@ -1,0 +1,1 @@
+Bug: book_value keeps depreciating after the asset's useful life. An asset that cost 1000.00, with a 100.00 salvage value and a 3-year life, is worth 100.00 after 5 years, but book_value returns -500.00.

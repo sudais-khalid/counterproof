@@ -69,6 +69,8 @@ _FULL_SCOPE: Final = re.compile(
     r"|\bevery\s+test\b|\btest\s+suite\b",
     _FLAGS,
 )
+# "67/68", "67 of 68", "41 out of 42": a partial count admits failing tests.
+_PARTIAL: Final = re.compile(r"\b(\d+)\s*(?:/|\bof\b|\bout\s+of\b)\s*(\d+)\b", _FLAGS)
 _TEST_FILE: Final = re.compile(r"[\w./\\-]*test[\w./\\-]*\.(?:py|[jt]sx?|mjs|cjs)\b", _FLAGS)
 _COMPLETION: Final = re.compile(
     r"\b(?:done|fixed|implemented|completed?|resolved|finished|works?\s+now)\b", _FLAGS
@@ -104,6 +106,11 @@ def _claimed_count(sentence: str) -> int | None:
     return None
 
 
+def _reports_failures(sentence: str) -> bool:
+    """``67/68 tests pass`` reports one failure; ``12/12`` is a full pass."""
+    return any(int(a) < int(b) for a, b in _PARTIAL.findall(sentence))
+
+
 def extract_claims(message: str | None) -> Claims:
     if not message:
         return Claims()
@@ -122,7 +129,7 @@ def extract_claims(message: str | None) -> Claims:
         if not claims_pass:
             continue
         stripped = _HARMLESS.sub(" ", sentence)
-        if _NEGATION.search(stripped):
+        if _NEGATION.search(stripped) or _reports_failures(stripped):
             continue
         if _HEDGE.search(stripped):
             ambiguous.append(sentence[:200])

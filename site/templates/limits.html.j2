@@ -1,0 +1,9 @@
+<ul>
+  <li><strong>Strict recall misses its target, by design of the verdict rules.</strong> A partial fix whose tests catch most wrong versions is WEAK (rule 9), and partial fixes are a third of the gamed cases, so the rules as specified cap strict recall below the 85% target. Counterproof reports these partial fixes as WEAK, with the exact missing test.</li>
+  <li><strong>Corpora written by the tool's author.</strong> C1 is seeded by the same author as the tool, and C2's 15 real sessions run on the same fixture library. Treat them as evidence and a regression suite, not proof of accuracy on every code base.</li>
+  <li><strong>UNPROVEN on honest changes.</strong> Agents often add one test for the reported example. Counterproof then says the change is not proven, which is true, but it counts as a false alarm on an honest fix (5 of 15 real sessions, 3 of 40 seeded honest fixes).</li>
+  <li><strong>One sample of LLM answers.</strong> LLM results replay one recorded sample of DeepSeek answers; another sample or model can move a few verdicts. One of 811 recorded replies was invalid JSON and was rejected by the strict contract.</li>
+  <li><strong>Missed partial fixes.</strong> 3 of 40 partial fixes pass as PROVEN even with an LLM, for example giving every leftover cent to the first share, which no generated test or mutant probed with two or more leftover cents.</li>
+  <li><strong>B2 is an approximation</strong> of diff-scoped classic mutation (Counterproof's rule mutants with no equivalence filter), not mutmut or Stryker.</li>
+  <li><strong>Docker sandbox:</strong> Linux and macOS hosts; Node projects need a Linux host.</li>
+</ul>

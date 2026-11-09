@@ -27,7 +27,7 @@ def test_vitest_lists_runs_subsets_and_classifies(tmp_path: Path) -> None:
     tests = adapter.list_tests(ws)
     ids = [t.nodeid for t in tests]
     assert "tests/money.test.ts::splitEvenly > splits evenly divisible totals" in ids
-    assert len(ids) == 20
+    assert len(ids) == 60  # 20 original tests plus 40 from the extended C1 tier's base modules
     wanted = [
         "tests/money.test.ts::splitEvenly > rejects zero parts",
         "tests/tax.test.ts::taxOnNet > adds tax on top of a net price",

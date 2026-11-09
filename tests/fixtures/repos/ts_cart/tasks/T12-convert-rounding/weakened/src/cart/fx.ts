@@ -1,0 +1,9 @@
+/** Currency conversion in whole cents. */
+
+/**
+ * `amountCents` converted at `rateMicros` (the exchange rate in millionths: 1.0875 is
+ * 1087500), rounded to the nearest whole cent, halves up.
+ */
+export function convertCents(amountCents: number, rateMicros: number): number {
+  return Math.round((amountCents * rateMicros) / 1_000_000);
+}

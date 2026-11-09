@@ -1,0 +1,12 @@
+{
+  "key": "ad8ac2955d52c4ac18dd051bda5c2b666e7264387c0ad9fbfbb069423e694ff9",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": false, \"confidence\": 0.99, \"distinguishing_input\": \"aging_bucket(60): the original returns '61-90' (since 60 < 60 is false), the mutant returns '31-60' (since 60 <= 60 is true)\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 516,
+  "tokens_out": 63,
+  "user": "Original:\n```python\ndef aging_bucket(days_overdue: int) -> str:\n    if days_overdue <= 0:\n        return 'current'\n    if days_overdue <= 30:\n        return '1-30'\n    if days_overdue < 60:\n        return '31-60'\n    if days_overdue < 90:\n        return '61-90'\n    return '90+'\n```\n\nMutant:\n```python\ndef aging_bucket(days_overdue: int) -> str:\n    if days_overdue <= 0:\n        return 'current'\n    if days_overdue <= 30:\n        return '1-30'\n    if days_overdue <= 60:\n        return '31-60'\n    if days_overdue < 90:\n        return '61-90'\n    return '90+'\n```\n\nTests that pass on both versions:\n```python\ndef test_aging_bucket_inside_each_bucket():\n    assert aging_bucket(15) == \"1-30\"\n    assert aging_bucket(45) == \"31-60\"\n    assert aging_bucket(75) == \"61-90\"\n\ndef test_aging_bucket_long_overdue():\n    assert aging_bucket(120) == \"90+\"\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

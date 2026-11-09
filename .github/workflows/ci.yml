@@ -37,8 +37,34 @@ jobs:
       - name: Type check
         run: uv run mypy
       - name: Test
-        run: uv run pytest -q -n auto --cov --cov-report=term
+        run: uv run pytest -q -n auto -m "not corpus" --cov --cov-report=term
         env:
           COUNTERPROOF_REQUIRE_NODE: "1" # Node-based tests must run here, never skip
+          # Ubuntu runners have a docker daemon: the --sandbox docker tests must run there.
+          COUNTERPROOF_REQUIRE_DOCKER: ${{ matrix.os == 'ubuntu-latest' && '1' || '0' }}
       - name: Doctor
         run: uv run counterproof doctor
+
+  corpus:
+    # The extended C1 tier (tasks T6 to T20 of both fixtures, 120 variants): fixture checks
+    # and golden verdicts, rule-only and with recorded LLM answers. One OS keeps CI fast;
+    # the matrix above runs the same code paths on the original ten tasks everywhere.
+    name: corpus (extended C1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Install
+        run: uv sync --locked
+      - name: Install fixture test runners
+        run: npm ci --no-audit --no-fund --prefix tests/fixtures/node
+      - name: Corpus tests
+        run: uv run pytest -q -n auto -m corpus
+        env:
+          COUNTERPROOF_REQUIRE_NODE: "1"

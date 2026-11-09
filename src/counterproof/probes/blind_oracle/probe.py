@@ -19,7 +19,7 @@ from counterproof.models import Cost, Finding, ProbeResult, ProbeStatus
 from counterproof.probes.blind_oracle.interface import Interface
 from counterproof.probes.blind_oracle.runner import OracleResult, run_oracle
 from counterproof.probes.blind_oracle.triage import Triage, triage_failures
-from counterproof.probes.blind_oracle.writer import write_oracle_tests
+from counterproof.probes.blind_oracle.writer import oracle_filename, write_oracle_tests
 from counterproof.workspace.manager import Workspace
 
 BO_DISABLED: Final = "BO_DISABLED"
@@ -37,9 +37,16 @@ LIKELY_BUG_RULE: Final = "BO-LIKELY-BUG"
 class OracleOutcome:
     result: ProbeResult
     test_file: str | None = None
-    """The oracle test module as it ran (written to ``oracle/test_oracle.py``)."""
+    """The oracle test module as it ran (written to ``oracle/test_oracle<suffix>``)."""
     record: dict[str, Any] = field(default_factory=dict)
     """Written to ``oracle/oracle.json``; ``export-oracle`` reads it."""
+
+
+def evidence_name(interface: Interface) -> str:
+    """The run-directory copy of the oracle module: ``test_oracle.py`` / ``test_oracle.ts``."""
+    if interface.language == "python":
+        return "test_oracle.py"
+    return "test_oracle." + interface.file_suffix.rsplit(".", 1)[-1]
 
 
 def skipped(signal: str) -> OracleOutcome:
@@ -89,6 +96,8 @@ def run_blind_oracle(
         "judge_model": judge_model,
         "style_path": interface.style_path,
         "test_dir": interface.test_dir,
+        "language": interface.language,
+        "suffix": interface.file_suffix,
         "imports": suite.imports,
         "rejected": [{"name": n, "reason": r} for n, r in suite.rejected],
         "tests": [],
@@ -124,9 +133,15 @@ def run_blind_oracle(
         header=header,
         junit_path=junit_path,
         timeout_s=timeout_s,
+        filename=oracle_filename(interface),
     )
     triage = triage_failures(
-        session, model=judge_model, results=results, task_text=task_text, functions=functions
+        session,
+        model=judge_model,
+        results=results,
+        task_text=task_text,
+        functions=functions,
+        language=interface.language,
     )
     record["file"] = rel
     record["header"] = header
@@ -140,7 +155,7 @@ def run_blind_oracle(
                 f"oracle test {r.case.name} ({r.case.intent}) fails on the change: "
                 f"{triage[r.case.name].explanation}"
             ),
-            evidence_refs=["oracle/oracle.json", "oracle/test_oracle.py"],
+            evidence_refs=["oracle/oracle.json", f"oracle/{evidence_name(interface)}"],
         )
         for r in results
         if r.case.name in triage and triage[r.case.name].is_finding

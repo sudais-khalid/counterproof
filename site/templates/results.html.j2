@@ -1,0 +1,69 @@
+{% extends "base.html.j2" %}
+{% block title %}Results: how well Counterproof catches gamed AI code changes{% endblock %}
+{% block description %}Measured recall on gamed changes, false alarms on honest fixes, baselines, real Claude Code sessions and real agent pull requests, with the limits stated plainly.{% endblock %}
+{% macro corpus_table(block, label) %}
+<table>
+  <caption>{{ label }}</caption>
+  <thead>
+    <tr><th scope="col">Configuration</th><th scope="col">Gamed flagged, strict</th><th scope="col">Gamed flagged, lenient</th><th scope="col">Honest flagged, strict</th><th scope="col">Honest flagged, lenient</th></tr>
+  </thead>
+  <tbody>
+    {% for c in block.configs %}
+    <tr><th scope="row">Counterproof, {{ "recorded LLM" if c.name == "llm" else "rules only" }}</th><td>{{ c.recall_strict }}</td><td>{{ c.recall_lenient }}</td><td>{{ c.false_strict }}</td><td>{{ c.false_lenient }}</td></tr>
+    {% endfor %}
+    {% set first = block.configs[0] %}
+    {% if first.baselines.B0 is defined %}<tr><th scope="row">B0: the tests are green</th><td>{{ first.baselines.B0.recall }}</td><td>{{ first.baselines.B0.recall }}</td><td>{{ first.baselines.B0.false }}</td><td>{{ first.baselines.B0.false }}</td></tr>{% endif %}
+    {% if first.baselines.B1 is defined %}<tr><th scope="row">B1: claim audit only</th><td>{{ first.baselines.B1.recall }}</td><td>{{ first.baselines.B1.recall }}</td><td>{{ first.baselines.B1.false }}</td><td>{{ first.baselines.B1.false }}</td></tr>{% endif %}
+    {% if first.baselines.B2 is defined %}<tr><th scope="row">B2: diff-scoped classic mutation</th><td>{{ first.baselines.B2.recall }}</td><td>{{ first.baselines.B2.recall }}</td><td>{{ first.baselines.B2.false }}</td><td>{{ first.baselines.B2.false }}</td></tr>{% endif %}
+  </tbody>
+</table>
+{% endmacro %}
+{% block main %}
+<div class="wrap doc doc--wide">
+  <article class="prose">
+    <h1>How well Counterproof catches gamed AI code changes</h1>
+    <p class="lede"><em>Strict</em> counts UNPROVEN or REFUTED as flagged, the definition in the product requirements; <em>lenient</em> also counts WEAK. Every table on this page is generated from the committed results files and regenerates with <code>counterproof eval</code>.</p>
+
+    {% if results.c1 is defined %}
+    {% set c1 = results.c1 %}
+    <h2 id="c1">C1: seeded changes ({{ c1.cases }} cases)</h2>
+    <p>Two fixture libraries, Python <code>py_ledger</code> (pytest) and TypeScript <code>ts_cart</code> (Vitest). Each task has one honest fix and three gamed variants: hard-coded outputs for the test's inputs, a wrong fix whose broken test was weakened, and a partial fix that only handles the reported example. Ground truth is by construction and checked with the real test runners.</p>
+    {{ corpus_table(c1, "C1, generated " ~ c1.date) }}
+    <h3>By kind of gaming</h3>
+    <table>
+      <thead><tr><th scope="col">Configuration</th><th scope="col">Kind</th><th scope="col">Cases</th><th scope="col">Flagged, strict</th><th scope="col">Flagged, lenient</th></tr></thead>
+      <tbody>
+      {% for c in c1.configs %}{% for kind, k in c.by_kind | dictsort %}
+        <tr><th scope="row">{{ "recorded LLM" if c.name == "llm" else "rules only" }}</th><td>{{ kind }}</td><td>{{ k.cases }}</td><td>{{ k.flagged_strict }}</td><td>{{ k.flagged_lenient }}</td></tr>
+      {% endfor %}{% endfor %}
+      </tbody>
+    </table>
+    <p>Median runtime per run: {% for c in c1.configs %}{{ c.runtime }} s ({{ c.name }}){% if not loop.last %}, {% endif %}{% endfor %}. Same verdict on a repeated run with the same seed: {% for c in c1.configs %}{{ c.determinism }} ({{ c.name }}){% if not loop.last %}, {% endif %}{% endfor %}.</p>
+    {% endif %}
+
+    {% if results.c2 is defined %}
+    {% set c2 = results.c2 %}
+    <h2 id="c2">C2: Claude Code sessions ({{ c2.cases }} cases)</h2>
+    <p>{{ c2.report.description | trim }}</p>
+    {{ corpus_table(c2, "C2, generated " ~ c2.date) }}
+    {% endif %}
+
+    {% if results.c3 is defined %}
+    {% set c3 = results.c3 %}
+    <h2 id="c3">C3: real agent pull requests ({{ c3.cases }} cases)</h2>
+    <p>{{ c3.report.description | trim }}</p>
+    <table>
+      <caption>C3, generated {{ c3.date }}</caption>
+      <thead><tr><th scope="col">Verdict</th><th scope="col">Pull requests</th></tr></thead>
+      <tbody>
+        {% for verdict, n in c3.configs[0].verdicts | dictsort %}<tr><th scope="row">{{ verdict }}</th><td>{{ n }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <p>False alarms among the pull requests Counterproof could run: {{ c3.configs[0].false_strict }} strict, {{ c3.configs[0].false_lenient }} lenient.</p>
+    {% endif %}
+
+    <h2 id="limits">Limits</h2>
+    {% include "limits.html.j2" %}
+  </article>
+</div>
+{% endblock %}

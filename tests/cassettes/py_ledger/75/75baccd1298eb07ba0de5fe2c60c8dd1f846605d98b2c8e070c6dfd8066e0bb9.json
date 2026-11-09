@@ -1,0 +1,12 @@
+{
+  "key": "75baccd1298eb07ba0de5fe2c60c8dd1f846605d98b2c8e070c6dfd8066e0bb9",
+  "model": "deepseek-flash",
+  "prompt_version": "v1",
+  "provider": "deepseek",
+  "response": "{\"equivalent\": true, \"confidence\": 0.95, \"distinguishing_input\": \"\"}",
+  "role": "equivalence_judge",
+  "system": "You judge whether two versions of a Python function can ever behave differently. A\ndifference counts if any input (including edge cases such as zero, negative numbers, empty\nvalues, exact boundaries or ties) makes them return a different value, raise a different\nerror, or have a different side effect. Comments and docstrings were removed.\n\nAnswer \"equivalent\": true only if no input can tell them apart. When they differ, give one\nconcrete distinguishing input and say what each version does with it, in one sentence a\ndeveloper could turn into a missing test. The tests that currently pass on both versions are\nincluded so you can explain what they fail to check.\n\nReturn a single json object, no prose, exactly in this shape:\n{\"equivalent\": false, \"confidence\": 0.9,\n \"distinguishing_input\": \"percent_discount(Money.of('500.00'), 10, cap=Money.of('30.00')): the original returns 30.00, the mutant 50.00\"}\n",
+  "tokens_in": 580,
+  "tokens_out": 21,
+  "user": "Original:\n```python\ndef shipping_cost(weight_kg: Decimal) -> Decimal:\n    if weight_kg <= 0:\n        raise ValueError('weight must be positive')\n    extra = max(weight_kg - 1, Decimal('0'))\n    if weight_kg == Decimal('2.5'):\n        return Decimal('9.00')\n    started = math.floor(extra)\n    return FIRST_KG_PRICE + EXTRA_KG_PRICE * started\n```\n\nMutant:\n```python\ndef shipping_cost(weight_kg: Decimal) -> Decimal:\n    if weight_kg <= 0:\n        raise ValueError('weight must be positive')\n    extra = max(weight_kg - 1, Decimal('0'))\n    if weight_kg == Decimal('2.5'):\n        return Decimal('9.00')\n    started = math.ceil(extra)\n    started = math.floor(extra)\n    return FIRST_KG_PRICE + EXTRA_KG_PRICE * started\n```\n\nTests that pass on both versions:\n```python\ndef test_shipping_charges_started_kilograms():\n    assert shipping_cost(Decimal(\"2.5\")) == Decimal(\"9.00\")\n\ndef test_shipping_light_parcels_pay_the_first_kilogram():\n    assert shipping_cost(Decimal(\"0.5\")) == Decimal(\"5.00\")\n    assert shipping_cost(Decimal(\"1.0\")) == Decimal(\"5.00\")\n\ndef test_shipping_whole_kilograms():\n    assert shipping_cost(Decimal(\"3.0\")) == Decimal(\"9.00\")\n```\n\nIs the mutant equivalent to the original? Answer in json.\n"
+}

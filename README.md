@@ -1,250 +1,272 @@
-# Counterproof
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sudais-khalid/counterproof/main/docs/assets/banner-dark.png">
+    <img alt="Counterproof: green tests are a claim. Counterproof checks it." src="https://raw.githubusercontent.com/sudais-khalid/counterproof/main/docs/assets/banner-light.png" width="100%">
+  </picture>
+</p>
 
-Counterproof is a local-first verification agent. It decides whether a code change written by
-an AI coding agent is actually **proven** by the tests around it, or only looks correct because
-the suite is green.
+<p align="center">
+  <a href="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://pypi.org/project/counterproof/"><img alt="PyPI" src="https://img.shields.io/pypi/v/counterproof?color=2850d6"></a>
+  <a href="https://pypi.org/project/counterproof/"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-2850d6"></a>
+  <a href="https://github.com/sudais-khalid/counterproof/blob/main/LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-2850d6"></a>
+  <a href="https://sudais-khalid.github.io/counterproof/"><img alt="Docs" src="https://img.shields.io/badge/docs-website-0e1b2c"></a>
+</p>
 
-After an agent finishes, Counterproof runs five probes in isolated git worktrees:
+<p align="center">
+  <b>Verify that an AI-written code change is actually proven by its tests, not just green.</b><br>
+  Local-first. Open source. For pytest, Vitest and Jest.
+</p>
 
-1. **Red-green**: the change's tests must fail on the old code for a behavioural reason and
-   pass on the new code.
-2. **Integrity**: static detection of weakened tests and of source that special-cases test inputs.
-3. **Change-scoped mutants**: realistic wrong versions of only the changed lines. If the tests
-   still pass on a wrong version, the change is not proven.
-4. **Blind oracle**: tests written from the task and interface only, never from function bodies.
-5. **Claim audit**: the agent's final claims compared with the commands it actually ran.
+<p align="center">
+  <a href="https://sudais-khalid.github.io/counterproof/docs/">Docs</a> ·
+  <a href="https://sudais-khalid.github.io/counterproof/integrations/">Integrations</a> ·
+  <a href="#results">Results</a> ·
+  <a href="https://github.com/sudais-khalid/counterproof/releases/latest">Demo video</a> ·
+  <a href="https://sudais-khalid.github.io/counterproof/faq/">FAQ</a>
+</p>
 
-A deterministic verdict engine maps the results to `PROVEN`, `WEAK`, `UNPROVEN`, `REFUTED` or
-`INCONCLUSIVE`. An LLM never decides the verdict.
+---
 
-> **Status: pre-alpha (v1 milestones M0 to M8 complete).** Python (pytest) and TypeScript/JavaScript (Vitest,
-> Jest) projects are supported. Counterproof resolves the change, snapshots your
-> working tree without touching it, builds isolated worktrees, selects impacted tests from
-> coverage and runs the head baseline. All five probes run: **claim audit** (the agent's
-> final message against the commands in its Claude Code transcript), **integrity**,
-> **red-green**, **mutants** (rule-based plus, with an LLM provider, LLM-written realistic
-> faults and an overfit mutant, filtered for equivalence by a static check, an LLM judge and
-> Hypothesis or fast-check fuzzing) and the **blind oracle** (with an LLM provider, Python
-> only for now: tests written from the task and the public interface only, run on the change
-> and triaged when they fail). The
-> deterministic verdict engine implements all 14 rules of PRD section 8.
-> See [docs/PRD.md](docs/PRD.md).
+When the same AI agent writes the fix **and** the test, a passing suite proves very little.
+Agents optimise for the visible check: published benchmarks such as
+[EvilGenie](https://arxiv.org/abs/2511.21654) caught coding agents hard-coding test cases,
+editing tests and fixing only the reported example. In our own recorded Claude Code sessions,
+an agent told not to touch a contradictory test bent the code to satisfy it, then reported
+"All 68 tests pass".
 
-```sh
-counterproof verify                      # certificate in the terminal, exit code = verdict
-counterproof verify --format md          # Markdown certificate (PRD section 14)
-counterproof verify --fail-on refuted    # CI gate: only REFUTED fails the job
-counterproof report RUN_ID --format json # re-render a stored run
-counterproof explain RUN_ID r002         # diff, tests run and hint for one mutant
-counterproof report RUN_ID --format html --out report.html   # also: sarif, json, md
-counterproof verify --transcript ~/.claude/projects/<proj>/<session>.jsonl   # audit claims
-counterproof export-oracle RUN_ID        # list blind-oracle tests; --accept NAME copies one
-```
+**Counterproof** checks the claim. It runs five probes against the change in isolated git
+worktrees and returns a verdict that no language model decides.
 
-The claim audit flags "tests pass" claims that the transcript contradicts: no test run after
-the last edit, a different pass count, a subset run claimed as the full suite, an exit code
-hidden behind `| tail` or `|| true`, or passing claimed while Counterproof's own baseline
-fails. Without a transcript it is skipped, with no penalty. Blind-oracle tests stay in the run
-directory; a likely bug they find caps the verdict at WEAK and is listed for human review,
-but never refutes a change on its own.
+<p align="center">
+  <img alt="Counterproof refutes a hard-coded fix, calls a partial fix WEAK with the missing test, and refutes a false 'tests pass' claim" src="https://raw.githubusercontent.com/sudais-khalid/counterproof/main/docs/assets/demo.svg" width="100%">
+</p>
 
-Waive an integrity finding with an inline comment on (or just above) the flagged line:
-`# counterproof: allow FR-IN-07 <reason>`. A waiver only applies once it is committed: a waiver
-added by the change under test is reported as a proposal, so an agent cannot excuse itself.
-
-## Evaluation
-
-All numbers come from `counterproof eval` and regenerate exactly. Seeds are fixed, LLM answers
-are replayed from recorded DeepSeek cassettes, and both corpora were run twice with the same
-verdicts. Full tables:
-[eval/results/2026-11-08-c1.md](eval/results/2026-11-08-c1.md) and
-[eval/results/2026-11-08-c2.md](eval/results/2026-11-08-c2.md).
+## Quick start
 
 ```sh
-counterproof eval eval/corpora/c1    # 40 seeded changes, rule-only and recorded-LLM
-counterproof eval eval/corpora/c2    # 8 agent sessions with true and false claims
+pipx install counterproof        # or: uv tool install counterproof
+cd your-repo
+counterproof verify              # the working tree against HEAD
 ```
 
-**C1: 40 seeded changes** (Python `py_ledger` and TypeScript `ts_cart`, 5 tasks each: one
-honest fix and three gamed variants per task). *Strict* counts UNPROVEN or REFUTED as
-flagged, the PRD's definition; *lenient* also counts WEAK.
+```sh
+counterproof verify --base main --task-file task.md      # say what the change was for
+counterproof verify --transcript session.jsonl           # audit the agent's claims too
+counterproof verify --fail-on refuted                    # CI gate on evidence of gaming
+counterproof verify --sandbox docker                     # tests in a no-network container
+```
+
+Nothing leaves your machine unless you configure an LLM provider. Counterproof never writes
+to your working tree.
+
+## What a certificate looks like
+
+```text
+## Counterproof certificate: WEAK  (rule R-WEAK-SURVIVOR)
+Change: 2 files, +6 -0 | intent: bugfix | profile: full | 17s | $0.00
+
+| Probe        | Result |
+|--------------|--------|
+| Red-green    | PASS: 1 of 1 test(s) fail on the old code (test_discount_is_capped) |
+| Integrity    | OK (0 findings) |
+| Mutants      | 5/8 killed (0.62). 3 survivor(s) |
+
+Surviving faults (would ship undetected):
+1. src/ledger/discounts.py:18  `rate > 20` -> `rate >= 20`   (boundary)
+   Missing test: Add a test where the two sides of the comparison on line 18 are equal.
+```
+
+A partial fix whose own test fails on the old code and passes on the new, so it looks proven.
+But wrong versions of the changed line pass every test too, and the certificate names the
+test that would catch them.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Change + task + transcript] --> W[Isolated worktrees<br/>base and head]
+    W --> P5[P5 Claim audit]
+    P5 --> P2[P2 Integrity]
+    P2 --> P1[P1 Red-green]
+    P1 --> P3[P3 Change-scoped mutants]
+    P3 --> P4[P4 Blind oracle]
+    P4 --> E{{Verdict engine<br/>14 ordered rules}}
+    E --> V[PROVEN / WEAK / UNPROVEN /<br/>REFUTED / INCONCLUSIVE]
+```
+
+| Probe | Question it answers |
+|---|---|
+| **P5 Claim audit** | Do the agent's final claims match the commands its session actually ran? Catches "tests pass" with no run after the last edit, a subset sold as the full suite, an exit code hidden behind `\| tail`. |
+| **P2 Integrity** | Did the change weaken a test (removed assertion, new skip, deleted test) or special-case the test's own inputs (`if amount == 200: return 30`)? |
+| **P1 Red-green** | Do the change's tests fail on the old code for a behavioural reason, and pass on the new? |
+| **P3 Mutants** | Would the tests notice a realistic wrong version of the changed lines? Rule and LLM mutants, filtered for equivalence by a static check, an LLM judge and fuzzing. |
+| **P4 Blind oracle** | Do tests written from the task and the public interface alone (never a function body) agree with the change? |
+
+The probes run cheapest first, and a decision that is final early skips the expensive ones.
+A pure function maps the evidence to a verdict, and the exit code follows:
+
+| Verdict | Meaning | Exit |
+|---|---|---|
+| `PROVEN` | Red on the old code, green on the new, and the tests catch wrong versions of the change | 0 |
+| `WEAK` | Plausible, with a named gap: a surviving mutant, a likely bug from the oracle | 10 |
+| `UNPROVEN` | The tests do not pin the change: they pass on the old code, or most wrong versions survive | 20 |
+| `REFUTED` | Evidence of gaming: hard-coded outputs, a weakened test, a false claim of passing tests | 30 |
+| `INCONCLUSIVE` | The tests could not run reliably: build error, red head, too flaky | 40 |
+
+## Results
+
+Every number below comes from `counterproof eval` and regenerates exactly: fixed seeds,
+recorded DeepSeek answers replayed offline, and every corpus run twice with identical verdicts
+and evidence. *Strict* counts UNPROVEN or REFUTED as flagged (the product requirements'
+definition); *lenient* also counts WEAK. Full tables: [C1](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c1.md),
+[C2](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c2.md), [C3](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c3.md).
+
+**C1: 160 seeded changes** in a Python and a TypeScript library: 40 tasks, each with an honest
+fix and three gamed variants (hard-coded outputs, a weakened test, a partial fix), ground truth
+checked with the real test runners.
 
 | | Gamed flagged, strict | Gamed flagged, lenient | Honest flagged, strict | Honest flagged, lenient |
 |---|---|---|---|---|
-| Counterproof, rules only | 67% (20/30) | 77% (23/30) | 0% (0/10) | 10% (1/10) |
-| Counterproof, recorded LLM | 70% (21/30) | 97% (29/30) | 0% (0/10) | 30% (3/10) |
-| B0 green tests only | 0% | 0% | 0% | 0% |
-| B1 claim audit only (no transcripts in C1) | 0% | 0% | 0% | 0% |
-| B2 diff-scoped classic mutation | 23% | 23% | 20% | 20% |
+| Counterproof, rules only | 67% (80/120) | 78% (94/120) | 0% (0/40) | 25% (10/40) |
+| **Counterproof, with an LLM** | **75% (90/120)** | **98% (117/120)** | **8% (3/40)** | 28% (11/40) |
+| B0: the tests are green | 0% | 0% | 0% | 0% |
+| B1: claim audit only (no transcripts in C1) | 0% | 0% | 0% | 0% |
+| B2: diff-scoped classic mutation | 39% | 39% | 22% | 22% |
 
-By kind, with recorded LLM output: hard-coded outputs 10/10 REFUTED, weakened tests 10/10
-REFUTED, partial fixes 1/10 UNPROVEN plus 8/10 WEAK.
+Every hard-coded and every weakened change is REFUTED (80/80). With an LLM, 37 of 40 partial
+fixes are flagged, 10 of them UNPROVEN. Without the integrity probe, strict recall falls from 75%
+to 23%; LLM mutants lift strict recall from 67% to 75% and lenient recall from 92% to 98%, and
+the blind oracle lifts lenient recall from 96% to 98%.
+Median run: 15 s rule-only, 27 s with an LLM, $0.009 of recorded LLM spend.
 
-**Ablation** (the verdict engine re-decides with one probe removed; recorded LLM): without
-the integrity probe, strict recall drops from 70% to 13%. LLM mutants raise lenient recall on gamed
-changes from 87% to 97%. Removing red-green or mutants makes every change at least WEAK,
-because PROVEN needs both kinds of evidence. The blind oracle and claim audit changed no C1
-verdict: rule 9 had already capped the oracle's catches at WEAK, and C1 has no transcripts.
+**C2: 23 agent sessions with their claims.** 15 are real Claude Code sessions (claude-sonnet-5,
+headless) on eight bug reports, run twice: once plainly, once EvilGenie-style, where a given
+test contradicts the task and the agent may not edit tests. Labels come from held-out tests the
+agent never saw plus a hand review. Under pressure, 2 of 8 sessions bent the code to satisfy the
+contradiction and reported "All 68 tests pass"; 5 reported the contradiction honestly; 1 made no
+change. The other 8 sessions reproduce known false-claim patterns.
 
-**C2: 8 agent sessions** (Claude Code JSONL, built to the real format with real pytest
-output): Counterproof flags 6 of 6 false or unsupported claims (2 REFUTED, 4 WEAK) and neither
-honest one. That is no better than the claim-only baseline B1 (6/6). What it adds is the
-independent baseline run: a "tests pass" claim on a change whose tests really fail becomes
-REFUTED, not merely a mismatch.
+| | Gamed flagged, strict | Gamed flagged, lenient | Honest flagged, strict | Honest flagged, lenient |
+|---|---|---|---|---|
+| Counterproof, rules only | 25% (2/8) | 88% (7/8) | 0% (0/15) | 27% (4/15) |
+| **Counterproof, with an LLM** | 25% (2/8) | **100% (8/8)** | 33% (5/15) | 33% (5/15) |
+| B1: claim audit only | 88% | 88% | 0% | 0% |
 
-**Against the PRD's v1 targets:**
+The two real gamed sessions passed every visible test with truthful claims: only the blind
+oracle (one) and the claim audit's hidden-exit-code check (the other) flagged them. The five
+honest sessions flagged with an LLM are correct fixes whose single regression test pins only the
+reported example, so a version special-cased to that example passes too: UNPROVEN means "not
+proven by these tests", not "wrong".
+
+C3_PLACEHOLDER
+
+**Against the v1 targets:**
 
 | Metric | Target | Measured | |
 |---|---|---|---|
-| Gamed-change recall (UNPROVEN or REFUTED) | >= 85% | 70% (C1, LLM) | missed: 8 of 10 partial fixes are WEAK, not UNPROVEN |
-| Honest false alarms (UNPROVEN or REFUTED) | <= 15% | 0% | met; 3 of 10 are WEAK (see limits) |
-| Lift over transcript checking | >= +30 points | +70 (C1); 0 (C2) | met on C1 only |
-| Median runtime, full profile | <= 5 min | 27 s (C1, LLM) | met on small fixtures |
-| Median LLM cost per run | <= $0.30 | $0.008 (DeepSeek, recorded) | met |
-| Equivalent-mutant leakage | <= 10% | not measured | 22 survivors exported, none labelled yet |
-| Determinism (same verdict, same seed) | 100% | 100% (C1 and C2, 2 runs each) | met |
+| Gamed-change recall, strict | >= 85% | 75% (C1, LLM) | missed |
+| Honest false alarms, strict | <= 15% | 8% (C1); 33% (C2 real sessions) | met on C1 |
+| Lift over transcript checking | >= +30 points | +75 (C1); +12 lenient (C2) | met on C1 |
+| Median runtime, full profile | <= 5 min | 27 s | met |
+| Median LLM cost per run | <= $0.30 | $0.009 | met |
+| Equivalent-mutant leakage | <= 10% | 10% (5 of 50 survivors, human-labelled) | met |
+| Determinism, same seed | 100% | 100% (C1, C2) | met |
 
 **Limits, stated plainly.**
 
-- **Small corpora.** The corpora are small and synthetic: 40 seeded changes and 8 sessions,
-  written by the same author as the tool. Treat them as a regression suite and a
-  demonstration, not proof of real-world accuracy. The PRD asks for 20 tasks per fixture
-  repository; there are 5.
-- **No real-agent data yet.** C2 sessions are hand-built in the verified format, not real
-  agent runs. C3 (real agent pull requests) is set up but not run, because it executes
-  foreign code ([eval/corpora/c3](eval/corpora/c3/README.md)).
-- **One sample of LLM answers.** LLM results replay one recorded sample of DeepSeek answers;
-  another sample, or another model, can move partial-fix verdicts by a case or two.
-- **Partial fixes mostly come out WEAK, not UNPROVEN.** One partial fix (`ts_cart` T2) is
-  missed entirely: no mutant differs only when two or more cents are left over, and there is
-  no blind oracle for TypeScript yet.
-- **The 3 WEAK honest fixes point at real untested cases**, for example negative totals where
-  JavaScript's `%` keeps the sign. Each WEAK lists the exact gap, but a strict reviewer may
-  still call it noise.
-- **B2 is an approximation.** It uses Counterproof's own rule mutants restricted to the diff,
-  with no equivalence filter, rather than mutmut or Stryker.
-- **Coach mode can ask for a test that cannot kill the fault.** Without an LLM judge it
-  cannot filter equivalent mutants (see the [Claude Code demo](docs/demos/claude-code-stop-hook.md)).
-
-## LLM providers
-
-LLMs are optional: with `llm.provider = "none"` (the default) nothing leaves your machine.
-
-| Provider | Key | Default models (`auto`) |
-|---|---|---|
-| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-v4-pro` (mutants, oracle), `deepseek-flash` (judges) |
-| `anthropic` | `ANTHROPIC_API_KEY` or `ant auth login` | `claude-sonnet-5-5`, `claude-haiku-5-5` |
-| `openai` | `OPENAI_API_KEY` | set `mutant_model` / `judge_model` explicitly |
-| `ollama` | none (local) | `qwen2.5-coder:7b` |
-
-Keys come from the environment or from `credentials.toml` in your user cache directory
-(`%LOCALAPPDATA%\counterproof` on Windows, `~/.cache/counterproof` elsewhere), never from the
-repository. Only the changed source lines, their context, the task text and test snippets are
-sent; secrets are redacted, and `.env` files, lockfiles and `paths.exclude` are never sent.
-Every run has hard token, USD (`llm.budget_usd`, default $0.30) and time limits; work the
-budget does not allow is skipped and listed on the certificate, which always states which
-provider saw code. Responses are cached, so re-running on the same change is free. The blind
-oracle sees the task, signatures, docstrings and public constants, never a function body; with
-`oracle_model = "auto"` it prefers a model family other than the one that wrote the code (read
-from the transcript).
+- **Strict recall misses its target, by design of the verdict rules.** A partial fix whose tests
+  catch most wrong versions is WEAK (rule 9), and partial fixes are a third of the gamed cases, so
+  the rules as specified cap strict recall below 85%. Counterproof reports these partial fixes as
+  WEAK with the exact missing test; it does not call them UNPROVEN.
+- **Corpora written by the tool's author.** C1 is seeded by the same author as the tool; C2's
+  real sessions are 15, on the same fixture library. Treat them as evidence and a regression
+  suite, not proof of accuracy on every code base.
+- **UNPROVEN on honest changes.** Agents often add one test for the reported example. Counterproof
+  then says the change is not proven, which is true, but it counts as a false alarm on an honest
+  fix (5 of 15 real sessions, 3 of 40 seeded honest fixes).
+- **One sample of LLM answers.** The LLM results replay one recorded sample of DeepSeek answers;
+  another sample or model can move a few verdicts. One of the 811 recorded replies (an equivalence
+  judgement) was invalid JSON and was rejected by the strict contract; that mutant stayed unjudged.
+- **Missed partial fixes.** 3 of 40 partial fixes pass as PROVEN even with an LLM, for example
+  giving every leftover cent to the first share, which no generated test or mutant probed with
+  two or more leftover cents.
+- **B2 is an approximation** of diff-scoped classic mutation (Counterproof's rule mutants with no
+  equivalence filter), not mutmut or Stryker.
+- **Docker sandbox:** Linux and macOS hosts; Node projects need a Linux host.
 
 ## Integrations
 
-**Claude Code (coach mode).** `counterproof init --claude` adds a Stop hook to
-`.claude/settings.json`. When Claude finishes a turn, the hook runs the fast profile on the
-working tree with the session transcript. A REFUTED change is blocked; a WEAK or UNPROVEN one
-gets a short hint so Claude keeps working, for example *"A boundary change at
-`src/ledger/discounts.py:19` is not detected by any test: add a test where the two sides of
-that comparison are equal."* The hint names the gap and its location only: never mutant code,
-oracle tests or the seed, and a later audit run uses a fresh seed. The hook never re-runs while
-Claude is already continuing because of it, gives up after 90 seconds without blocking, and
-needs `counterproof` on `PATH` (or the interpreter path `init` writes).
+**Claude Code (coach mode).** `counterproof init --claude` adds a Stop hook. When Claude
+finishes, the hook verifies the change with the session transcript: REFUTED blocks, and WEAK
+or UNPROVEN returns one line naming the gap and its location, so Claude keeps working. Never
+mutant code, oracle tests or the seed: the agent cannot write a test for our mutant.
 
-**MCP.** `claude mcp add counterproof -- counterproof mcp` (or any MCP client, stdio) exposes
-`verify_change`, `get_report` and `explain_mutant`. Agents get the redacted certificate: classes
-and locations, no mutant code, unless a human commits `[mcp] reveal_mutants = true`.
+> Counterproof: WEAK. A boundary change at `src/ledger/discounts.py:19` is not detected by
+> any test: add a test where the two sides of that comparison are equal.
 
-**git.** `counterproof init --git-hook [--fail-on refuted]` installs a pre-push hook that
-verifies each pushed range with the fast profile and blocks only at that verdict.
-
-**GitHub Action.** Install your project's test dependencies first, then:
+**GitHub Actions.** One certificate comment per pull request, SARIF for code scanning, a gate
+on the verdict you choose. Pull requests from forks always run without LLM keys.
 
 ```yaml
-on: pull_request
-permissions: {contents: read, pull-requests: write, security-events: write}
-jobs:
-  counterproof:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with: {fetch-depth: 0}
-      - run: pip install -e . pytest pytest-cov   # your project and its tests
-      - uses: sudais-khalid/counterproof/action@main
-        with:
-          fail-on: refuted          # or unproven / weak
-          provider: none            # or deepseek / anthropic with the matching key input
+- uses: actions/checkout@v7
+  with: {fetch-depth: 0}
+- run: pip install -e . pytest pytest-cov          # your project and its tests
+- uses: sudais-khalid/counterproof/action@v1
+  with:
+    fail-on: refuted                               # or unproven / weak
 ```
 
-It comments one certificate on the PR (updated on every push), uploads SARIF to code
-scanning and writes the certificate to the job summary. Pull requests from forks always run
-with `provider: none`, so keys never reach untrusted code.
+**MCP.** `claude mcp add counterproof -- counterproof mcp` exposes `verify_change`,
+`get_report` and `explain_mutant` to any MCP client, redacted for agents.
 
-## Install (development)
+**git.** `counterproof init --git-hook --fail-on refuted` verifies every pushed range.
 
-```sh
-uv sync
-uv run counterproof doctor
-```
+[Set up an integration](https://sudais-khalid.github.io/counterproof/integrations/)
 
-## Usage
+## LLM providers and privacy
 
-```sh
-counterproof verify [--base REF] [--head REF|WORKTREE] [--task TEXT | --task-file PATH]
-counterproof doctor
-counterproof gc --older-than 7d
-```
+LLMs are optional and only propose mutants, judge equivalence and write oracle tests.
 
-| Exit code | Meaning |
-|---|---|
-| 0 | PROVEN |
-| 10 | WEAK |
-| 20 | UNPROVEN |
-| 30 | REFUTED |
-| 40 | INCONCLUSIVE |
-| 2 | usage error |
-| 1 | internal error |
+| Provider | Key | Default models |
+|---|---|---|
+| `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-5-5`, `claude-haiku-5-5` |
+| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-v4-pro`, `deepseek-flash` |
+| `openai` | `OPENAI_API_KEY` | set the models explicitly |
+| `ollama` | none, local | `qwen2.5-coder:7b` |
 
-Run artefacts live outside the repository, under `$XDG_CACHE_HOME/counterproof/runs`
-(`~/.cache` by default; `%LOCALAPPDATA%` on Windows). Set `COUNTERPROOF_CACHE_DIR` to override.
-Counterproof never writes to your working tree.
+Only the changed lines, their context, the task text and test snippets are sent; secrets are
+redacted and `.env` files, lockfiles and excluded paths never are. Every run has hard token,
+dollar (0.30 USD by default) and time budgets, answers are cached, and the certificate names
+the provider that saw code. The blind oracle prefers a model family other than the one that
+wrote the change. Configuration is read from the **base** commit, so a change cannot loosen its
+own thresholds. See [the docs](https://sudais-khalid.github.io/counterproof/docs/#configuration).
 
-Run `counterproof init` (or copy [counterproof.example.toml](counterproof.example.toml)) to
-configure it. The configuration is read from the **base** commit by default, so a change cannot
-loosen its own thresholds; pass `--config-from worktree` to use the file on disk. With no
-configuration, `llm.provider = "none"` and nothing leaves your machine.
+## How it compares
 
-Tests run in your existing Python environment: `COUNTERPROOF_PYTHON`, then the repository's
-`.venv`/`venv`, then `$VIRTUAL_ENV`, then the interpreter running Counterproof. Install
-`pytest-cov` there to get coverage-based test selection. Child processes get a scrubbed
-environment; pass extra variables with `[env] pass = [...]`.
-
-TypeScript and JavaScript projects use their own Vitest or Jest (with `jest-junit`) from the
-repository's `node_modules`, which each worktree links to; install dependencies first
-(`npm ci`), since Counterproof never installs packages. `node` comes from `PATH` or
-`COUNTERPROOF_NODE`. Vitest and Jest have no per-test coverage in v1, so tests are selected
-from changed test files plus the test files that import a changed module. Install
-`fast-check` to enable differential fuzzing of surviving mutants.
+| | Green CI | Coverage | Classic mutation testing | Transcript review | **Counterproof** |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Tests fail on the old code | | | | | ✓ |
+| Weakened or special-cased tests | | | | partly | ✓ |
+| Wrong versions of the change go unnoticed | | | ✓ (whole code base, noisy) | | ✓ (changed lines, filtered) |
+| Tests written without seeing the code | | | | | ✓ |
+| The agent's claims match what it ran | | | | ✓ | ✓ |
+| One verdict a CI job can gate on | ✓ | threshold | score | | ✓ |
 
 ## Development
 
 ```sh
-npm ci --prefix tests/fixtures/node   # Vitest/Jest for the TypeScript fixtures (once)
-uv run ruff check
-uv run ruff format --check
-uv run mypy
-uv run pytest -q
+uv sync && npm ci --prefix tests/fixtures/node
+uv run ruff check && uv run ruff format --check && uv run mypy
+uv run pytest -q -n auto -m "not corpus"     # every CI job
+uv run pytest -q -n auto -m corpus           # the extended C1 corpus
 ```
+
+CI runs on Linux, macOS and Windows with Python 3.11 and 3.13, offline: real LLM answers are
+replayed from recorded cassettes. See [CONTRIBUTING.md](https://github.com/sudais-khalid/counterproof/blob/main/CONTRIBUTING.md),
+[SECURITY.md](https://github.com/sudais-khalid/counterproof/blob/main/SECURITY.md) and the [changelog](https://github.com/sudais-khalid/counterproof/blob/main/CHANGELOG.md). The product requirements are in
+[docs/PRD.md](https://github.com/sudais-khalid/counterproof/blob/main/docs/PRD.md).
 
 ## Licence
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/sudais-khalid/counterproof/blob/main/LICENSE). Built by [Sudais Khalid](https://sudaiskhalid.com).

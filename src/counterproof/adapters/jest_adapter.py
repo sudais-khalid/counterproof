@@ -41,7 +41,7 @@ from counterproof.log import get_logger
 from counterproof.models import FailureInfo, FailureKind, RunResult, TestId, TestOutcome
 from counterproof.probes import tsast
 from counterproof.workspace.manager import Workspace
-from counterproof.workspace.sandbox_none import run_process
+from counterproof.workspace.sandbox_docker import SandboxHost
 
 log = get_logger("adapters.jest")
 
@@ -53,7 +53,7 @@ CONFIG_FILES: Final = tuple(
 )
 
 
-class JestAdapter:
+class JestAdapter(SandboxHost):
     name = "jest"
 
     def __init__(
@@ -145,7 +145,9 @@ class JestAdapter:
 
     def _list_files(self, ws: Workspace, extra: list[str]) -> list[str]:
         cmd = [*self._base_cmd(ws), "--listTests", "--json", *extra]
-        proc = run_process(cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S)
+        proc = self.run_process(
+            cmd, cwd=ws.root, env=self.child_env(ws), timeout_s=COLLECT_TIMEOUT_S
+        )
         start = proc.stdout.find("[")
         try:
             files = json.loads(proc.stdout[start:]) if start >= 0 else None
@@ -220,7 +222,7 @@ class JestAdapter:
         if problem:
             out, exit_code, duration, timed_out = problem, 1, 0.0, False
         else:
-            proc = run_process(
+            proc = self.run_process(
                 cmd, cwd=ws.root, env=self.child_env(ws, junit_path), timeout_s=timeout_s
             )
             out = f"{proc.stdout}\n{proc.stderr}"
@@ -292,7 +294,7 @@ class JestAdapter:
         if ensure_node_modules(self.repo_root, ws) or self.node is None:
             return None
         rel = script.relative_to(ws.root).as_posix()
-        proc = run_process(
+        proc = self.run_process(
             [*self._base_cmd(ws), "--runTestsByPath", rel],
             cwd=ws.root,
             env=self.child_env(ws),

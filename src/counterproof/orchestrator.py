@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, cast
 
 from counterproof import __version__, git
 from counterproof.adapters.base import Adapter, CollectionError, CoverageMap
@@ -59,9 +59,14 @@ from counterproof.probes.blind_oracle.interface import (
     changed_function_sources,
     extract_interface,
 )
+from counterproof.probes.blind_oracle.interface_ts import (
+    changed_function_sources_ts,
+    extract_interface_ts,
+)
 from counterproof.probes.blind_oracle.probe import (
     BO_NO_INTERFACE,
     BO_NO_LLM,
+    evidence_name,
     run_blind_oracle,
     skipped,
 )
@@ -76,6 +81,7 @@ from counterproof.probes.mutants.probe import LLMContext, run_mutation_probe
 from counterproof.probes.pyast import Literal as CodeLiteral
 from counterproof.probes.red_green import run_red_green
 from counterproof.verdict.rules import DecisionInput, decide, early_verdict
+from counterproof.workspace import sandbox_docker
 from counterproof.workspace.env import dropped_names, scrub_env
 from counterproof.workspace.manager import Workspace, WorkspaceManager
 
@@ -83,6 +89,7 @@ log = get_logger("orchestrator")
 
 RUN_LOG: Final = "run.log"
 ORACLE_RUN_TIMEOUT_S: Final = 120.0
+TS_FRAMEWORKS: Final = frozenset({"vitest", "jest"})
 SEED_FILE: Final = "seed"
 ConfigFrom = Literal["base", "worktree"]
 
@@ -380,13 +387,26 @@ def _blind_oracle(
     def sendable(path: str) -> bool:
         return may_send(path, excluded)
 
-    interface = extract_interface(
-        change,
-        read_head=read_head,
-        read_base=read_base,
-        selected_test_files=selected_files,
-        sendable=sendable,
-    )
+    typescript = ctx.adapter.name in TS_FRAMEWORKS
+    if typescript:
+        interface = extract_interface_ts(
+            change,
+            read_head=read_head,
+            read_base=read_base,
+            selected_test_files=selected_files,
+            sendable=sendable,
+            framework=ctx.adapter.name,
+        )
+        functions = changed_function_sources_ts(change, read_head, sendable=sendable)
+    else:
+        interface = extract_interface(
+            change,
+            read_head=read_head,
+            read_base=read_base,
+            selected_test_files=selected_files,
+            sendable=sendable,
+        )
+        functions = changed_function_sources(change, read_head, sendable=sendable)
     if interface.empty:
         return skipped(BO_NO_INTERFACE).result
     author = transcript.author_model if transcript is not None else None
@@ -409,7 +429,7 @@ def _blind_oracle(
         k=config.oracle.k,
         task_text=change.task_text,
         interface=interface,
-        functions=changed_function_sources(change, read_head, sendable=sendable),
+        functions=functions,
         adapter=ctx.adapter,
         head=ctx.head,
         base=ctx.base,
@@ -419,7 +439,7 @@ def _blind_oracle(
     )
     store.write_text("oracle/interface.txt", interface.render() + "\n")
     if outcome.test_file is not None:
-        store.write_text("oracle/test_oracle.py", outcome.test_file)
+        store.write_text(f"oracle/{evidence_name(interface)}", outcome.test_file)
     store.write_json("oracle/oracle.json", outcome.record)
     for name in ("head-1", "head-2", "head-3", "base"):
         _track_existing(store, f"oracle/{name}.xml", f"oracle/{name}.log")
@@ -661,6 +681,18 @@ def _prepare(
     if not adapters:
         return "no supported test runner detected (pytest in this version)"
     adapter = choose_adapter(adapters, change) or adapters[0]
+    if config.run.sandbox == "docker":  # FR-WS-05: never fall back to running unsandboxed
+        try:
+            sandbox_docker.attach(
+                cast("sandbox_docker.SandboxHost", adapter),
+                stack="python" if adapter.name == "pytest" else "node",
+                base_root=base.root,
+                run_dir=store.run_dir,
+                deps_root=change.repo_root,
+                executable=getattr(adapter, "interpreter", None) or getattr(adapter, "node", None),
+            )
+        except sandbox_docker.SandboxError as exc:
+            return f"docker sandbox unavailable: {exc}"
     dropped = dropped_names(os.environ, scrub_env(os.environ, config.env.pass_))
     log.info("child env: dropped %d variables (names in run log)", len(dropped))
     log.debug("dropped env names: %s", ", ".join(dropped))

@@ -104,3 +104,25 @@ def test_m8_git_cases_need_allow_remote(tmp_path: Path, monkeypatch: pytest.Monk
     data = _eval(corpus, tmp_path / "r.json", "--allow-remote")
     (result,) = data["results"]
     assert (result["case"], result["verdict"]) == ("origin#1", "PROVEN")
+
+
+def test_m8_replay_reproduces_inconclusive_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression (C3): a rule-1 INCONCLUSIVE run must replay to the same verdict. The stored
+    reason already carries its ``[R-INC-BUILD]`` tag, which replay used to add again, so every
+    INCONCLUSIVE case in C3 was reported as an engine inconsistency."""
+    from counterproof.eval.harness import replay_verdict  # noqa: PLC0415
+    from counterproof.evidence.store import runs_root  # noqa: PLC0415
+    from counterproof.models import RunManifest  # noqa: PLC0415
+    from counterproof.report.bundle import load_bundle  # noqa: PLC0415
+
+    monkeypatch.setenv("COUNTERPROOF_CACHE_DIR", str(tmp_path / "cache"))
+    repo = build_repo(tmp_path / "repo").path
+    (repo / "README.md").write_text("Docs only.\n", encoding="utf-8")
+    monkeypatch.chdir(repo)
+    result = runner.invoke(app, ["verify", "--format", "json", "--seed", "00" * 16])
+    manifest = RunManifest.model_validate_json(result.stdout)
+    assert manifest.verdict.rule_id == "R-INC-BUILD"
+    bundle = load_bundle(next(runs_root().rglob(manifest.run_id)))
+    assert replay_verdict(bundle) == manifest.verdict

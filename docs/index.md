@@ -39,10 +39,12 @@ your machine.
 
 ## Results
 
-On corpus C1 (40 seeded changes in a Python and a TypeScript library), green tests flag none
-of the 30 gamed changes. Counterproof refutes every hard-coded and weakened-test variant and,
-with recorded LLM output, flags 9 of 10 partial fixes as WEAK or worse. The full tables, the
-ablations and the honest limits are in the [README](../README.md#evaluation) and
+On corpus C1 (160 seeded changes in a Python and a TypeScript library), green tests flag none
+of the 120 gamed changes. Counterproof refutes all 80 hard-coded and weakened-test variants and,
+with recorded LLM output, flags 37 of 40 partial fixes as WEAK or worse, while refuting or
+calling unproven 3 of 40 honest fixes. Real Claude Code sessions (corpus C2) and real agent pull
+requests (corpus C3) are measured too. The website has the full results and the honest limits:
+<https://sudais-khalid.github.io/counterproof/results/>, with the tables in
 [eval/results](../eval/results/). Everything regenerates with:
 
 ```sh

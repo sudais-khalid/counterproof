@@ -1,0 +1,51 @@
+name: pages
+
+# The website (https://sudais-khalid.github.io/counterproof/): built from site/ and the
+# committed evaluation results by scripts/build_site.py, then deployed to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "eval/results/**"
+      - "scripts/build_site.py"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - name: Build the site
+        run: |
+          uv sync --locked
+          uv run python scripts/build_site.py --out _site
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

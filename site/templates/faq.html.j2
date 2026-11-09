@@ -1,0 +1,50 @@
+{% extends "base.html.j2" %}
+{% block title %}FAQ: Counterproof, AI coding agents and test-proven changes{% endblock %}
+{% block description %}Answers about Counterproof: how it differs from CI and mutation testing, privacy, supported languages, runtime and cost, and whether an agent can game it.{% endblock %}
+{% set faqs = [
+  ("How do I check that tests written by an AI agent actually test the fix?",
+   "Run counterproof verify on the change. It checks that the new tests fail on the old code and pass on the new, that no test was weakened and no input was special-cased, and that realistic wrong versions of the changed lines make the tests fail. If a wrong version still passes, the certificate names the missing test."),
+  ("What is mutation testing for AI-written code?",
+   "Mutation testing makes small wrong versions of the code (mutants) and checks whether the tests notice. Counterproof mutates only the lines the agent changed, adds realistic faults written by an LLM, filters out mutants that behave the same as the original, and turns the result into a verdict a CI job can gate on."),
+  ("How is this different from my CI being green?",
+   "A green suite only says the tests the change came with pass. When an AI agent writes both the fix and the tests, it can make them pass without fixing anything: hard-code the test's inputs, weaken an assertion, or fix only the reported example. Counterproof asks whether the tests would notice if the change were wrong, and whether the agent's claims match what it actually ran."),
+  ("How is it different from mutation testing tools like mutmut or Stryker?",
+   "Classic mutation testing mutates the whole code base with fixed operators and reports a score. Counterproof mutates only the changed lines, adds realistic LLM-written faults and an overfit mutant, filters equivalent mutants with a static check, an LLM judge and fuzzing, and combines the result with agent-aware probes (integrity, red-green, a blind oracle and a claim audit) into one verdict."),
+  ("Does my code leave my machine?",
+   "Not by default. With provider = none, the default, everything runs locally and the mutants come from rules. With an LLM provider, only the changed lines, their context, the task text and test snippets are sent; secrets are redacted, .env files, lockfiles and excluded paths are never sent, and the certificate names the provider that saw code."),
+  ("Which languages and test runners are supported?",
+   "Python with pytest, and TypeScript or JavaScript with Vitest or Jest. Counterproof uses the project's own environment and runners and never installs packages."),
+  ("How long does a run take, and what does it cost?",
+   "On the evaluation fixtures the median full run takes under half a minute. The full profile targets five minutes for a change under 300 lines and the fast profile 90 seconds. Rule-only runs cost nothing; with an LLM every run has a hard dollar budget (0.30 USD by default), and answers are cached."),
+  ("Can an agent game Counterproof itself?",
+   "Counterproof is designed against it. Coach-mode hints name the kind of missing test and its location, never the mutant or the oracle tests; a later audit uses a fresh seed; configuration is read from the base commit, so a change cannot loosen its own thresholds; and a waiver only counts once a human has committed it."),
+  ("Should I block merges on WEAK?",
+   "Start with --fail-on refuted, which only fails on evidence of gaming. WEAK names a concrete gap, such as an untested boundary, and is worth reading on every pull request; teams that want tests to pin every change can gate on weak."),
+  ("Does it replace code review?",
+   "No. It gives the reviewer evidence about whether the tests prove the change. It does not approve merges or judge design."),
+  ("Does Counterproof change my repository?",
+   "No. Runs happen in isolated git worktrees under your cache directory, from a snapshot of your working tree. Blind-oracle tests stay in the run directory until you accept one with counterproof export-oracle."),
+  ("How accurate is it?",
+   "The results page has the measured numbers for seeded changes, real Claude Code sessions and real agent pull requests, next to simple baselines, together with the limits we know about. The corpora are small, and the page says so."),
+] %}
+{% block head %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+{% for q, a in faqs %}{"@type": "Question", "name": {{ q | tojson }}, "acceptedAnswer": {"@type": "Answer", "text": {{ a | tojson }}}}{% if not loop.last %},{% endif %}
+{% endfor %}]}
+</script>
+{% endblock %}
+{% block main %}
+<div class="wrap doc doc--narrow">
+  <article class="prose">
+    <h1>Questions about Counterproof and AI-written code</h1>
+    {% for q, a in faqs %}
+    <section class="qa">
+      <h2>{{ q }}</h2>
+      <p>{{ a }}</p>
+    </section>
+    {% endfor %}
+    <p><a class="more" href="{{ base_url }}/docs/">Read the docs</a></p>
+  </article>
+</div>
+{% endblock %}

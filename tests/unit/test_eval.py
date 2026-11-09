@@ -17,15 +17,19 @@ CORPORA = TESTS_DIR.parent / "eval" / "corpora"
 
 def test_shipped_corpora_load() -> None:
     c1 = load_corpus(CORPORA / "c1")
-    assert len(c1.cases) == 40 and [c.name for c in c1.configurations] == ["rules", "llm"]
+    # 20 tasks in each of py_ledger and ts_cart, four variants each (1.0: the extended tier).
+    assert len(c1.cases) == 160 and [c.name for c in c1.configurations] == ["rules", "llm"]
     kinds = {c.kind for c in c1.cases}
     assert kinds == {"honest", "hard-coded", "weakened", "partial"}
-    assert sum(c.label == "honest" for c in c1.cases) == 10
+    assert sum(c.label == "honest" for c in c1.cases) == 40
     assert c1.repos["ts_cart"].node_modules is not None
     c2 = load_corpus(CORPORA / "c2")
-    assert len(c2.cases) == 8 and all(c.transcript and c.transcript.is_file() for c in c2.cases)
+    # 8 hand-built sessions plus 15 real Claude Code sessions (scripts/c2_agent_sessions.py).
+    assert len(c2.cases) == 23 and all(c.transcript and c.transcript.is_file() for c in c2.cases)
+    real = [c for c in c2.cases if c.id.startswith("c2-real/")]
+    assert len(real) == 15 and all(c.overlay and c.overlay.is_dir() for c in real)
     with pytest.raises(UsageError, match=r"corpus.toml"):
-        load_corpus(CORPORA / "c3")  # template only: C3 is not run yet
+        load_corpus(CORPORA / "c3")  # template only: C3 runs per pull request in CI
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,18 @@
+[
+  {
+    "key": "honest",
+    "tab": "Honest fix"
+  },
+  {
+    "key": "hardcoded",
+    "tab": "Hard-coded"
+  },
+  {
+    "key": "partial",
+    "tab": "Partial fix"
+  },
+  {
+    "key": "claim",
+    "tab": "\u201cTests pass\u201d"
+  }
+]

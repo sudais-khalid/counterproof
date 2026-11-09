@@ -7,7 +7,7 @@ Author: Sudais Khalid | Date: 4 November 2026 | Status: Approved for implementat
 | Product | Counterproof (CLI `counterproof`, Python package `counterproof`) |
 | Document version | 1.0 |
 | Status | Approved for implementation |
-| Author / owner | Muhammad Sudais Khalid |
+| Author / owner | Sudais Khalid |
 | Date | 4 November 2026 |
 | Primary implementer | Claude Code, milestone by milestone (see Appendix A) |
 | Licence (planned) | Apache-2.0 |

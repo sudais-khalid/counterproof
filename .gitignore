@@ -15,3 +15,4 @@ node_modules/
 # Working copies of the PRD; the tracked version is docs/PRD.md
 /Counterproof_PRD.docx
 /Counterproof_PRD.md
+_site/
