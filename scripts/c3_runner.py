@@ -69,7 +69,7 @@ def _run(cmd: list[str], cwd: Path, log: list[str], **env: str) -> bool:
         return False
     log.append(f"$ {' '.join(cmd)}  -> {proc.returncode}")
     if proc.returncode != 0:
-        log.append((proc.stdout + proc.stderr)[-1500:])
+        log.append(proc.stdout[-1000:] + proc.stderr[-3000:])  # a crash's stack is on stderr
     return proc.returncode == 0
 
 
@@ -104,10 +104,13 @@ def plan(out: Path, limit: int | None, only: list[str] | None = None) -> int:
     return 0
 
 
-def _install(src: Path, log: list[str]) -> bool:
-    """Best effort: the project and its test dependencies into ``src/.venv``."""
+def _install(src: Path, log: list[str]) -> tuple[bool, bool]:
+    """Best effort: the project and its test dependencies into ``src/.venv``.
+
+    ``(venv has pytest, project dependencies installed)``. The venv is used whenever it has
+    pytest: a project whose own install failed may still collect its tests."""
     if not _run(["uv", "venv", ".venv", "--python", "3.12"], src, log):
-        return False
+        return False, False
     python = str(src / ".venv" / "bin" / "python")
     pip = ["uv", "pip", "install", "--python", python]
     installed = False
@@ -124,7 +127,7 @@ def _install(src: Path, log: list[str]) -> bool:
     for name in REQUIREMENTS:
         if (src / name).is_file():
             installed = _run([*pip, "-r", name], src, log) or installed
-    return _run([*pip, "pytest", "pytest-cov"], src, log) and installed
+    return _run([*pip, "pytest", "pytest-cov"], src, log), installed
 
 
 def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
@@ -147,7 +150,7 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         )
         base = merge_base.stdout.strip() or spec["base"]
         ok = _run(["git", "checkout", "--quiet", spec["head"]], src, log)
-    installed = ok and _install(src, log)
+    venv_ready, installed = _install(src, log) if ok else (False, False)
     corpus = workdir / "corpus"
     corpus.mkdir(exist_ok=True)
     (corpus / "corpus.toml").write_text(
@@ -169,7 +172,8 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         ),
         encoding="utf-8",
     )
-    env = {"COUNTERPROOF_PYTHON": str(src / ".venv" / "bin" / "python")} if installed else {}
+    env = {"COUNTERPROOF_PYTHON": str(src / ".venv" / "bin" / "python")} if venv_ready else {}
+    env["PYTHONFAULTHANDLER"] = "1"  # a native crash prints the Python stack to the log
     ran = _run(
         [
             "counterproof",
@@ -191,6 +195,7 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         "id": spec["id"],
         "cloned": ok,
         "dependencies_installed": installed,
+        "test_venv": venv_ready,
         "eval_ran": ran,
         "log": log[-40:],
     }
