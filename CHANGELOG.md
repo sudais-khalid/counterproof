@@ -11,6 +11,10 @@ Documentation, website and release plumbing; the verification engine is unchange
 - **GitHub Action**: `uses: sudais-khalid/counterproof/action@v1` now resolves. Every release
   moves the `v1` tag to itself, and CI runs the action end to end on a seeded hard-coded fix,
   which it must refute.
+- **Fixed: the action stopped at its own verdict.** GitHub runs composite steps with `bash -e`,
+  so any verdict with a non-zero exit code (WEAK or worse) ended the step before the verdict
+  output, the pull request comment and the SARIF upload were written. The end-to-end job found
+  it; the action now records the exit code and gates on it in its last step.
 - **Install and upgrade**: the README and docs lead with `pip install counterproof` and show
   `pip install --upgrade counterproof`; the README badges read the version, Python versions and
   licence live from PyPI.

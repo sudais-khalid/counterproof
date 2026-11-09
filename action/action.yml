@@ -95,8 +95,11 @@ runs:
               --fail-on "$INPUT_FAIL_ON" --format json --out "$RUNNER_TEMP/counterproof.json")
         [ -n "$BASE_SHA" ] && args+=(--base "$BASE_SHA")
         [ -s "$task" ] && [ -n "$PR_TITLE" ] && args+=(--task-file "$task")
-        "$CP" "${args[@]}"
-        code=$?
+        # The step's shell runs with -e: capture the verdict's exit code instead of stopping
+        # here, so the outputs, the comment and SARIF are written for every verdict. The
+        # last step gates on it.
+        code=0
+        "$CP" "${args[@]}" || code=$?
         echo "exit-code=$code" >> "$GITHUB_OUTPUT"
         if [ ! -s "$RUNNER_TEMP/counterproof.json" ]; then
           echo "::error::Counterproof did not produce a result (exit $code)"
