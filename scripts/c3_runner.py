@@ -53,7 +53,9 @@ REQUIREMENTS = (
 )
 
 
-def _run(cmd: list[str], cwd: Path, log: list[str], **env: str) -> bool:
+def _run(
+    cmd: list[str], cwd: Path, log: list[str], stderr_file: Path | None = None, **env: str
+) -> bool:
     try:
         proc = subprocess.run(
             cmd,
@@ -68,6 +70,9 @@ def _run(cmd: list[str], cwd: Path, log: list[str], **env: str) -> bool:
         log.append(f"$ {' '.join(cmd)}  -> timed out after 1200 s")
         return False
     log.append(f"$ {' '.join(cmd)}  -> {proc.returncode}")
+    if stderr_file is not None and proc.stderr:  # all of it: a crash dump lists every thread
+        stderr_file.parent.mkdir(parents=True, exist_ok=True)
+        stderr_file.write_text(proc.stderr, encoding="utf-8")
     if proc.returncode != 0:
         log.append(proc.stdout[-1000:] + proc.stderr[-3000:])  # a crash's stack is on stderr
     return proc.returncode == 0
@@ -187,6 +192,7 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         ],
         workdir,
         log,
+        out.with_suffix(".stderr.txt"),
         **env,
     )
     # Each result carries the verdict's reasons (rule, file, line), which is what the hand
