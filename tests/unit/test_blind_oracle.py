@@ -607,3 +607,17 @@ def test_triage_prompt_is_identical_on_every_platform() -> None:
         prompts.append(provider.requests[0].user)
     assert prompts[0] == prompts[1]
     assert "tests/test_counterproof_oracle.py:7" in prompts[1]
+
+
+def test_triage_separator_lines_are_identical_on_every_platform() -> None:
+    """Regression (1.0 CI): pytest draws its ``_ _ _`` section separator one column narrower
+    on Windows, so on Linux and macOS the line ends in ``_ `` and a triage cassette recorded
+    on Windows missed there (C1 T19 honest)."""
+    from counterproof.probes.blind_oracle.triage import platform_neutral  # noqa: PLC0415
+
+    windows = "tests/test_x.py:25: \n" + "_ " * 39 + "_\n\ncost = 1\n"
+    posix = "tests/test_x.py:25: \n" + "_ " * 40 + "\n\ncost = 1\n"
+    wide = "tests/test_x.py:25: \n" + "_ " * 60 + "\n\ncost = 1\n"
+    assert platform_neutral(posix) == platform_neutral(windows) == platform_neutral(wide)
+    assert platform_neutral(windows) == windows  # recorded Windows prompts keep their keys
+    assert "tests/test_x.py:25: \n" in platform_neutral(posix)  # other lines are untouched

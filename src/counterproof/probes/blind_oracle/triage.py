@@ -21,14 +21,19 @@ MAX_TRIAGE: Final = 3
 MAX_FAILURE_CHARS: Final = 2000
 MAX_CODE_CHARS: Final = 6000
 _WINDOWS_PATH: Final = re.compile(r"[\w.-]+(?:\\[\w.-]+)+\.(?:py|[cm]?[jt]sx?)\b")
+# pytest's "_ _ _" section separator follows the terminal width, which differs by platform.
+_SEPARATOR: Final = re.compile(r"^(?:_ ){8,}_? *$", re.M)
+_CANONICAL_SEPARATOR: Final = "_ " * 39 + "_"  # what a Windows console draws
 
 
 def platform_neutral(text: str) -> str:
-    """Same failure text on every OS: POSIX separators in paths, LF line endings.
+    """Same failure text on every OS: POSIX separators in paths, LF line endings, and one
+    width for pytest's section separators.
 
     The prompt is part of the cache key, so a recorded answer must replay everywhere.
     """
     text = text.replace("\r\n", "\n")
+    text = _SEPARATOR.sub(_CANONICAL_SEPARATOR, text)
     return _WINDOWS_PATH.sub(lambda m: m.group(0).replace("\\", "/"), text)
 
 

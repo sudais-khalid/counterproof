@@ -55,7 +55,9 @@ def _worktrees(
     if nm.exists():
         from counterproof.workspace.links import link_dir  # noqa: PLC0415
 
-        link_dir(nm.resolve(), base_dir / "node_modules")
+        target = base_dir / "node_modules"
+        if not target.exists() and not target.is_symlink():  # on POSIX git tracks the link
+            link_dir(nm.resolve(), target)
     return (
         repo.path,
         Workspace("head", repo.path, "HEAD"),
