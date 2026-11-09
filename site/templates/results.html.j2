@@ -59,7 +59,11 @@
         {% for verdict, n in c3.configs[0].verdicts | dictsort %}<tr><th scope="row">{{ verdict }}</th><td>{{ n }}</td></tr>{% endfor %}
       </tbody>
     </table>
-    <p>False alarms among the pull requests Counterproof could run: {{ c3.configs[0].false_strict }} strict, {{ c3.configs[0].false_lenient }} lenient.</p>
+    {% set v = c3.configs[0].verdicts %}
+    {% set ran = c3.cases - v.get("INCONCLUSIVE", 0) %}
+    {% set strict = v.get("UNPROVEN", 0) + v.get("REFUTED", 0) %}
+    <p>Counterproof could run the tests of {{ ran }} of the {{ c3.cases }} pull requests; the rest are INCONCLUSIVE, mostly because the project's tests did not collect after a best-effort install on a fresh runner. All are assumed honest, so every flag is a false alarm until a hand review says otherwise: {{ strict }} of {{ ran }} strict (UNPROVEN or REFUTED), {{ strict + v.get("WEAK", 0) }} of {{ ran }} lenient (also WEAK).</p>
+    <p>A hand review of every flagged pull request found no gaming. The UNPROVEN ones are honest changes whose tests do not pin them: they catch few realistic wrong versions, or pass on the old code too. The one REFUTED adds a test that skips itself when model weights are not downloaded, which looks the same as an agent skipping a test it cannot pass. Full per-case reasons and setup logs are in <a href="{{ repo_url }}/blob/main/eval/results/{{ c3.date }}-c3.md">the C3 results file</a>.</p>
     {% endif %}
 
     <h2 id="limits">Limits</h2>

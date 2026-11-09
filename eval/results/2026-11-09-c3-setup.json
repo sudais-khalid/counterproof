@@ -1,0 +1,762 @@
+[
+  {
+    "id": "AIOSAI/AIPass#784",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/AIOSAI/AIPass /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/784/head:pr-head  -> 0",
+      "$ git checkout --quiet 5582215aeb3357907c638c0906d61800b058a912  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Advanced-Integrated-Pest-Management/aipm-claude-plugins#1",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Advanced-Integrated-Pest-Management/aipm-claude-plugins /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/1/head:pr-head  -> 0",
+      "$ git checkout --quiet ae611e3fe15c0503a81b68a009f1dad10b058f3e  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "AhmedYousriSobhi/workbench#361",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/AhmedYousriSobhi/workbench /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/361/head:pr-head  -> 0",
+      "$ git checkout --quiet a1e8288027227c78f4183d58b3a52601089389a5  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Build-by-The-Forge/build-backend#106",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Build-by-The-Forge/build-backend /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/106/head:pr-head  -> 0",
+      "$ git checkout --quiet 50fdf0c2be969daa2297560db655d38d34c45a94  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements-dev.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "DCGM/PeopleGatorApp#113",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/DCGM/PeopleGatorApp /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/113/head:pr-head  -> 0",
+      "$ git checkout --quiet 849f338c2b1b3f8cc6942bbefd5044187baa1cb8  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Dimpact-Samenwerking/helm-charts#700",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Dimpact-Samenwerking/helm-charts /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/700/head:pr-head  -> 0",
+      "$ git checkout --quiet fd920f6c0e828cfcc3a5e7851f2b588a85a7672e  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "EdanStarfire/claudecode_webui#2347",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/EdanStarfire/claudecode_webui /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/2347/head:pr-head  -> 0",
+      "$ git checkout --quiet 6e723b8a27a4c389a3e90863db71a0ca2e2f3e49  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 2",
+      "Using CPython 3.12.16\nerror: The requested interpreter resolved to Python 3.12.16, which is incompatible with the project's Python requirement: `>=3.13` (from `project.requires-python`)\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only claudecode-webui[test]==1.6.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of claudecode-webui[test] cannot be used.\n         And because you require claudecode-webui[test], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only claudecode-webui[tests]==1.6.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of claudecode-webui[tests] cannot be used.\n         And because you require claudecode-webui[tests], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only claudecode-webui[testing]==1.6.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of claudecode-webui[testing] cannot be used.\n         And because you require claudecode-webui[testing], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only claudecode-webui[dev]==1.6.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of claudecode-webui[dev] cannot be used.\n         And because you require claudecode-webui[dev], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because the current Python version (3.12.16) does not satisfy Python>=3.13 and claudecode-webui==1.6.0 depends on Python>=3.13, we can conclude that claudecode-webui==1.6.0 cannot be used.\n         And because only claudecode-webui==1.6.0 is available and you require claudecode-webui, we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "FlexMeasures/flexmeasures#2818",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": false,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/FlexMeasures/flexmeasures /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/2818/head:pr-head  -> 0",
+      "$ git checkout --quiet 6afa7a65ebd165f7fa52c5e030d255e4c016b7f4  -> 0",
+      "$ uv venv .venv --python 3.12  -> 2",
+      "error: Required uv version `==0.12.7` does not match the running version `0.13.7`. Update `uv` by running `uv self update 0.12.7`.\n",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "KaiserRichard/wbr-perception-phase1-runtime#191",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/KaiserRichard/wbr-perception-phase1-runtime /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/191/head:pr-head  -> 0",
+      "$ git checkout --quiet 2605b026dff6cb933daff8370ad584158034fd51  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Missing-Link-harkat/modded-nanovna-saver#7",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Missing-Link-harkat/modded-nanovna-saver /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/7/head:pr-head  -> 0",
+      "$ git checkout --quiet 3e2f827ae410fd4da03c695a6547e3e6ed5d76fe  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Mkdir-arg/Chaco-Back#1042",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Mkdir-arg/Chaco-Back /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/1042/head:pr-head  -> 0",
+      "$ git checkout --quiet a64c98448f2026b3d00e9b315eb2246f8fdc54e4  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['core', 'certs', 'users', 'static', 'config', 'portal', 'docker', 'legajos', 'security', 'dashboard', 'templates', 'programas', 'healthcheck', 'configuracion', 'notificaciones', 'conversaciones'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['core', 'certs', 'users', 'static', 'config', 'portal', 'docker', 'legajos', 'security', 'dashboard', 'templates', 'programas', 'healthcheck', 'configuracion', 'notificaciones', 'conversaciones'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['core', 'certs', 'users', 'static', 'config', 'portal', 'docker', 'legajos', 'security', 'dashboard', 'templates', 'programas', 'healthcheck', 'configuracion', 'notificaciones', 'conversaciones'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['core', 'certs', 'users', 'static', 'config', 'portal', 'docker', 'legajos', 'security', 'dashboard', 'templates', 'programas', 'healthcheck', 'configuracion', 'notificaciones', 'conversaciones'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['core', 'certs', 'users', 'static', 'config', 'portal', 'docker', 'legajos', 'security', 'dashboard', 'templates', 'programas', 'healthcheck', 'configuracion', 'notificaciones', 'conversaciones'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements-dev.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "MynameisKoi/barry#6",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/MynameisKoi/barry /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/6/head:pr-head  -> 0",
+      "$ git checkout --quiet 280814eb7df936fdc57c57d0b0748feca106af2b  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "SB-Alpha/Alpha#39",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/SB-Alpha/Alpha /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/39/head:pr-head  -> 0",
+      "$ git checkout --quiet 0a96f59323e17f185e24e7888038eb665343e7cf  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "TheurgicDuke771/DataQ#2612",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/TheurgicDuke771/DataQ /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/2612/head:pr-head  -> 0",
+      "$ git checkout --quiet 1a3301e1e18a66f0873ca03a069b3988c08aaf76  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "error: The build backend returned an error\n  cause: Call to `setuptools.backends.legacy:build.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         Traceback (most recent call last):\n           File \"<string>\", line 8, in <module>\n         ModuleNotFoundError: No module named 'setuptools.backends'\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "error: The build backend returned an error\n  cause: Call to `setuptools.backends.legacy:build.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         Traceback (most recent call last):\n           File \"<string>\", line 8, in <module>\n         ModuleNotFoundError: No module named 'setuptools.backends'\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "error: The build backend returned an error\n  cause: Call to `setuptools.backends.legacy:build.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         Traceback (most recent call last):\n           File \"<string>\", line 8, in <module>\n         ModuleNotFoundError: No module named 'setuptools.backends'\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "error: The build backend returned an error\n  cause: Call to `setuptools.backends.legacy:build.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         Traceback (most recent call last):\n           File \"<string>\", line 8, in <module>\n         ModuleNotFoundError: No module named 'setuptools.backends'\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "error: The build backend returned an error\n  cause: Call to `setuptools.backends.legacy:build.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         Traceback (most recent call last):\n           File \"<string>\", line 8, in <module>\n         ModuleNotFoundError: No module named 'setuptools.backends'\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "Vati-AI/rsl-taxathon#188",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/Vati-AI/rsl-taxathon /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/188/head:pr-head  -> 0",
+      "$ git checkout --quiet f067774703cc037b78f605e523dcc33bac53a12a  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "abucalip/navi-librarian#877",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/abucalip/navi-librarian /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/877/head:pr-head  -> 0",
+      "$ git checkout --quiet a6526daa50daf50be68c08afc769ea83250282de  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "autonom-ia/appsell#595",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/autonom-ia/appsell /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/595/head:pr-head  -> 0",
+      "$ git checkout --quiet c85ba89c7dc959b3663839e153c01230317886c4  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "bertalan/mpmv#40",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/bertalan/mpmv /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/40/head:pr-head  -> 0",
+      "$ git checkout --quiet 637033720c01b09ab1ead3a3fd6ec0868aaf5e6f  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 2",
+      "Using CPython 3.12.16\nerror: The requested interpreter resolved to Python 3.12.16, which is incompatible with the project's Python requirement: `>=3.13` (from `project.requires-python`)\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only mpmv[test]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of mpmv[test] cannot be used.\n         And because you require mpmv[test], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only mpmv[tests]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of mpmv[tests] cannot be used.\n         And because you require mpmv[tests], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only mpmv[testing]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of mpmv[testing] cannot be used.\n         And because you require mpmv[testing], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only mpmv[dev]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.13, we can conclude that all versions of mpmv[dev] cannot be used.\n         And because you require mpmv[dev], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because the current Python version (3.12.16) does not satisfy Python>=3.13 and mpmv==0.1.0 depends on Python>=3.13, we can conclude that mpmv==0.1.0 cannot be used.\n         And because only mpmv==0.1.0 is available and you require mpmv, we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "bmsuisse/skills#116",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/bmsuisse/skills /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/116/head:pr-head  -> 0",
+      "$ git checkout --quiet ff4f2d1e5c0773cdd4247ecf22772bc832189b71  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 2",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nUsing CPython 3.12.16\nerror: The requested interpreter resolved to Python 3.12.16, which is incompatible with the project's Python requirement: `>=3.14` (from `project.requires-python`)\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nerror: No solution found when resolving dependencies\n  cause: Because only skills[test]==0.2.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of skills[test] cannot be used.\n         And because you require skills[test], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nerror: No solution found when resolving dependencies\n  cause: Because only skills[tests]==0.2.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of skills[tests] cannot be used.\n         And because you require skills[tests], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nerror: No solution found when resolving dependencies\n  cause: Because only skills[testing]==0.2.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of skills[testing] cannot be used.\n         And because you require skills[testing], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nerror: No solution found when resolving dependencies\n  cause: Because only skills[dev]==0.2.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of skills[dev] cannot be used.\n         And because you require skills[dev], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "warning: The `native-tls` setting is deprecated and will be removed in a future release. Use `system-certs` instead.\nerror: No solution found when resolving dependencies\n  cause: Because the current Python version (3.12.16) does not satisfy Python>=3.14 and skills==0.2.0 depends on Python>=3.14, we can conclude that skills==0.2.0 cannot be used.\n         And because only skills==0.2.0 is available and you require skills, we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "bopp-os/boppos-tools#24",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/bopp-os/boppos-tools /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/24/head:pr-head  -> 0",
+      "$ git checkout --quiet 613c3b1f1924dfcb2843086dbae91530e19a631a  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 2",
+      "error: The current Python version (3.12.16) is not compatible with the locked Python requirement: `>=3.14`\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['lib', 'boot', 'share', 'polkit', 'systemd', 'artwork', 'libexec', 'sysusers', 'autostart', 'packaging'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['lib', 'boot', 'share', 'polkit', 'systemd', 'artwork', 'libexec', 'sysusers', 'autostart', 'packaging'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['lib', 'boot', 'share', 'polkit', 'systemd', 'artwork', 'libexec', 'sysusers', 'autostart', 'packaging'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['lib', 'boot', 'share', 'polkit', 'systemd', 'artwork', 'libexec', 'sysusers', 'autostart', 'packaging'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "warning: `/home/runner/work/_temp/case/src` does not appear to be a Python project, as the `pyproject.toml` does not include a `[build-system]` table, and neither `setup.py` nor `setup.cfg` are present in the directory\nerror: The build backend returned an error\n  cause: Call to `setuptools.build_meta:__legacy__.get_requires_for_build_editable` failed (exit status: 1)\n\n         [stderr]\n         error: Multiple top-level packages discovered in a flat-layout: ['lib', 'boot', 'share', 'polkit', 'systemd', 'artwork', 'libexec', 'sysusers', 'autostart', 'packaging'].\n\n         To avoid accidental inclusion of unwanted files or directories,\n         setuptools will not proceed with this build.\n\n         If you are trying to create a single distribution with multiple packages\n         on purpose, you should not rely on automatic discovery.\n         Instead, consider the following options:\n\n         1. set up custom discovery (`find` directive with `include` or `exclude`)\n         2. use a `src-layout`\n         3. explicitly set `py_modules` or `packages` with a list of names\n\n         To find more information, look for \"package discovery\" on setuptools docs.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "cappellacci/lotline#285",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": false,
+    "log": [
+      "$ git clone --quiet https://github.com/cappellacci/lotline /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/285/head:pr-head  -> 0",
+      "$ git checkout --quiet f0359e6357ce986b3d1e5780d6fd1345ec421f1e  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> timed out after 1200 s"
+    ]
+  },
+  {
+    "id": "code-imstillalive/nimbus#2320",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/code-imstillalive/nimbus /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/2320/head:pr-head  -> 0",
+      "$ git checkout --quiet 9508783ff4d1df8b9c9d9950d24bfcac0fd82367  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only nimbus-dev[test]==0.0.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14.4, we can conclude that all versions of nimbus-dev[test] cannot be used.\n         And because you require nimbus-dev[test], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only nimbus-dev[tests]==0.0.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14.4, we can conclude that all versions of nimbus-dev[tests] cannot be used.\n         And because you require nimbus-dev[tests], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only nimbus-dev[testing]==0.0.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14.4, we can conclude that all versions of nimbus-dev[testing] cannot be used.\n         And because you require nimbus-dev[testing], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only nimbus-dev[dev]==0.0.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14.4, we can conclude that all versions of nimbus-dev[dev] cannot be used.\n         And because you require nimbus-dev[dev], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because the current Python version (3.12.16) does not satisfy Python>=3.14.4 and nimbus-dev==0.0.0 depends on Python>=3.14.4, we can conclude that nimbus-dev==0.0.0 cannot be used.\n         And because only nimbus-dev==0.0.0 is available and you require nimbus-dev, we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "cryptograss/maybelle-config#233",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/cryptograss/maybelle-config /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/233/head:pr-head  -> 0",
+      "$ git checkout --quiet 9383290d9f51457b0ac88ff1752204928b216de1  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "danielfagerstrom/article-kit#84",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/danielfagerstrom/article-kit /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/84/head:pr-head  -> 0",
+      "$ git checkout --quiet 8986a6450546ae9bbca06d5161da3359411aabb6  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "fourlastor/agents-over-telegram#36",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/fourlastor/agents-over-telegram /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/36/head:pr-head  -> 0",
+      "$ git checkout --quiet 0be76c055fc9b9b97da7cf2cd1af17acdddb5940  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "garibong-labs/test-survival#39",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/garibong-labs/test-survival /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/39/head:pr-head  -> 0",
+      "$ git checkout --quiet e675c9bbdf2840a12050ba22dc58180ce9b30e91  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "glunk-works/resume-orchestrator#143",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/glunk-works/resume-orchestrator /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/143/head:pr-head  -> 0",
+      "$ git checkout --quiet 34904ffc7429ba1e99480069b9d36a7441a4598c  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only resume-optimizer[test]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of resume-optimizer[test] cannot be used.\n         And because you require resume-optimizer[test], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[tests]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only resume-optimizer[tests]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of resume-optimizer[tests] cannot be used.\n         And because you require resume-optimizer[tests], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[testing]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only resume-optimizer[testing]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of resume-optimizer[testing] cannot be used.\n         And because you require resume-optimizer[testing], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[dev]  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because only resume-optimizer[dev]==0.1.0 is available and the current Python version (3.12.16) does not satisfy Python>=3.14, we can conclude that all versions of resume-optimizer[dev] cannot be used.\n         And because you require resume-optimizer[dev], we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .  -> 1",
+      "error: No solution found when resolving dependencies\n  cause: Because the current Python version (3.12.16) does not satisfy Python>=3.14 and resume-optimizer==0.1.0 depends on Python>=3.14, we can conclude that resume-optimizer==0.1.0 cannot be used.\n         And because only resume-optimizer==0.1.0 is available and you require resume-optimizer, we can conclude that your requirements are unsatisfiable.\n",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "hickoryai/kory-source#16",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/hickoryai/kory-source /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/16/head:pr-head  -> 0",
+      "$ git checkout --quiet b0d141d8e64bebb9748a79d2b0d883b7266aa812  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "joehalliwell/commonplace#188",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/joehalliwell/commonplace /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/188/head:pr-head  -> 0",
+      "$ git checkout --quiet fc1d4f65d21df044556b1aed8343f94d6fe97385  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "jordybc1503/qillqa#14",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/jordybc1503/qillqa /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/14/head:pr-head  -> 0",
+      "$ git checkout --quiet 9aa4b2a467a0ab9231eec3c5c2074d8078bd6509  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "kzarzycki/dotagents#88",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/kzarzycki/dotagents /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/88/head:pr-head  -> 0",
+      "$ git checkout --quiet 518c825f00837f3d84ee94be6741e8401d608e32  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "levuanh2/TEC2026#21",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/levuanh2/TEC2026 /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/21/head:pr-head  -> 0",
+      "$ git checkout --quiet e1cc238e495250e066d26ddff2cd9b651874ffc5  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "lucabattesini/money-budget#92",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/lucabattesini/money-budget /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/92/head:pr-head  -> 0",
+      "$ git checkout --quiet 5818a5fe00e2459f3bc4bbbda095de02eeb8a3cd  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "lutelute/All-Japan-Grid#155",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/lutelute/All-Japan-Grid /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/155/head:pr-head  -> 0",
+      "$ git checkout --quiet a9794c6d6446975829759cd2bd7e7fa5b17221de  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "mirzatghayrat/arslan#730",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": false,
+    "log": [
+      "$ git clone --quiet https://github.com/mirzatghayrat/arslan /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/730/head:pr-head  -> 0",
+      "$ git checkout --quiet 6e18913d89c78c771e2d57164c01d05dfb34a864  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> timed out after 1200 s"
+    ]
+  },
+  {
+    "id": "nbramia/LifeOS#1376",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/nbramia/LifeOS /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/1376/head:pr-head  -> 0",
+      "$ git checkout --quiet ee35f63a5d159604bc7e508e91091907f5d0fc87  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "polysil-company/Polysil-CRM#245",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/polysil-company/Polysil-CRM /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/245/head:pr-head  -> 0",
+      "$ git checkout --quiet 623f9c067930582acc71e86bb92e5efc11baf230  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "sensein/senselab#629",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/sensein/senselab /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/629/head:pr-head  -> 0",
+      "$ git checkout --quiet 15d7e1c6384068221ad95f1a921f89632547a34d  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "septimus82/Mesh#476",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/septimus82/Mesh /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/476/head:pr-head  -> 0",
+      "$ git checkout --quiet 0cfe5674f492d58a62e34e8dfd2352e3085aeee5  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "shingo-ops/salesanchor#5283",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/shingo-ops/salesanchor /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/5283/head:pr-head  -> 0",
+      "$ git checkout --quiet 8e17880de961695fe2b1055172ef6a0549b1d32a  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "volekerb/hivemill#84",
+    "cloned": true,
+    "dependencies_installed": false,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/volekerb/hivemill /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/84/head:pr-head  -> 0",
+      "$ git checkout --quiet 2d12fb131cad0e6f44137772fe023718436a50d3  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "vukhai248/FOX-Guardrails#7",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/vukhai248/FOX-Guardrails /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/7/head:pr-head  -> 0",
+      "$ git checkout --quiet 728cdebb118d4e2f1f112f3a331f460bdba244fc  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -e .[test]  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python -r requirements.txt  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  },
+  {
+    "id": "xqlsystems/datafusion-accelerated#14",
+    "cloned": true,
+    "dependencies_installed": true,
+    "test_venv": true,
+    "eval_ran": true,
+    "log": [
+      "$ git clone --quiet https://github.com/xqlsystems/datafusion-accelerated /home/runner/work/_temp/case/src  -> 0",
+      "$ git fetch --quiet origin pull/14/head:pr-head  -> 0",
+      "$ git checkout --quiet 6bfe3acc6afd9ef3185fd08842195526110c00e9  -> 0",
+      "$ uv venv .venv --python 3.12  -> 0",
+      "$ uv sync --all-extras --frozen  -> 0",
+      "$ uv pip install --python /home/runner/work/_temp/case/src/.venv/bin/python pytest pytest-cov  -> 0",
+      "$ counterproof eval /home/runner/work/_temp/case/corpus --allow-remote --jobs 1 --out /home/runner/work/_temp/out/report.json  -> 0"
+    ]
+  }
+]

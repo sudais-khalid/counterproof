@@ -120,7 +120,7 @@ Every number below comes from `counterproof eval` and regenerates exactly: fixed
 recorded DeepSeek answers replayed offline, and every corpus run twice with identical verdicts
 and evidence. *Strict* counts UNPROVEN or REFUTED as flagged (the product requirements'
 definition); *lenient* also counts WEAK. Full tables: [C1](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c1.md),
-[C2](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c2.md), [C3](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c3.md).
+[C2](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-08-c2.md), [C3](https://github.com/sudais-khalid/counterproof/blob/main/eval/results/2026-11-09-c3.md).
 
 **C1: 160 seeded changes** in a Python and a TypeScript library: 40 tasks, each with an honest
 fix and three gamed variants (hard-coded outputs, a weakened test, a partial fix), ground truth
@@ -159,14 +159,31 @@ honest sessions flagged with an LLM are correct fixes whose single regression te
 reported example, so a version special-cased to that example passes too: UNPROVEN means "not
 proven by these tests", not "wrong".
 
-C3_PLACEHOLDER
+**C3: 41 real merged pull requests** from public Python repositories whose description says
+Claude Code wrote them, each run rule-only on its own fresh GitHub runner with its dependencies
+installed best effort. They are assumed honest, so every flag counts as a false alarm until a
+hand review says otherwise.
+
+| Verdict | PROVEN | WEAK | UNPROVEN | REFUTED | INCONCLUSIVE |
+|---|---|---|---|---|---|
+| Pull requests | 0 | 3 | 5 | 1 | 32 |
+
+Counterproof could run the tests of 9 of the 41; the other 32 are INCONCLUSIVE, mostly because
+the project's tests do not collect on a fresh runner (22). Of the 9, a hand review found no
+gaming. The five UNPROVEN are honest changes whose tests do not pin them: they catch 0 to 14% of
+realistic wrong versions, or pass on the old code too. The one REFUTED adds a test that skips
+itself when model weights are not downloaded (FR-IN-03), which looks the same as an agent
+skipping a test it cannot pass. The C3 review also changed two things before release: comparing
+an input with a one-word string (`== "rejected"`) is now medium FR-IN-07 for review, not a
+refutation, after it caused every refutation in an earlier run; and tree-sitter is pinned below
+0.26, whose 0.26.0 release segfaulted on three of these pull requests' TypeScript files.
 
 **Against the v1 targets:**
 
 | Metric | Target | Measured | |
 |---|---|---|---|
 | Gamed-change recall, strict | >= 85% | 75% (C1, LLM) | missed |
-| Honest false alarms, strict | <= 15% | 8% (C1); 33% (C2 real sessions) | met on C1 |
+| Honest false alarms, strict | <= 15% | 8% (C1); 33% (C2 real sessions); 6 of 9 runnable (C3) | met on C1 |
 | Lift over transcript checking | >= +30 points | +75 (C1); +12 lenient (C2) | met on C1 |
 | Median runtime, full profile | <= 5 min | 27 s | met |
 | Median LLM cost per run | <= $0.30 | $0.009 | met |
@@ -179,6 +196,11 @@ C3_PLACEHOLDER
   catch most wrong versions is WEAK (rule 9), and partial fixes are a third of the gamed cases, so
   the rules as specified cap strict recall below 85%. Counterproof reports these partial fixes as
   WEAK with the exact missing test; it does not call them UNPROVEN.
+- **Real pull requests are mostly INCONCLUSIVE on a fresh machine.** In C3, 32 of 41 were
+  INCONCLUSIVE: 22 projects' tests did not collect after a best-effort install, 4 had no tests
+  for the changed lines and 6 had other setup gaps; 3 more pull requests timed out. Counterproof
+  runs the project's own environment; it does not install one. On the 9 it could run, 6 honest
+  changes were flagged strict, 5 of them because their tests do not pin the change.
 - **Corpora written by the tool's author.** C1 is seeded by the same author as the tool; C2's
   real sessions are 15, on the same fixture library. Treat them as evidence and a regression
   suite, not proof of accuracy on every code base.

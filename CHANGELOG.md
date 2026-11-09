@@ -4,7 +4,7 @@ All notable changes to Counterproof. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/).
 
-## [1.0.0] - 2026-11-08
+## [1.0.0] - 2026-11-09
 
 The first stable release: everything in the v1 product requirements ([docs/PRD.md](docs/PRD.md)),
 measured on three corpora.
@@ -18,7 +18,9 @@ measured on three corpora.
 - **Integrity rules FR-IN-01 to FR-IN-09**: removed assertions, deleted tests, added skips,
   loosened expectations, neutralised assertions, mocked units, code special-cased to the
   test's inputs, test-environment detection and self-configuration changes. Waivers only
-  count once committed.
+  count once committed. Comparing an input with a one-word string (`== "rejected"`) is
+  treated as mode dispatch and stays a medium finding for review, after it caused every
+  refutation on real agent pull requests in corpus C3.
 - **Mutants**: rule operators for Python and TypeScript, optional LLM-written realistic
   faults and an overfit mutant, a three-stage equivalence filter (static, an LLM judge,
   Hypothesis or fast-check fuzzing), timeouts confirmed by a re-run before they count.
@@ -31,7 +33,8 @@ measured on three corpora.
 
 ### Languages and environments
 
-- Python with pytest; TypeScript and JavaScript with Vitest or Jest (tree-sitter analysis).
+- Python with pytest; TypeScript and JavaScript with Vitest or Jest (tree-sitter analysis;
+  tree-sitter is held below 0.26, whose 0.26.0 release segfaults on large syntax trees).
 - **`--sandbox docker`**: tests run in a container with no network, 2 GB of memory, 2 CPUs and
   512 processes, with an image built once per set of dependency files. Linux and macOS hosts
   (Node projects: Linux). A sandbox that cannot start makes the run INCONCLUSIVE; it never
