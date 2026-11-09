@@ -261,3 +261,29 @@ def test_switch_cases_comparing_test_inputs_are_overfit() -> None:
     tests = frozenset({("num", "7"), ("num", "13")})
     (finding,) = overfit_findings_ts("src/f.ts", text, {3, 4}, tests)
     assert finding.severity == "high" and finding.line == 3
+
+
+def test_positions_of_every_node_in_a_large_file_do_not_crash_the_process() -> None:
+    """tree-sitter 0.26.0 segfaults reading ``start_point`` across a large tree (corpus C3:
+    three real pull requests crashed the integrity probe). Run in a child process so a crash
+    fails this test instead of killing the test run."""
+    import subprocess  # noqa: PLC0415
+    import sys  # noqa: PLC0415
+
+    script = dedent(
+        """\
+        from counterproof.probes import tsast
+        from counterproof.probes.integrity.overfit_ts import overfit_findings_ts
+        text = chr(10).join(f"export const v{i}: number = f({i}) + {i} * 2;" for i in range(1500))
+        tree = tsast.parse_tree("big.ts", text)
+        rows = [node.start_point.row for node in tsast.walk(tree.root_node)]
+        lines = set(range(1, 1501))
+        overfit_findings_ts("big.ts", text, lines, frozenset({("num", "7")}))
+        print(len(rows))
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=120, check=False
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert int(proc.stdout) > 1500 * 10
