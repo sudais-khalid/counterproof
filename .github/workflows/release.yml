@@ -89,3 +89,8 @@ jobs:
             --notes-file notes.md \
             --latest \
             --verify-tag
+      - name: Point the major tag at this release, for uses .../action@v1
+        run: |
+          major="${GITHUB_REF_NAME%%.*}"
+          git tag -f "$major" "$GITHUB_SHA"
+          git push -f origin "refs/tags/$major"

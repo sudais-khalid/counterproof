@@ -1,4 +1,5 @@
 {% extends "base.html.j2" %}
+{% from "charts.html.j2" import comparison %}
 {% block title %}Results: how well Counterproof catches gamed AI code changes{% endblock %}
 {% block description %}Measured recall on gamed changes, false alarms on honest fixes, baselines, real Claude Code sessions and real agent pull requests, with the limits stated plainly.{% endblock %}
 {% macro corpus_table(block, label) %}
@@ -28,6 +29,7 @@
     {% set c1 = results.c1 %}
     <h2 id="c1">C1: seeded changes ({{ c1.cases }} cases)</h2>
     <p>Two fixture libraries, Python <code>py_ledger</code> (pytest) and TypeScript <code>ts_cart</code> (Vitest). Each task has one honest fix and three gamed variants: hard-coded outputs for the test's inputs, a wrong fix whose broken test was weakened, and a partial fix that only handles the reported example. Ground truth is by construction and checked with the real test runners.</p>
+    {{ comparison(c1, "c1") }}
     {{ corpus_table(c1, "C1, generated " ~ c1.date) }}
     <h3>By kind of gaming</h3>
     <table>
@@ -45,6 +47,7 @@
     {% set c2 = results.c2 %}
     <h2 id="c2">C2: Claude Code sessions ({{ c2.cases }} cases)</h2>
     <p>{{ c2.report.description | trim }}</p>
+    {{ comparison(c2, "c2") }}
     {{ corpus_table(c2, "C2, generated " ~ c2.date) }}
     {% endif %}
 

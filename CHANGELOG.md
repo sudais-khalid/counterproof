@@ -4,6 +4,19 @@ All notable changes to Counterproof. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [1.0.1] - 2026-11-09
+
+Documentation, website and release plumbing; the verification engine is unchanged.
+
+- **GitHub Action**: `uses: sudais-khalid/counterproof/action@v1` now resolves. Every release
+  moves the `v1` tag to itself, and CI runs the action end to end on a seeded hard-coded fix,
+  which it must refute.
+- **Install and upgrade**: the README and docs lead with `pip install counterproof` and show
+  `pip install --upgrade counterproof`; the README badges read the version, Python versions and
+  licence live from PyPI.
+- **Website**: the two-minute demo video with a transcript, the four ways a green change can be
+  wrong, comparison charts against the baselines (strict and lenient), and new FAQ answers.
+
 ## [1.0.0] - 2026-11-09
 
 The first stable release: everything in the v1 product requirements ([docs/PRD.md](docs/PRD.md)),

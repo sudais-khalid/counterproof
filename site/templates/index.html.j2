@@ -1,19 +1,41 @@
 {% extends "base.html.j2" %}
+{% from "charts.html.j2" import comparison %}
 {% block title %}Counterproof: is the AI-written change actually proven by its tests?{% endblock %}
 {% block main %}
 {% set c1 = results.c1 if results.c1 is defined else None %}
 <section class="hero">
   <div class="wrap hero__grid">
     <div class="hero__copy">
+      <a class="release" href="https://pypi.org/project/counterproof/">
+        <span class="release__tag">v{{ version }}</span><span>Now on PyPI: <code>pip install counterproof</code></span>
+      </a>
       <p class="eyebrow">Verification for AI coding agents</p>
       <h1>Green tests are a&nbsp;claim.<br><em>Counterproof checks&nbsp;it.</em></h1>
       <p class="lede">When the same agent writes the fix and the test, a passing suite proves very little. Counterproof runs five probes against the change in isolated git worktrees and returns a verdict that no language model decides.</p>
-      <div class="install">
-        <pre class="install__cmd"><code><span class="prompt">$</span> pipx install counterproof
-<span class="prompt">$</span> counterproof verify</code></pre>
-        <button class="copy" type="button" data-copy="pipx install counterproof && counterproof verify">Copy</button>
+
+      <div class="install" data-install>
+        <div class="install__tabs" role="tablist" aria-label="Install with">
+          <button role="tab" type="button" id="inst-pip" aria-controls="inst-pip-p" aria-selected="true" tabindex="0">pip</button>
+          <button role="tab" type="button" id="inst-pipx" aria-controls="inst-pipx-p" aria-selected="false" tabindex="-1">pipx</button>
+          <button role="tab" type="button" id="inst-uv" aria-controls="inst-uv-p" aria-selected="false" tabindex="-1">uv</button>
+        </div>
+        {% for key, cmd in [("pip", "pip install counterproof"), ("pipx", "pipx install counterproof"), ("uv", "uv tool install counterproof")] %}
+        <div class="install__panel" role="tabpanel" id="inst-{{ key }}-p" aria-labelledby="inst-{{ key }}"{% if not loop.first %} hidden{% endif %}>
+          <pre class="install__cmd"><code><span class="prompt" aria-hidden="true">$</span> {{ cmd }}
+<span class="prompt" aria-hidden="true">$</span> counterproof verify</code></pre>
+          <button class="copy" type="button" data-copy="{{ cmd }} && counterproof verify" aria-label="Copy the {{ key }} install commands">Copy</button>
+        </div>
+        {% endfor %}
       </div>
-      <p class="hero__meta">Python 3.11+ · pytest, Vitest, Jest · nothing leaves your machine unless you add an LLM key</p>
+
+      <div class="cta">
+        <a class="btn btn--primary" href="{{ base_url }}/docs/">Get started</a>
+        <a class="btn btn--ghost" href="{{ repo_url }}">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <p class="hero__meta">Python 3.11+ · pytest, Vitest, Jest · Apache-2.0 · nothing leaves your machine unless you add an LLM key</p>
     </div>
 
     <figure class="sheet" aria-labelledby="sheet-caption">
@@ -53,16 +75,84 @@
   </div>
 </section>
 
+<section class="strip" aria-label="Works with">
+  <div class="wrap strip__row">
+    <span class="strip__label">Works with</span>
+    <ul class="strip__list">
+      <li>pytest</li><li>Vitest</li><li>Jest</li><li>Claude Code</li><li>GitHub Actions</li><li>MCP clients</li><li>git hooks</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="problem-h">
+  <div class="wrap">
+    <p class="eyebrow">The problem</p>
+    <h2 id="problem-h">Agents optimise for the check they can see</h2>
+    <p class="section-lede">Published benchmarks such as <a href="https://arxiv.org/abs/2511.21654">EvilGenie</a> caught coding agents hard-coding test cases and editing tests. In our own recorded Claude Code sessions, an agent told not to touch a contradictory test bent the code to satisfy it, then reported <q>All 68 tests pass</q>. Four ways a change can be green and still wrong:</p>
+    <ul class="gaming">
+      <li class="gaming__card reveal">
+        <svg class="gaming__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9h4M7 13h10M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="9" r="1.6" fill="currentColor"/></svg>
+        <h3>Hard-coded outputs</h3>
+        <p>The code special-cases the exact inputs its own test uses: <code>if amount == 200: return 30</code>.</p>
+        <p class="gaming__catch"><span class="chip chip--refuted">REFUTED</span> by the integrity probe</p>
+      </li>
+      <li class="gaming__card reveal">
+        <svg class="gaming__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 3" stroke-linecap="round"/></svg>
+        <h3>Weakened tests</h3>
+        <p>An assertion removed or loosened, a new skip, a deleted test: the bar lowered until the change clears it.</p>
+        <p class="gaming__catch"><span class="chip chip--refuted">REFUTED</span> by the integrity probe</p>
+      </li>
+      <li class="gaming__card reveal">
+        <svg class="gaming__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+        <h3>Partial fixes</h3>
+        <p>Only the reported example is fixed. The new test passes, and so do wrong versions of the changed line.</p>
+        <p class="gaming__catch"><span class="chip chip--weak">WEAK</span> with the missing test named</p>
+      </li>
+      <li class="gaming__card reveal">
+        <svg class="gaming__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 9l6 4M15 9l-6 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <h3>False claims</h3>
+        <p><q>The suite passes</q>, from a session that never ran it after the last edit, or piped it through <code>| tail</code> and hid the exit code.</p>
+        <p class="gaming__catch"><span class="chip chip--refuted">REFUTED</span> by the claim audit</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+{% if demo %}
+<section class="band band--alt" aria-labelledby="demo-h">
+  <div class="wrap demo">
+    <div class="demo__copy">
+      <p class="eyebrow">Two-minute demo</p>
+      <h2 id="demo-h">Watch it check four changes for the same bug</h2>
+      <p class="section-lede">Real runs on a fixture repository, no network, seed 00…00. Captions are part of the video; the transcript is below it.</p>
+    </div>
+    <figure class="demo__player">
+      <video controls preload="none" playsinline width="1280" height="720" poster="{{ base_url }}/static/demo-poster.jpg" aria-describedby="demo-transcript">
+        <source src="{{ base_url }}/static/counterproof-demo.mp4" type="video/mp4">
+        <a href="{{ base_url }}/static/counterproof-demo.mp4">Download the demo video (MP4)</a>
+      </video>
+      <details class="demo__transcript" id="demo-transcript">
+        <summary>Transcript</summary>
+        <ol>
+          {% for scene in demo %}<li><strong>{{ scene.title }}.</strong> {{ scene.caption }}</li>{% endfor %}
+        </ol>
+      </details>
+    </figure>
+  </div>
+</section>
+{% endif %}
+
 <section class="band" aria-labelledby="probes-h">
   <div class="wrap">
+    <p class="eyebrow">How it works</p>
     <h2 id="probes-h">Five probes, cheapest first</h2>
-    <p class="section-lede">Each probe asks a different question about the change. A decision that is final after a cheap probe skips the expensive ones.</p>
+    <p class="section-lede">Each probe asks a different question about the change, in isolated git worktrees of the old and the new code. A decision that is final after a cheap probe skips the expensive ones.</p>
     <ol class="probes">
-      <li><span class="probes__id">P5</span><h3>Claim audit</h3><p>Compares the agent's final message with the commands its session actually ran: no test after the last edit, a subset run sold as the full suite, an exit code hidden behind <code>| tail</code>.</p></li>
-      <li><span class="probes__id">P2</span><h3>Integrity</h3><p>Static checks for weakened tests and for code that special-cases the test's own inputs: removed assertions, new skips, <code>if amount == 200: return 30</code>.</p></li>
-      <li><span class="probes__id">P1</span><h3>Red-green</h3><p>The change's tests must fail on the old code for a behavioural reason, and pass on the new code.</p></li>
-      <li><span class="probes__id">P3</span><h3>Change-scoped mutants</h3><p>Realistic wrong versions of only the changed lines, from rules and optionally an LLM, filtered for equivalence. If the tests still pass on a wrong version, the change is not proven.</p></li>
-      <li><span class="probes__id">P4</span><h3>Blind oracle</h3><p>With an LLM: tests written from the task and the public interface only, never a function body, run on the change and triaged when they fail.</p></li>
+      <li class="reveal"><span class="probes__id">P5</span><h3>Claim audit</h3><p>Compares the agent's final message with the commands its session actually ran: no test after the last edit, a subset run sold as the full suite, an exit code hidden behind <code>| tail</code>.</p></li>
+      <li class="reveal"><span class="probes__id">P2</span><h3>Integrity</h3><p>Static checks for weakened tests and for code that special-cases the test's own inputs: removed assertions, new skips, <code>if amount == 200: return 30</code>.</p></li>
+      <li class="reveal"><span class="probes__id">P1</span><h3>Red-green</h3><p>The change's tests must fail on the old code for a behavioural reason, and pass on the new code.</p></li>
+      <li class="reveal"><span class="probes__id">P3</span><h3>Change-scoped mutants</h3><p>Realistic wrong versions of only the changed lines, from rules and optionally an LLM, filtered for equivalence. If the tests still pass on a wrong version, the change is not proven.</p></li>
+      <li class="reveal"><span class="probes__id">P4</span><h3>Blind oracle</h3><p>With an LLM: tests written from the task and the public interface only, never a function body, run on the change and triaged when they fail.</p></li>
     </ol>
   </div>
 </section>
@@ -70,8 +160,9 @@
 <section class="band band--alt" aria-labelledby="verdicts-h">
   <div class="wrap verdicts">
     <div>
+      <p class="eyebrow">The output</p>
       <h2 id="verdicts-h">A verdict, not a score</h2>
-      <p class="section-lede">Fourteen ordered rules map the evidence to one of five verdicts, and the exit code follows, so CI can gate on exactly the strictness you want.</p>
+      <p class="section-lede">Fourteen ordered rules map the evidence to one of five verdicts, and the exit code follows, so CI can gate on exactly the strictness you want. An LLM can propose mutants and tests; it never decides the verdict.</p>
       <p><a class="more" href="{{ base_url }}/docs/#verdicts">How the rules decide</a></p>
     </div>
     <table class="ladder">
@@ -90,31 +181,50 @@
 
 {% if c1 %}
 {% set llm = c1.configs | selectattr("name", "equalto", "llm") | first %}
-{% set rules = c1.configs | selectattr("name", "equalto", "rules") | first %}
 <section class="band" aria-labelledby="results-h">
   <div class="wrap">
+    <p class="eyebrow">Results</p>
     <h2 id="results-h">Measured, not claimed</h2>
-    <p class="section-lede">Corpus C1: {{ c1.cases }} seeded changes in a Python and a TypeScript library, three gamed variants and one honest fix per task. Every number regenerates with <code>counterproof eval eval/corpora/c1</code>.</p>
+    <p class="section-lede">Corpus C1: {{ c1.cases }} seeded changes in a Python and a TypeScript library, three gamed variants and one honest fix per task, compared with simple baselines. Every number regenerates with <code>counterproof eval eval/corpora/c1</code>.</p>
     <div class="figures">
-      <p class="figure"><span class="figure__n">{{ llm.recall_lenient }}</span><span class="figure__l">of gamed changes flagged WEAK or worse, with an LLM ({{ llm.recall_strict }} UNPROVEN or REFUTED)</span></p>
-      <p class="figure"><span class="figure__n">{{ llm.false_strict }}</span><span class="figure__l">of honest fixes refuted or called unproven</span></p>
-      <p class="figure"><span class="figure__n">{{ llm.baselines.B0.recall }}</span><span class="figure__l">of gamed changes caught by "the tests are green"</span></p>
+      <p class="figure reveal"><span class="figure__n">{{ llm.recall_lenient }}</span><span class="figure__l">of gamed changes flagged WEAK or worse, with an LLM ({{ llm.recall_strict }} UNPROVEN or REFUTED)</span></p>
+      <p class="figure reveal"><span class="figure__n">{{ llm.false_strict }}</span><span class="figure__l">of honest fixes refuted or called unproven</span></p>
+      <p class="figure reveal"><span class="figure__n">{{ llm.baselines.B0.recall }}</span><span class="figure__l">of gamed changes caught by "the tests are green"</span></p>
     </div>
-    <p><a class="more" href="{{ base_url }}/results/">Full results, baselines and the limits we know about</a></p>
+    {{ comparison(c1, "home") }}
+    <p><a class="more" href="{{ base_url }}/results/">Full results on three corpora, baselines and the limits we know about</a></p>
   </div>
 </section>
 {% endif %}
 
 <section class="band band--alt" aria-labelledby="where-h">
   <div class="wrap">
+    <p class="eyebrow">Integrations</p>
     <h2 id="where-h">Where it runs</h2>
+    <p class="section-lede">The same verification at the moment it is cheapest to act on: while the agent is still working, when it pushes, and when the pull request opens.</p>
     <div class="where">
-      <div class="where__item"><h3>Claude Code</h3><p>A Stop hook coaches the agent with the gap and its location, never the answer.</p><pre><code>counterproof init --claude</code></pre></div>
-      <div class="where__item"><h3>GitHub Actions</h3><p>One certificate comment per pull request, SARIF for code scanning, a gate on the verdict you choose.</p><pre><code>uses: sudais-khalid/counterproof/action@v1</code></pre></div>
-      <div class="where__item"><h3>MCP</h3><p>Any MCP client can call <code>verify_change</code>, <code>get_report</code> and <code>explain_mutant</code>.</p><pre><code>claude mcp add counterproof -- counterproof mcp</code></pre></div>
-      <div class="where__item"><h3>git</h3><p>A pre-push hook verifies each pushed range and blocks only at the verdict you set.</p><pre><code>counterproof init --git-hook</code></pre></div>
+      <div class="where__item reveal"><h3>Claude Code</h3><p>A Stop hook coaches the agent with the gap and its location, never the answer.</p><pre><code>counterproof init --claude</code></pre></div>
+      <div class="where__item reveal"><h3>GitHub Actions</h3><p>One certificate comment per pull request, SARIF for code scanning, a gate on the verdict you choose.</p><pre><code>uses: sudais-khalid/counterproof/action@v1</code></pre></div>
+      <div class="where__item reveal"><h3>MCP</h3><p>Any MCP client can call <code>verify_change</code>, <code>get_report</code> and <code>explain_mutant</code>.</p><pre><code>claude mcp add counterproof -- counterproof mcp</code></pre></div>
+      <div class="where__item reveal"><h3>git</h3><p>A pre-push hook verifies each pushed range and blocks only at the verdict you set.</p><pre><code>counterproof init --git-hook</code></pre></div>
     </div>
     <p><a class="more" href="{{ base_url }}/integrations/">Set up an integration</a></p>
+  </div>
+</section>
+
+<section class="closer" aria-labelledby="closer-h">
+  <div class="wrap closer__inner">
+    <h2 id="closer-h">Check your agent's next change</h2>
+    <p>Open source, local-first and free. One command in the repository the agent just touched.</p>
+    <div class="closer__cmd">
+      <pre><code><span class="prompt" aria-hidden="true">$</span> pip install counterproof && counterproof verify</code></pre>
+      <button class="copy" type="button" data-copy="pip install counterproof && counterproof verify" aria-label="Copy the install command">Copy</button>
+    </div>
+    <div class="cta cta--center">
+      <a class="btn btn--primary" href="{{ base_url }}/docs/">Read the docs</a>
+      <a class="btn btn--ghost" href="{{ repo_url }}">Star on GitHub</a>
+      <a class="btn btn--ghost" href="https://pypi.org/project/counterproof/">PyPI</a>
+    </div>
   </div>
 </section>
 {% endblock %}

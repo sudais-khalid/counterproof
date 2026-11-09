@@ -1,0 +1,35 @@
+{#- Comparison charts: one single-series bar chart per question, Counterproof in the accent,
+    baselines in gray (emphasis, no legend: the title names the series). Bars are HTML, so
+    they render without JavaScript; app.js only switches strict/lenient and moves labels. -#}
+{% macro bars(rows, measure, title, note, id) %}
+<figure class="chart" aria-labelledby="{{ id }}-t">
+  <figcaption id="{{ id }}-t" class="chart__title">{{ title }}</figcaption>
+  <p class="chart__note">{{ note }}</p>
+  <ul class="chart__rows">
+    {% for row in rows %}
+    {% set s = row[measure].strict %}{% set l = row[measure].lenient %}
+    <li class="chart__row{% if row.ours %} chart__row--ours{% endif %}" tabindex="0"
+        data-strict="{{ s.v }}" data-lenient="{{ l.v }}"
+        data-strict-text="{{ s.pct }} · {{ s.count }} of {{ s.n }}" data-lenient-text="{{ l.pct }} · {{ l.count }} of {{ l.n }}">
+      <span class="chart__label">{{ row.label }}</span>
+      <span class="chart__track" aria-hidden="true"><span class="chart__bar" style="--v: {{ s.v }}"></span></span>
+      <span class="chart__value" data-value>{{ s.pct }}</span>
+      <span class="chart__tip" role="tooltip" data-tip>{{ row.label }}: {{ s.pct }} · {{ s.count }} of {{ s.n }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</figure>
+{% endmacro %}
+
+{% macro comparison(block, id) %}
+<div class="charts" data-charts>
+  <div class="seg" role="group" aria-label="What counts as flagged">
+    <button type="button" class="seg__btn" data-mode="strict" aria-pressed="true">Strict<span class="seg__hint">UNPROVEN or REFUTED</span></button>
+    <button type="button" class="seg__btn" data-mode="lenient" aria-pressed="false">Lenient<span class="seg__hint">also WEAK</span></button>
+  </div>
+  <div class="charts__pair">
+    {{ bars(block.chart, "gamed", "Gamed changes caught", "Higher is better. Hard-coded, weakened and partial fixes whose own tests pass.", id ~ "-g") }}
+    {{ bars(block.chart, "honest", "Honest fixes flagged", "Lower is better. Correct fixes that were flagged anyway.", id ~ "-h") }}
+  </div>
+</div>
+{% endmacro %}

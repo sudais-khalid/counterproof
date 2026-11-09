@@ -68,3 +68,38 @@ jobs:
         run: uv run pytest -q -n auto -m corpus
         env:
           COUNTERPROOF_REQUIRE_NODE: "1"
+
+  action:
+    # The GitHub Action end to end, as a user runs it: a real git repository holding the
+    # seeded hard-coded fix (py_ledger T1), a separate test interpreter, and the gate.
+    name: GitHub Action (end to end)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+      - name: Build the fixture pull request and its test environment
+        run: |
+          uv sync --locked
+          uv run python scripts/action_fixture.py "$RUNNER_TEMP/fixture" >> "$GITHUB_ENV"
+          python3 -m venv "$RUNNER_TEMP/testenv"
+          "$RUNNER_TEMP/testenv/bin/pip" install --quiet pytest pytest-cov
+      - id: counterproof
+        uses: ./action
+        continue-on-error: true
+        with:
+          working-directory: ${{ runner.temp }}/fixture
+          base: ${{ env.FIXTURE_BASE }}
+          head: ${{ env.FIXTURE_HEAD }}
+          test-python: ${{ runner.temp }}/testenv/bin/python
+          comment: "false"
+          upload-sarif: "false"
+      - name: The hard-coded fix is refuted and the gate fails the job
+        env:
+          VERDICT: ${{ steps.counterproof.outputs.verdict }}
+          OUTCOME: ${{ steps.counterproof.outcome }}
+        run: |
+          echo "verdict=$VERDICT outcome=$OUTCOME"
+          test "$VERDICT" = REFUTED
+          test "$OUTCOME" = failure

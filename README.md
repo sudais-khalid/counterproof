@@ -6,11 +6,12 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/counterproof/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/counterproof?label=pypi&color=2850d6&cacheSeconds=3600"></a>
+  <a href="https://pypi.org/project/counterproof/"><img alt="Supported Python versions" src="https://img.shields.io/pypi/pyversions/counterproof?color=2850d6&cacheSeconds=3600"></a>
   <a href="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://pypi.org/project/counterproof/"><img alt="PyPI" src="https://img.shields.io/pypi/v/counterproof?color=2850d6"></a>
-  <a href="https://pypi.org/project/counterproof/"><img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-2850d6"></a>
-  <a href="https://github.com/sudais-khalid/counterproof/blob/main/LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-2850d6"></a>
-  <a href="https://sudais-khalid.github.io/counterproof/"><img alt="Docs" src="https://img.shields.io/badge/docs-website-0e1b2c"></a>
+  <a href="https://github.com/sudais-khalid/counterproof/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/sudais-khalid/counterproof?color=2850d6&cacheSeconds=3600"></a>
+  <a href="https://github.com/sudais-khalid/counterproof/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/counterproof?color=2850d6&cacheSeconds=3600"></a>
+  <a href="https://sudais-khalid.github.io/counterproof/"><img alt="Website" src="https://img.shields.io/badge/website-docs%20%26%20results-0e1b2c"></a>
 </p>
 
 <p align="center">
@@ -22,7 +23,7 @@
   <a href="https://sudais-khalid.github.io/counterproof/docs/">Docs</a> ·
   <a href="https://sudais-khalid.github.io/counterproof/integrations/">Integrations</a> ·
   <a href="#results">Results</a> ·
-  <a href="https://github.com/sudais-khalid/counterproof/releases/latest">Demo video</a> ·
+  <a href="https://sudais-khalid.github.io/counterproof/#demo-h">Demo video</a> ·
   <a href="https://sudais-khalid.github.io/counterproof/faq/">FAQ</a>
 </p>
 
@@ -38,6 +39,26 @@ an agent told not to touch a contradictory test bent the code to satisfy it, the
 **Counterproof** checks the claim. It runs five probes against the change in isolated git
 worktrees and returns a verdict that no language model decides.
 
+<table>
+  <tr>
+    <td align="center"><b>98%</b><br><sub>of 120 seeded gamed changes flagged WEAK or worse, with an LLM</sub></td>
+    <td align="center"><b>80 / 80</b><br><sub>hard-coded and weakened changes refuted</sub></td>
+    <td align="center"><b>0%</b><br><sub>caught by "the tests are green"</sub></td>
+    <td align="center"><b>27 s</b><br><sub>median run, $0.009 of LLM spend</sub></td>
+  </tr>
+</table>
+
+<sub>Corpus C1, reproducible with <code>counterproof eval</code>. Strict numbers, real Claude Code sessions, real pull requests and the limits are under <a href="#results">Results</a>.</sub>
+
+## Who it is for
+
+- **Developers using Claude Code, Cursor, Copilot or any coding agent** who want to know whether
+  "done, all tests pass" is true before they merge.
+- **Teams reviewing agent pull requests**, with one certificate per pull request and a CI gate on
+  the verdict.
+- **People building or evaluating agents**, who need a reproducible, rule-based check for reward
+  hacking on real code.
+
 <p align="center">
   <img alt="Counterproof refutes a hard-coded fix, calls a partial fix WEAK with the missing test, and refutes a false 'tests pass' claim" src="https://raw.githubusercontent.com/sudais-khalid/counterproof/main/docs/assets/demo.svg" width="100%">
 </p>
@@ -45,10 +66,13 @@ worktrees and returns a verdict that no language model decides.
 ## Quick start
 
 ```sh
-pipx install counterproof        # or: uv tool install counterproof
+pip install counterproof         # or: pipx install counterproof / uv tool install counterproof
 cd your-repo
 counterproof verify              # the working tree against HEAD
 ```
+
+Upgrade with `pip install --upgrade counterproof` (or `pipx upgrade` / `uv tool upgrade`);
+`counterproof --version` prints what you have. Python 3.11 to 3.13 on Linux, macOS and Windows.
 
 ```sh
 counterproof verify --base main --task-file task.md      # say what the change was for

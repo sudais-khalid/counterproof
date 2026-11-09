@@ -25,6 +25,7 @@ from counterproof import __version__
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "site"
 RESULTS = ROOT / "eval" / "results"
+DEMO_VIDEO = ROOT / "docs" / "media" / "counterproof-demo.mp4"
 BASE_URL = "https://sudais-khalid.github.io/counterproof"
 REPO_URL = "https://github.com/sudais-khalid/counterproof"
 PAGES = {
@@ -90,6 +91,70 @@ def pct(value: float | None) -> str:
     return "n/a" if value is None else f"{round(value * 100)}%"
 
 
+CONFIG_LABELS = {"llm": "Counterproof, with an LLM", "rules": "Counterproof, rules only"}
+BASELINE_LABELS = {
+    "B0": "The tests are green",
+    "B1": "Claim audit only",
+    "B2": "Classic mutation, diff-scoped",
+}
+
+
+def _share(value: float | None, n: int) -> dict[str, Any]:
+    v = value or 0.0
+    return {"v": round(v, 4), "pct": pct(value), "count": round(v * n), "n": n}
+
+
+def chart_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Bars for the comparison charts: each Counterproof configuration, then each baseline
+    (baselines have one value, so strict and lenient are the same)."""
+    summary = report["summary"]
+    rows: list[dict[str, Any]] = []
+    order = sorted(summary, key=lambda name: name != "llm")  # with an LLM first
+    for name in order:
+        block = summary[name]
+        gamed, honest = block.get("gamed", 0), block.get("honest", 0)
+        if not gamed and not honest:
+            continue
+        rows.append(
+            {
+                "label": CONFIG_LABELS.get(name, name),
+                "ours": True,
+                "gamed": {
+                    "strict": _share(block.get("recall_strict"), gamed),
+                    "lenient": _share(block.get("recall_lenient"), gamed),
+                },
+                "honest": {
+                    "strict": _share(block.get("false_alarm_strict"), honest),
+                    "lenient": _share(block.get("false_alarm_lenient"), honest),
+                },
+            }
+        )
+    # Baselines are computed inside each configuration's run (B2 reuses its rule mutants), so
+    # take them from the report's first configuration, as the results tables do.
+    first = next(iter(summary.values()), {})
+    for key, baseline in first.get("baselines", {}).items():
+        if not baseline.get("applicable"):
+            continue
+        gamed, honest = first.get("gamed", 0), first.get("honest", 0)
+        g, h = _share(baseline.get("recall"), gamed), _share(baseline.get("false_alarm"), honest)
+        rows.append(
+            {
+                "label": f"{key}: {BASELINE_LABELS.get(key, key)}",
+                "ours": False,
+                "gamed": {"strict": g, "lenient": g},
+                "honest": {"strict": h, "lenient": h},
+            }
+        )
+    return rows
+
+
+def demo_scenes() -> list[dict[str, str]]:
+    """The demo video's scenes and captions, shown under the video as its transcript."""
+    from make_demo import SCENES  # noqa: PLC0415  (scripts/ is on sys.path when run)
+
+    return [{"title": s["title"], "caption": s["caption"]} for s in SCENES]
+
+
 def results_context() -> dict[str, Any]:
     out: dict[str, Any] = {}
     for corpus in ("c1", "c2", "c3"):
@@ -122,6 +187,7 @@ def results_context() -> dict[str, Any]:
         out[corpus] = {
             "report": report,
             "configs": configs,
+            "chart": chart_rows(report),
             "cases": len({r["case"] for r in report["results"]}),
             "date": report["created_at"][:10],
         }
@@ -143,7 +209,10 @@ def build(out: Path, base_url: str) -> None:
         else:
             child.unlink()
     shutil.copytree(SITE / "static", out / "static")
+    if DEMO_VIDEO.is_file():  # served from the site, kept once in the repository
+        shutil.copy2(DEMO_VIDEO, out / "static" / DEMO_VIDEO.name)
     context = {
+        "demo": demo_scenes() if DEMO_VIDEO.is_file() else [],
         "version": __version__,
         "base_url": base_url.rstrip("/"),
         "repo_url": REPO_URL,

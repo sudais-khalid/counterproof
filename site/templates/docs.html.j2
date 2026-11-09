@@ -22,10 +22,14 @@
     <p class="lede">Counterproof decides whether a code change is proven by the tests around it. It never edits your working tree: every run happens in isolated git worktrees under your cache directory.</p>
 
     <h2 id="install">Install</h2>
-    <p>Counterproof is a Python command-line tool. Install it once, globally, with <a href="https://pipx.pypa.io/">pipx</a> or <a href="https://docs.astral.sh/uv/">uv</a>:</p>
-    <pre><code>pipx install counterproof
-# or
+    <p>Counterproof is a Python command-line tool, published on <a href="https://pypi.org/project/counterproof/">PyPI</a>. Install it with pip, or once, globally, with <a href="https://pipx.pypa.io/">pipx</a> or <a href="https://docs.astral.sh/uv/">uv</a>:</p>
+    <pre><code>pip install counterproof
+# or, isolated from your projects
+pipx install counterproof
 uv tool install counterproof</code></pre>
+    <p>Upgrade to the latest release the same way, and check which version you have:</p>
+    <pre><code>pip install --upgrade counterproof     # pipx upgrade counterproof / uv tool upgrade counterproof
+counterproof --version</code></pre>
     <p>Then check that it can see git, your test runner and the run directory:</p>
     <pre><code>counterproof doctor</code></pre>
     <p>Counterproof needs Python 3.11 or newer and git. It runs your tests with the project's own environment, so it never installs packages for you.</p>
