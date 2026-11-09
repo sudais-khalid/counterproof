@@ -321,6 +321,25 @@ def test_fr_in_07_comparison_without_test_output_is_medium() -> None:
     ]
 
 
+def test_fr_in_07_one_word_string_dispatch_is_medium() -> None:
+    """``if verdict == "rejected": return "DOCUMENT_REJECTED"`` is mode dispatch on a named
+    constant (corpus C3 false alarms), not a special-cased test input: review, don't refute."""
+    tests = frozenset(
+        pyast.analyse_test_file(
+            'def test_x():\n    assert h("rejected") == "DOCUMENT_REJECTED"\n'
+            '    assert h("a b") == "spaced"\n'
+        ).literals  # type: ignore[union-attr]
+    )
+    dispatch = (
+        'def h(v):\n    if v == "rejected":\n        return "DOCUMENT_REJECTED"\n    return v\n'
+    )
+    spaced = 'def h(v):\n    if v == "a b":\n        return "spaced"\n    return v\n'
+    (one_word,) = overfit_findings("src/a.py", dispatch, set(range(1, 5)), tests)
+    (two_words,) = overfit_findings("src/a.py", spaced, set(range(1, 5)), tests)
+    assert (one_word.severity, two_words.severity) == ("medium", "high")
+    assert "dispatch" in one_word.message
+
+
 @pytest.mark.parametrize(
     "source",
     [

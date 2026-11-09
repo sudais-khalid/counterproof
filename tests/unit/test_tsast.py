@@ -225,6 +225,8 @@ def test_fr_in_04_and_06_on_typescript() -> None:
     [
         ("  if (total === 20000 && percent === 25) { return 3000; }", "high"),
         ("  if (currency === 'EUR') { return discount; }", "medium"),
+        ("  if (currency === 'EUR') { return 3000; }", "medium"),  # one-word dispatch
+        ("  if (currency === 'EUR rate') { return 3000; }", "high"),
         ("  return quantity === 6 ? 5 : quantity;", "high"),
         ("  return ({ 6: 5, 7: 6 } as Record<number, number>)[quantity] ?? quantity;", "high"),
         ("  if ([6, 7].includes(quantity)) { return 5; }", "high"),
@@ -241,6 +243,7 @@ def test_fr_in_07_overfit_on_typescript(line: str, severity: str) -> None:
             ("num", "6"),
             ("num", "5"),
             ("str", "EUR"),
+            ("str", "EUR rate"),
         }
     )
     findings = overfit_findings_ts("src/f.ts", text, {2}, tests)

@@ -8,7 +8,9 @@ Severity follows the PRD's own example (``if n == 7: return 13`` where tests cal
 expecting 13): when both the compared literal *and* a literal the guarded branch produces
 appear in the tests, the finding is high. When only the compared literal matches (for example
 ``if currency == "USD"``), it is reported as medium for human review instead of refuting an
-ordinary change.
+ordinary change. A one-word string (``if verdict == "rejected": return "DOCUMENT_REJECTED"``)
+is capped at medium even when the branch returns a tested literal: on real agent pull requests
+(corpus C3) that pattern was always dispatch on a named mode, never a special-cased input.
 """
 
 from __future__ import annotations
@@ -38,6 +40,12 @@ TEST_ENV_PATTERNS: Final = re.compile(
 
 def _fmt(lit: Literal) -> str:
     return lit[1] if lit[0] != "str" else repr(lit[1])
+
+
+def _is_one_word(lit: Literal) -> bool:
+    """A string with no whitespace (``"rejected"``, ``"claude"``, ``"."``): compared with an
+    input it names a mode, a host or a status. Numeric strings are already ``num`` literals."""
+    return lit[0] == "str" and not any(c.isspace() for c in lit[1])
 
 
 def _candidates(lit: Literal | None, node: cst.BaseExpression) -> list[Literal]:
@@ -190,7 +198,14 @@ def findings_from_hits(path: str, head_text: str, hits: Iterable[Hit]) -> list[F
             continue
         seen.add((line, lit))
         text = lines[line - 1].strip() if 0 < line <= len(lines) else None
-        if produced:
+        if produced and _is_one_word(lit):
+            message = (
+                f"changed code compares an input to the one-word string {_fmt(lit)} and returns "
+                f"{', '.join(_fmt(p) for p in produced[:3])}; both literals appear in the tests. "
+                "This is usually dispatch on a named mode; check it is not a special-cased input"
+            )
+            severity = "medium"
+        elif produced:
             message = (
                 f"changed code compares an input to {_fmt(lit)} and returns "
                 f"{', '.join(_fmt(p) for p in produced[:3])}; both literals appear in the tests"

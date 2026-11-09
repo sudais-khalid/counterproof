@@ -54,15 +54,19 @@ REQUIREMENTS = (
 
 
 def _run(cmd: list[str], cwd: Path, log: list[str], **env: str) -> bool:
-    proc = subprocess.run(
-        cmd,
-        cwd=cwd,
-        env={**os.environ, **env},
-        capture_output=True,
-        text=True,
-        timeout=1200,
-        check=False,
-    )
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=cwd,
+            env={**os.environ, **env},
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:  # a slow suite is a result to record, not a crash
+        log.append(f"$ {' '.join(cmd)}  -> timed out after 1200 s")
+        return False
     log.append(f"$ {' '.join(cmd)}  -> {proc.returncode}")
     if proc.returncode != 0:
         log.append((proc.stdout + proc.stderr)[-1500:])
@@ -181,18 +185,8 @@ def case(spec: dict[str, Any], workdir: Path, out: Path) -> int:
         log,
         **env,
     )
-    if ran and out.is_file():  # the certificate, for the hand review of every flagged case
-        for result in json.loads(out.read_text(encoding="utf-8")).get("results", []):
-            proc = subprocess.run(
-                ["counterproof", "report", result["run_id"], "--format", "md"],
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-            out.with_name(f"certificate-{result['config']}.md").write_text(
-                proc.stdout or proc.stderr, encoding="utf-8"
-            )
+    # Each result carries the verdict's reasons (rule, file, line), which is what the hand
+    # review of a flagged case starts from; the run directories stay in eval's temp cache.
     setup = {
         "id": spec["id"],
         "cloned": ok,
