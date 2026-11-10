@@ -4,6 +4,14 @@ All notable changes to Counterproof. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+- **Citable**: Counterproof is archived on Zenodo with the DOI
+  [10.5281/zenodo.24102199](https://doi.org/10.5281/zenodo.24102199) (all versions; 1.0.1 is
+  10.5281/zenodo.24102200). `CITATION.cff` drives GitHub's "Cite this repository" button, and
+  `.zenodo.json` sets the archive's title, author, keywords and links for future releases. The
+  README, the website and the package metadata link the DOI.
+
 ## [1.0.1] - 2026-11-09
 
 Documentation, website and release plumbing; the verification engine is unchanged.

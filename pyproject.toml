@@ -58,6 +58,7 @@ Documentation = "https://sudais-khalid.github.io/counterproof/"
 Repository = "https://github.com/sudais-khalid/counterproof"
 Issues = "https://github.com/sudais-khalid/counterproof/issues"
 Changelog = "https://github.com/sudais-khalid/counterproof/blob/main/CHANGELOG.md"
+DOI = "https://doi.org/10.5281/zenodo.24102199"
 
 [project.scripts]
 counterproof = "counterproof.cli:main"

@@ -1,0 +1,24 @@
+{
+  "title": "Counterproof: verifying that code changes by AI coding agents are proven by their tests",
+  "upload_type": "software",
+  "description": "Counterproof is a local-first command-line tool that decides whether a code change written by an AI coding agent is actually proven by its tests, not just green. It runs five probes against the change in isolated git worktrees (a claim audit of the agent's session, test-integrity checks, red-green, change-scoped mutation testing and a blind test oracle) and maps the evidence to one of five verdicts (PROVEN, WEAK, UNPROVEN, REFUTED, INCONCLUSIVE) with deterministic rules; no language model decides the verdict. It supports Python (pytest) and TypeScript/JavaScript (Vitest, Jest) and integrates with Claude Code, GitHub Actions, MCP and git hooks. Each release includes its evaluation on three corpora, with baselines and stated limits.",
+  "creators": [
+    {"name": "Khalid, Sudais"}
+  ],
+  "license": "Apache-2.0",
+  "keywords": [
+    "AI coding agents",
+    "software testing",
+    "mutation testing",
+    "reward hacking",
+    "test integrity",
+    "code verification",
+    "Claude Code",
+    "pytest"
+  ],
+  "related_identifiers": [
+    {"identifier": "https://github.com/sudais-khalid/counterproof", "relation": "isSupplementTo", "scheme": "url"},
+    {"identifier": "https://pypi.org/project/counterproof/", "relation": "isIdenticalTo", "scheme": "url"},
+    {"identifier": "https://sudais-khalid.github.io/counterproof/", "relation": "isDocumentedBy", "scheme": "url"}
+  ]
+}

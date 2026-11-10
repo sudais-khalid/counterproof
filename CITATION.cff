@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use Counterproof in your work, please cite it as below."
+type: software
+title: "Counterproof: verifying that code changes by AI coding agents are proven by their tests"
+abstract: >-
+  Counterproof is a local-first command-line tool that decides whether a code change written
+  by an AI coding agent is actually proven by its tests, not just green. It runs five probes
+  against the change in isolated git worktrees (a claim audit of the agent's session,
+  test-integrity checks, red-green, change-scoped mutation testing and a blind test oracle)
+  and maps the evidence to one of five verdicts with deterministic rules; no language model
+  decides the verdict.
+authors:
+  - given-names: Sudais
+    family-names: Khalid
+    website: "https://sudaiskhalid.com"
+version: 1.0.1
+date-released: 2026-11-10
+doi: 10.5281/zenodo.24102199
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24102199
+    description: "Concept DOI: all versions, resolves to the latest"
+  - type: doi
+    value: 10.5281/zenodo.24102200
+    description: "Version 1.0.1"
+repository-code: "https://github.com/sudais-khalid/counterproof"
+url: "https://sudais-khalid.github.io/counterproof/"
+license: Apache-2.0
+keywords:
+  - AI coding agents
+  - software testing
+  - mutation testing
+  - reward hacking
+  - test integrity
+  - code verification

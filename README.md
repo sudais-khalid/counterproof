@@ -11,6 +11,7 @@
   <a href="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/sudais-khalid/counterproof/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/sudais-khalid/counterproof/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/sudais-khalid/counterproof?color=2850d6&cacheSeconds=3600"></a>
   <a href="https://github.com/sudais-khalid/counterproof/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/counterproof?color=2850d6&cacheSeconds=3600"></a>
+  <a href="https://doi.org/10.5281/zenodo.24102199"><img alt="DOI 10.5281/zenodo.24102199" src="https://zenodo.org/badge/DOI/10.5281/zenodo.24102199.svg"></a>
   <a href="https://sudais-khalid.github.io/counterproof/"><img alt="Website" src="https://img.shields.io/badge/website-docs%20%26%20results-0e1b2c"></a>
 </p>
 
@@ -312,6 +313,24 @@ CI runs on Linux, macOS and Windows with Python 3.11 and 3.13, offline: real LLM
 replayed from recorded cassettes. See [CONTRIBUTING.md](https://github.com/sudais-khalid/counterproof/blob/main/CONTRIBUTING.md),
 [SECURITY.md](https://github.com/sudais-khalid/counterproof/blob/main/SECURITY.md) and the [changelog](https://github.com/sudais-khalid/counterproof/blob/main/CHANGELOG.md). The product requirements are in
 [docs/PRD.md](https://github.com/sudais-khalid/counterproof/blob/main/docs/PRD.md).
+
+## Citing Counterproof
+
+If you use Counterproof in research or an evaluation, please cite it. The DOI
+[10.5281/zenodo.24102199](https://doi.org/10.5281/zenodo.24102199) always resolves to the latest
+version; each release also has its own DOI on [Zenodo](https://doi.org/10.5281/zenodo.24102199).
+GitHub's "Cite this repository" button reads [CITATION.cff](https://github.com/sudais-khalid/counterproof/blob/main/CITATION.cff).
+
+```bibtex
+@software{khalid_counterproof,
+  author    = {Khalid, Sudais},
+  title     = {Counterproof: verifying that code changes by AI coding agents are proven by their tests},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24102199},
+  url       = {https://doi.org/10.5281/zenodo.24102199}
+}
+```
 
 ## Licence
 
